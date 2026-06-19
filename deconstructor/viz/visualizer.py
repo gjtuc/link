@@ -1,12 +1,6 @@
 """
-Step 3 — Pyvis 렌더링 엔진 (Provenance Step 1 연동)
-===================================================
-
-Provenance 시각화 (S1-6):
-  extracted  → 파란 실선
-  inferred   → 노란 점선
-  dropped    → 노란 점선 + opacity 0.4 + ✖ 라벨
-  verified   → 초록 실선
+Step 3 — Pyvis 렌더링 엔진 (Provenance + Storm Step 4 critical override)
+========================================================================
 """
 
 from __future__ import annotations
@@ -17,9 +11,16 @@ from pathlib import Path
 from pyvis.network import Network
 
 from deconstructor.provenance.viz_style import resolve_edge_style, resolve_node_style
+from deconstructor.storm.viz_style import (
+    build_critical_pyvis_kwargs,
+    format_critical_tooltip_prefix,
+    resolve_critical_style,
+)
 from deconstructor.viz.neo4j_utils import GraphEdge, GraphNode
 
 logger = logging.getLogger(__name__)
+
+DEFAULT_NODE_SIZE = 22
 
 
 def _log(step: str, msg: str) -> None:
@@ -28,14 +29,27 @@ def _log(step: str, msg: str) -> None:
     print(line)
 
 
+def _log_storm_s4(step: str, msg: str) -> None:
+    line = f"[STORM-S4-{step}] {msg}"
+    logger.info(line)
+    print(line)
+
+
 def _node_tooltip(node: GraphNode) -> str:
-    lines = [
-        f"subject: {node.subject}",
-        f"state_change: {node.state_change}",
-        f"timestamp: {node.timestamp or 'n/a'}",
-        f"source_type: {node.source_type}",
-        f"check_status: {node.check_status}",
-    ]
+    lines: list[str] = []
+    if node.is_critical:
+        lines.append(format_critical_tooltip_prefix(node.stress_level))
+    lines.extend(
+        [
+            f"subject: {node.subject}",
+            f"state_change: {node.state_change}",
+            f"timestamp: {node.timestamp or 'n/a'}",
+            f"source_type: {node.source_type}",
+            f"check_status: {node.check_status}",
+            f"stress_level: {node.stress_level}",
+            f"is_critical: {node.is_critical}",
+        ]
+    )
     if node.check_status == "dropped":
         lines.append("status: REJECTED ghost hypothesis")
     return "<br>".join(lines)
@@ -46,13 +60,33 @@ def _edge_tooltip(edge: GraphEdge) -> str:
     return f"probability: {edge.probability:.3f}<br>latency: {latency}"
 
 
+def _build_provenance_node_kwargs(node: GraphNode, label: str) -> dict:
+    style = resolve_node_style(node.source_type, node.check_status)
+    node_kwargs: dict = {
+        "label": label,
+        "title": _node_tooltip(node),
+        "color": style.color,
+        "size": DEFAULT_NODE_SIZE,
+    }
+    if style.opacity < 1.0:
+        node_kwargs["opacity"] = style.opacity
+    if style.border_color:
+        node_kwargs["borderWidth"] = 2
+        node_kwargs["color"] = {
+            "background": style.color,
+            "border": style.border_color,
+            "highlight": {"background": style.color, "border": "#ef476f"},
+        }
+    return node_kwargs
+
+
 def build_pyvis_network(
     nodes: list[GraphNode],
     edges: list[GraphEdge],
     *,
     title: str = "Deconstructor Causal Graph",
 ) -> Network:
-    """GraphNode provenance → pyvis 색·투명도·점선/실선."""
+    """GraphNode provenance → pyvis; is_critical이면 storm override 최우선."""
     _log("1", f"init Network directed=True title={title!r}")
     net = Network(
         height="800px",
@@ -65,30 +99,41 @@ def build_pyvis_network(
 
     node_by_id = {n.id: n for n in nodes}
 
-    _log("2", f"adding {len(nodes)} nodes with provenance styling [PROV-S1-6]")
+    _log("2", f"adding {len(nodes)} nodes (provenance + storm critical override)")
+    critical_ids: set[str] = set()
     for node in nodes:
         style = resolve_node_style(node.source_type, node.check_status)
-        label = (node.subject or node.id[:8])
+        label = node.subject or node.id[:8]
         if style.label_prefix:
             label = f"{style.label_prefix}{label}"
 
-        node_kwargs: dict = {
-            "label": label,
-            "title": _node_tooltip(node),
-            "color": style.color,
-            "size": 22,
-        }
-        if style.opacity < 1.0:
-            node_kwargs["opacity"] = style.opacity
-        if style.border_color:
-            node_kwargs["borderWidth"] = 2
-            node_kwargs["color"] = {
-                "background": style.color,
-                "border": style.border_color,
-                "highlight": {"background": style.color, "border": "#ef476f"},
-            }
+        if node.is_critical:
+            critical_ids.add(node.id)
+            _log_storm_s4(
+                "4",
+                f"apply critical override node={node.subject!r} "
+                f"provenance={node.source_type} ignored",
+            )
+            critical_style = resolve_critical_style(stress_level=node.stress_level)
+            node_kwargs = build_critical_pyvis_kwargs(
+                label=label,
+                tooltip=_node_tooltip(node),
+                style=critical_style,
+            )
+        else:
+            node_kwargs = _build_provenance_node_kwargs(node, label)
 
         net.add_node(node.id, **node_kwargs)
+
+    for node_dict in net.nodes:
+        if node_dict.get("id") in critical_ids:
+            node_dict["font"] = {
+                "color": "white",
+                "size": 16,
+                "face": "arial",
+                "bold": True,
+            }
+            node_dict["shadow"] = True
 
     _log("3", f"adding {len(edges)} edges with dashed/solid by provenance")
     for edge in edges:
@@ -148,6 +193,15 @@ def build_pyvis_network(
   "edges": {
     "smooth": { "type": "dynamic" },
     "arrows": { "to": { "enabled": true, "scaleFactor": 1.2 } }
+  },
+  "nodes": {
+    "shadow": {
+      "enabled": true,
+      "color": "rgba(255,0,51,0.45)",
+      "size": 25,
+      "x": 2,
+      "y": 2
+    }
   }
 }
 """

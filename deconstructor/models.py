@@ -85,6 +85,17 @@ class AtomicFact(BaseModel):
         default=DEFAULT_CHECK_STATUS,
         description="검증 상태: active | pending | promoted | dropped(고스트).",
     )
+    stress_level: int = Field(
+        default=0,
+        ge=0,
+        description=(
+            "[STORM-S1-1] 누적 인과 스트레스. CAUSES 엣지마다 source provenance 가중치 합산."
+        ),
+    )
+    is_critical: bool = Field(
+        default=False,
+        description="[STORM-S1-1] Perfect Storm 임계 돌파 시 Watcher가 True로 격상.",
+    )
 
     @field_validator("source_type")
     @classmethod

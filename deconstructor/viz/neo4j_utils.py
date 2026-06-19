@@ -26,6 +26,7 @@ from neo4j import GraphDatabase
 
 from deconstructor import config
 from deconstructor.provenance.types import DEFAULT_CHECK_STATUS, DEFAULT_SOURCE_TYPE
+from deconstructor.storm.types import DEFAULT_IS_CRITICAL, DEFAULT_STRESS_LEVEL
 
 logger = logging.getLogger(__name__)
 
@@ -44,6 +45,8 @@ class GraphNode:
     trigger_event: str | None
     source_type: str = DEFAULT_SOURCE_TYPE
     check_status: str = DEFAULT_CHECK_STATUS
+    stress_level: int = DEFAULT_STRESS_LEVEL
+    is_critical: bool = DEFAULT_IS_CRITICAL
 
 
 @dataclass(frozen=True)
@@ -112,7 +115,7 @@ def fetch_causal_graph(
 
             _log(
                 "2",
-                f"fetching Fact nodes (+ source_type, check_status) "
+                f"fetching Fact nodes (+ source_type, check_status, stress_level, is_critical) "
                 f"LIMIT {max_nodes} (db_total={total_in_db})",
             )
             node_rows = session.run(
@@ -124,13 +127,17 @@ def fetch_causal_graph(
                        f.timestamp AS timestamp,
                        f.trigger_event AS trigger_event,
                        coalesce(f.source_type, $default_source) AS source_type,
-                       coalesce(f.check_status, $default_check) AS check_status
+                       coalesce(f.check_status, $default_check) AS check_status,
+                       coalesce(f.stress_level, $default_stress) AS stress_level,
+                       coalesce(f.is_critical, $default_critical) AS is_critical
                 ORDER BY f.timestamp, f.subject
                 LIMIT $limit
                 """,
                 limit=max_nodes,
                 default_source=DEFAULT_SOURCE_TYPE,
                 default_check=DEFAULT_CHECK_STATUS,
+                default_stress=DEFAULT_STRESS_LEVEL,
+                default_critical=DEFAULT_IS_CRITICAL,
             ).data()
 
             nodes = [
@@ -142,9 +149,16 @@ def fetch_causal_graph(
                     trigger_event=row["trigger_event"],
                     source_type=row["source_type"] or DEFAULT_SOURCE_TYPE,
                     check_status=row["check_status"] or DEFAULT_CHECK_STATUS,
+                    stress_level=int(row["stress_level"] or DEFAULT_STRESS_LEVEL),
+                    is_critical=bool(row["is_critical"]),
                 )
                 for row in node_rows
             ]
+            critical_count = sum(1 for n in nodes if n.is_critical)
+            if critical_count:
+                from deconstructor.storm.viz_style import log_critical_nodes_fetched
+
+                log_critical_nodes_fetched(critical_count)
             node_ids = {n.id for n in nodes}
             truncated = total_in_db > len(nodes)
 

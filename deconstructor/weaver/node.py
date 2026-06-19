@@ -4,10 +4,10 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from deconstructor.agents.watcher.run import run_watcher_in_memory, run_watcher_neo4j
 from deconstructor.weaver.console_store import ConsoleWeaver
 from deconstructor.weaver.neo4j_store import Neo4jWeaver
 from deconstructor.weaver.resolve import facts_for_verified_edges
-from deconstructor.weaver.schemas import WeaverResult
 
 if TYPE_CHECKING:
     from deconstructor.pipeline.state import State
@@ -49,6 +49,11 @@ def weaver_node(state: "State", *, persist_db: bool) -> dict:
                 result = result.model_copy(
                     update={"ghosts_written": ghosts_written}
                 )
+            critical_subjects = run_watcher_neo4j(store._driver)
+            if critical_subjects:
+                result = result.model_copy(
+                    update={"critical_subjects": critical_subjects}
+                )
         finally:
             store.close()
     else:
@@ -62,6 +67,11 @@ def weaver_node(state: "State", *, persist_db: bool) -> dict:
             print(
                 f"[STEP4-weaver] console mode: {len(ghost_facts)} ghost(s) "
                 f"(not persisted without --db)"
+            )
+        critical_subjects = run_watcher_in_memory(facts, edges)
+        if critical_subjects:
+            result = result.model_copy(
+                update={"critical_subjects": critical_subjects}
             )
 
     return {"weaver_result": result}

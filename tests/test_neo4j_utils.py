@@ -8,10 +8,12 @@ def test_max_graph_nodes_default_is_300():
 
 
 def test_graph_node_tooltip_fields():
-    """Step 3 툴팁에 필요한 필드가 dataclass에 존재."""
+    """Step 3·4 툴팁에 필요한 필드가 dataclass에 존재."""
     n = GraphNode("id1", "grid", "off -> occurred", "2026-01-01T10:00:00", "headline")
     assert n.state_change == "off -> occurred"
     assert n.timestamp is not None
+    assert n.stress_level == 0
+    assert n.is_critical is False
 
 
 def test_graph_edge_is_verified_causal_only():

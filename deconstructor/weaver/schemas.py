@@ -90,7 +90,10 @@ class WeaverResult(BaseModel):
 
     ghosts_written: int = 0
 
-
+    critical_subjects: list[str] = Field(
+        default_factory=list,
+        description="[STORM-S3] Watcher가 Perfect Storm으로 격상한 노드 subject 목록.",
+    )
 
     model_config = {"frozen": True}
 
