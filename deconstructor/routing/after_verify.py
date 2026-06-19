@@ -37,7 +37,15 @@ from typing import Literal
 from deconstructor.pipeline.state import State
 
 
-def route_after_verify(state: State) -> Literal["deconstruct", "skeptic"]:
+def _post_decompose_target(state: State) -> Literal["skeptic", "dreamer"]:
+    """enable_dreamer 시 verify 탈출 → dreamer, 아니면 skeptic."""
+    if state.get("enable_dreamer"):
+        print("[STEP4-route] enable_dreamer=True → dreamer")
+        return "dreamer"
+    return "skeptic"
+
+
+def route_after_verify(state: State) -> Literal["deconstruct", "skeptic", "dreamer"]:
     """
     Micro-step R-1: null floor -> skeptic.
     Micro-step R-2: non-atomic + under cap -> deconstruct.
@@ -49,11 +57,10 @@ def route_after_verify(state: State) -> Literal["deconstruct", "skeptic"]:
     """
     # R-1: extracted_facts 비었으면 분해 완료(또는 초기 실패) — skeptic로
     if not state["extracted_facts"]:
-        return "skeptic"
+        return _post_decompose_target(state)
 
-    # R-3: depth 상한 도달 — 더 쪼개지 않고 skeptic에서 인과 검증만
     if state["recursion_depth"] >= state["max_recursion_depth"]:
-        return "skeptic"
+        return _post_decompose_target(state)
 
     # R-2: 아직 쪼갤 비원자 crumb 있음 — deconstruct 루프
     return "deconstruct"

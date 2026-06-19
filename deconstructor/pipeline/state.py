@@ -28,6 +28,9 @@ Field guide / 필드 가이드
 - ``recursion_depth`` / ``max_recursion_depth``: deconstruct loop control.
 - ``partial_run`` / ``partial_run_reason``: set when depth cap hits with leftovers.
 - ``verified_edges`` / ``rejected_hypotheses`` / ``skeptic_verdicts``: skeptic outputs.
+- ``inferred_facts`` / ``dreamer_log``: Dreamer agent outputs (Step 2).
+- ``promoted_facts`` / ``dropped_hypotheses`` / ``fact_checker_log``: Fact-Checker (Step 3).
+- ``enable_dreamer``: CLI ``--enable-dreamer`` — dreamer→fact_checker 경로 활성.
 - ``weaver_result``: final persistence summary.
 
 Modification guide for other AIs / 다른 AI 수정 가이드
@@ -46,6 +49,7 @@ import operator
 from typing import Annotated, TypedDict
 
 from deconstructor.models import AtomicFact, CausalEdge
+from deconstructor.agents.fact_checker.schemas import DroppedHypothesis
 from deconstructor.skeptic.run_log import SkepticLogEntry
 from deconstructor.skeptic.schemas import HypothesisVerdict, RejectedHypothesis
 from deconstructor.weaver.schemas import WeaverResult
@@ -68,4 +72,10 @@ class State(TypedDict):
     verified_edges: list[CausalEdge]
     rejected_hypotheses: list[RejectedHypothesis]
     skeptic_verdicts: list[HypothesisVerdict]
+    inferred_facts: list[AtomicFact]
+    dreamer_log: list[str]
+    promoted_facts: Annotated[list[AtomicFact], operator.add]
+    dropped_hypotheses: list[DroppedHypothesis]
+    fact_checker_log: list[str]
+    enable_dreamer: bool
     weaver_result: WeaverResult | None

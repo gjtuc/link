@@ -88,6 +88,8 @@ class WeaverResult(BaseModel):
 
     partial_run: bool = False
 
+    ghosts_written: int = 0
+
 
 
     model_config = {"frozen": True}

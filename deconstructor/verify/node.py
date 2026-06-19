@@ -33,6 +33,7 @@ Always runs on the fixed edge immediately after deconstruct.
 from __future__ import annotations
 
 from deconstructor.pipeline.state import State
+from deconstructor.provenance.assign import tag_as_extracted
 from deconstructor.verify.partition import partition_by_atomicity
 
 
@@ -40,11 +41,11 @@ def verify_node(state: State) -> dict:
     """
     Move atomic crumbs to completed_facts; keep non-atomic in extracted_facts.
 
-    원자 crumb → completed_facts, 비원자 → extracted_facts에 잔류.
+    [PROV-S1-3] atomic 이동 시 source_type=extracted 강제.
     """
-    # V-1 / V-2: is_atomic 플래그 기준 순수 분할
     atomic, non_atomic = partition_by_atomicity(state["extracted_facts"])
+    tagged_atomic = tag_as_extracted(atomic)
     return {
         "extracted_facts": non_atomic,
-        "completed_facts": atomic,
+        "completed_facts": tagged_atomic,
     }

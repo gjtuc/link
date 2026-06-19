@@ -158,7 +158,12 @@ def skeptic_node(state: "State", *, dry_run: bool = True) -> dict:
 
 
 
-    facts = state["completed_facts"]
+    facts = list(state["completed_facts"]) + list(state.get("promoted_facts") or [])
+    print(
+        f"[STEP4-skeptic] evaluating {len(facts)} facts "
+        f"(completed={len(state['completed_facts'])}, "
+        f"promoted={len(state.get('promoted_facts') or [])})"
+    )
 
     if len(facts) < 2:
 

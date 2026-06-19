@@ -42,6 +42,7 @@ def make_initial_state(
     raw_text: str,
     *,
     max_recursion_depth: int | None = None,
+    enable_dreamer: bool = False,
 ) -> State:
     """Create fresh State dict ready for graph.stream / invoke."""
     cap = (
@@ -61,5 +62,11 @@ def make_initial_state(
         "verified_edges": [],
         "rejected_hypotheses": [],
         "skeptic_verdicts": [],
+        "inferred_facts": [],
+        "dreamer_log": [],
+        "promoted_facts": [],
+        "dropped_hypotheses": [],
+        "fact_checker_log": [],
+        "enable_dreamer": enable_dreamer,
         "weaver_result": None,
     }

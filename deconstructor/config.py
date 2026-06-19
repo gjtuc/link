@@ -64,6 +64,9 @@ NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD", "")
 # deconstruct ↔ verify 루프 최대 반복 (routing/after_verify.py 와 연동)
 MAX_DECOMPOSITION_ITERATIONS = int(os.getenv("MAX_DECOMPOSITION_ITERATIONS", "5"))
 
+# --- Tavily (Fact-Checker live search) ---
+TAVILY_API_KEY = os.getenv("TAVILY_API_KEY", "")
+
 
 def _apply_local_settings() -> None:
     """
@@ -72,7 +75,7 @@ def _apply_local_settings() -> None:
     ImportError면 무시 (CI·테스트는 env만 사용 가능).
     """
     global OPENAI_API_KEY, OPENAI_MODEL, GEMINI_API_KEY, GEMINI_MODEL
-    global LLM_PROVIDER, NEO4J_URI, NEO4J_USER, NEO4J_PASSWORD
+    global LLM_PROVIDER, NEO4J_URI, NEO4J_USER, NEO4J_PASSWORD, TAVILY_API_KEY
 
     try:
         from deconstructor import local_settings as local
@@ -88,6 +91,7 @@ def _apply_local_settings() -> None:
         "NEO4J_URI",
         "NEO4J_USER",
         "NEO4J_PASSWORD",
+        "TAVILY_API_KEY",
     ):
         value = getattr(local, name, None)
         if value:

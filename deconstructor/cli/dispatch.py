@@ -47,7 +47,7 @@ def dispatch(argv: list[str] | None = None) -> int:
     dry_run = args.dry_run or args.depth_cap
     headline, cap = resolve_headline(args, dry_run=dry_run)
 
-    if dry_run:
+    if dry_run and not args.enable_dreamer:
         return run_dry_traced(
             headline,
             cap=cap,
@@ -55,5 +55,10 @@ def dispatch(argv: list[str] | None = None) -> int:
             as_json=args.json,
         )
 
-    # 기본: live LLM 파이프라인
-    return run_live(headline, persist_db=args.db, as_json=args.json)
+    return run_live(
+        headline,
+        persist_db=args.db,
+        as_json=args.json,
+        dry_run=dry_run,
+        enable_dreamer=args.enable_dreamer,
+    )

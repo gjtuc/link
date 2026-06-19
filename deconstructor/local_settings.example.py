@@ -24,6 +24,9 @@ OPENAI_MODEL = "gpt-4o-mini"
 # auto | gemini | openai
 LLM_PROVIDER = "gemini"
 
+# --- Tavily (Fact-Checker --enable-dreamer live search) ---
+TAVILY_API_KEY = ""
+
 # --- Neo4j (main.py --db, viz 자동 오픈) ---
 NEO4J_URI = "bolt://localhost:7687"
 NEO4J_USER = "neo4j"

@@ -18,6 +18,10 @@ def test_null_floor_to_skeptic():
     assert route_after_verify(_state()) == "skeptic"
 
 
+def test_null_floor_to_dreamer_when_enabled():
+    assert route_after_verify(_state(enable_dreamer=True)) == "dreamer"
+
+
 def test_non_atomic_loops():
     non = AtomicFact(subject="x", state_change="a -> b", is_atomic=False)
     assert route_after_verify(_state(extracted_facts=[non], recursion_depth=2)) == "deconstruct"

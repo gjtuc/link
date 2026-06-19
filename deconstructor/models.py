@@ -27,16 +27,26 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field, field_validator
 
+from deconstructor.provenance.types import (
+    DEFAULT_CHECK_STATUS,
+    DEFAULT_SOURCE_TYPE,
+    CheckStatus,
+    SourceType,
+    validate_check_status,
+    validate_source_type,
+)
+
 
 class AtomicFact(BaseModel):
     """
     분해의 최소 단위: 주체(subject) + 관측 가능한 상태 변화(state_change) + 시각.
 
-    서술·형용사·감정·예측 필드는 없다. ``reasoning`` 은 verify 루프용
-    **기계적** 원자성 판단 메모일 뿐 시장 의견이 아니다.
+    Provenance (Step 1):
+      source_type — extracted | inferred | verified
+      check_status — active | pending | promoted | dropped (고스트 A안)
 
-    Neo4j :Fact 노드로 저장될 때 id, subject, state_change, timestamp, trigger_event 사용.
-  """
+    Neo4j :Fact 노드로 저장 시 위 필드 + trigger_event 포함.
+    """
 
     id: str = Field(
         default_factory=lambda: str(uuid.uuid4()),
@@ -67,6 +77,26 @@ class AtomicFact(BaseModel):
         default="",
         description="원자성 판단 근거 (기계적). 감정·평가 금지.",
     )
+    source_type: SourceType = Field(
+        default=DEFAULT_SOURCE_TYPE,
+        description="출처: extracted(원문) | inferred(몽상가) | verified(검색 검증).",
+    )
+    check_status: CheckStatus = Field(
+        default=DEFAULT_CHECK_STATUS,
+        description="검증 상태: active | pending | promoted | dropped(고스트).",
+    )
+
+    @field_validator("source_type")
+    @classmethod
+    def validate_source_type_field(cls, value: str) -> str:
+        """[PROV-S1-2] source_type 3값 강제."""
+        return validate_source_type(value)
+
+    @field_validator("check_status")
+    @classmethod
+    def validate_check_status_field(cls, value: str) -> str:
+        """[PROV-S1-2] check_status 4값 강제."""
+        return validate_check_status(value)
 
     @field_validator("subject", "state_change", "reasoning")
     @classmethod

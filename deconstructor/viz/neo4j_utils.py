@@ -25,6 +25,7 @@ from dataclasses import dataclass
 from neo4j import GraphDatabase
 
 from deconstructor import config
+from deconstructor.provenance.types import DEFAULT_CHECK_STATUS, DEFAULT_SOURCE_TYPE
 
 logger = logging.getLogger(__name__)
 
@@ -34,13 +35,15 @@ MAX_GRAPH_NODES = 300
 
 @dataclass(frozen=True)
 class GraphNode:
-    """Neo4j :Fact 노드 1개 — pyvis 입력용."""
+    """Neo4j :Fact 노드 1개 — pyvis 입력용 (provenance 포함)."""
 
     id: str
     subject: str
     state_change: str
     timestamp: str | None
     trigger_event: str | None
+    source_type: str = DEFAULT_SOURCE_TYPE
+    check_status: str = DEFAULT_CHECK_STATUS
 
 
 @dataclass(frozen=True)
@@ -109,8 +112,8 @@ def fetch_causal_graph(
 
             _log(
                 "2",
-                f"fetching Fact nodes ORDER BY timestamp LIMIT {max_nodes} "
-                f"(db_total={total_in_db})",
+                f"fetching Fact nodes (+ source_type, check_status) "
+                f"LIMIT {max_nodes} (db_total={total_in_db})",
             )
             node_rows = session.run(
                 """
@@ -119,11 +122,15 @@ def fetch_causal_graph(
                        f.subject AS subject,
                        f.state_change AS state_change,
                        f.timestamp AS timestamp,
-                       f.trigger_event AS trigger_event
+                       f.trigger_event AS trigger_event,
+                       coalesce(f.source_type, $default_source) AS source_type,
+                       coalesce(f.check_status, $default_check) AS check_status
                 ORDER BY f.timestamp, f.subject
                 LIMIT $limit
                 """,
                 limit=max_nodes,
+                default_source=DEFAULT_SOURCE_TYPE,
+                default_check=DEFAULT_CHECK_STATUS,
             ).data()
 
             nodes = [
@@ -133,6 +140,8 @@ def fetch_causal_graph(
                     state_change=row["state_change"] or "",
                     timestamp=row["timestamp"],
                     trigger_event=row["trigger_event"],
+                    source_type=row["source_type"] or DEFAULT_SOURCE_TYPE,
+                    check_status=row["check_status"] or DEFAULT_CHECK_STATUS,
                 )
                 for row in node_rows
             ]

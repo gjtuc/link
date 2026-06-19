@@ -50,5 +50,10 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Persist verified edges to Neo4j (default: --no-db console weaver).",
     )
+    parser.add_argument(
+        "--enable-dreamer",
+        action="store_true",
+        help="Run Dreamer + Fact-Checker after decompose (requires more API usage live).",
+    )
     parser.add_argument("--skeptic-only", action="store_true")
     return parser

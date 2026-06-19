@@ -18,6 +18,12 @@ def base_state(**overrides: object) -> dict:
         "verified_edges": [],
         "rejected_hypotheses": [],
         "skeptic_verdicts": [],
+        "inferred_facts": [],
+        "dreamer_log": [],
+        "promoted_facts": [],
+        "dropped_hypotheses": [],
+        "fact_checker_log": [],
+        "enable_dreamer": False,
         "weaver_result": None,
     }
     state.update(overrides)

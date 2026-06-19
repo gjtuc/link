@@ -42,8 +42,15 @@ def run_live(
     *,
     persist_db: bool,
     as_json: bool,
+    dry_run: bool = False,
+    enable_dreamer: bool = False,
 ) -> int:
-    result = run_pipeline(headline, dry_run=False, persist_db=persist_db)
+    result = run_pipeline(
+        headline,
+        dry_run=dry_run,
+        persist_db=persist_db,
+        enable_dreamer=enable_dreamer,
+    )
     if as_json:
         print(encode_pipeline_result(result))
         return 0
