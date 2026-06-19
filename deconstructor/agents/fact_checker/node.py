@@ -33,6 +33,7 @@ from deconstructor.agents.fact_checker.stub import stub_verify_hypothesis
 from deconstructor.agents.fact_checker.verifier import verify_hypothesis_with_llm
 from deconstructor.print_util import safe_print
 from deconstructor.models import AtomicFact
+from deconstructor.web.progress_ctx import progress_sub
 
 if TYPE_CHECKING:
     from deconstructor.pipeline.state import State
@@ -106,7 +107,12 @@ def fact_checker_node(state: "State", *, dry_run: bool = False) -> dict:
 
     for i, fact in enumerate(inferred, 1):
         _log(f"loop {i}/{len(inferred)}")
-        promoted, dropped, step_logs = _check_one_hypothesis(fact, dry_run=dry_run)
+        with progress_sub(
+            f"FC-{i}",
+            f"팩트체크 {i}/{len(inferred)}",
+            fact.subject[:40],
+        ):
+            promoted, dropped, step_logs = _check_one_hypothesis(fact, dry_run=dry_run)
         fact_checker_log.extend(step_logs)
         if promoted is not None:
             promoted_facts.append(promoted)

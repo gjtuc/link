@@ -17,9 +17,11 @@ logger = logging.getLogger(__name__)
 
 SourceType = Literal["extracted", "inferred", "verified"]
 CheckStatus = Literal["active", "pending", "promoted", "dropped"]
+HypothesisAuthor = Literal["dreamer", "human"]
 
 SOURCE_TYPES: frozenset[str] = frozenset({"extracted", "inferred", "verified"})
 CHECK_STATUSES: frozenset[str] = frozenset({"active", "pending", "promoted", "dropped"})
+HYPOTHESIS_AUTHORS: frozenset[str] = frozenset({"dreamer", "human"})
 
 DEFAULT_SOURCE_TYPE: SourceType = "extracted"
 DEFAULT_CHECK_STATUS: CheckStatus = "active"

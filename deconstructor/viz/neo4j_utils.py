@@ -20,6 +20,7 @@ Micro-steps (각 단계마다 [VIZ-S2-...] 로그):
 from __future__ import annotations
 
 import logging
+from collections.abc import Sequence
 from dataclasses import dataclass
 
 from neo4j import GraphDatabase
@@ -27,6 +28,7 @@ from neo4j import GraphDatabase
 from deconstructor import config
 from deconstructor.provenance.types import DEFAULT_CHECK_STATUS, DEFAULT_SOURCE_TYPE
 from deconstructor.storm.types import DEFAULT_IS_CRITICAL, DEFAULT_STRESS_LEVEL
+from deconstructor.web.graph_context import normalize_trigger_event
 
 logger = logging.getLogger(__name__)
 
@@ -55,6 +57,7 @@ class GraphNode:
     is_critical: bool = DEFAULT_IS_CRITICAL
     anchor_fact_id: str | None = None
     reasoning: str | None = None
+    author: str | None = None
 
 
 @dataclass(frozen=True)
@@ -81,6 +84,10 @@ class GraphFetchResult:
     node_limit: int
     truncated: bool
     total_nodes_in_db: int | None
+    # 필터 메타 (UI·디버그)
+    trigger_events_filter: tuple[str, ...] = ()
+    analysis_run_id_filter: str | None = None
+    matched_nodes_in_db: int | None = None
 
 
 def _log(step: str, msg: str) -> None:
@@ -107,15 +114,75 @@ def neo4j_is_available() -> bool:
         driver.close()
 
 
+def _resolve_trigger_events_for_fetch(
+    session,
+    explicit: Sequence[str] | None,
+) -> tuple[str, ...]:
+    """
+    그래프에 쓸 trigger_event 목록 (정규화).
+
+    1. explicit 이 있으면 정규화 후 사용
+    2. 없으면 DB 에서 **가장 최근** trigger_event 1건
+    3. DB 비어 있으면 빈 tuple → 노드 0건
+    """
+    if explicit:
+        return tuple(
+            dict.fromkeys(
+                normalize_trigger_event(te) for te in explicit if normalize_trigger_event(te)
+            )
+        )
+
+    row = session.run(
+        """
+        MATCH (f:Fact)
+        WHERE f.trigger_event IS NOT NULL AND trim(f.trigger_event) <> ""
+        WITH f.trigger_event AS te, max(f.timestamp) AS latest
+        ORDER BY latest DESC
+        LIMIT 1
+        RETURN te
+        """
+    ).single()
+    if row and row.get("te"):
+        return (normalize_trigger_event(row["te"]),)
+    return ()
+
+
+def _resolve_analysis_run_id_for_fetch(
+    session,
+    explicit: str | None,
+) -> str | None:
+    """명시 run_id 없으면 DB 최신 analysis_run_id 1건."""
+    if explicit:
+        rid = explicit.strip()
+        return rid or None
+    row = session.run(
+        """
+        MATCH (f:Fact)
+        WHERE f.analysis_run_id IS NOT NULL AND trim(f.analysis_run_id) <> ""
+        WITH f.analysis_run_id AS rid, max(f.timestamp) AS latest
+        ORDER BY latest DESC
+        LIMIT 1
+        RETURN rid
+        """
+    ).single()
+    if row and row.get("rid"):
+        return str(row["rid"])
+    return None
+
+
 def fetch_causal_graph(
     *,
     max_nodes: int = MAX_GRAPH_NODES,
+    trigger_events: Sequence[str] | None = None,
+    analysis_run_id: str | None = None,
 ) -> GraphFetchResult:
     """
     Neo4j에서 Fact 노드(상한)와 CAUSES 엣지를 로드.
 
     Args:
         max_nodes: 최대 노드 수 (기본 300). 초과 시 timestamp 순 상위만.
+        trigger_events: 이 원문(들)에 해당하는 fact 만 표시 (run_id 없을 때).
+        analysis_run_id: 배치 UUID — **우선** 필터. 이번 분석만 표시.
 
     Returns:
         GraphFetchResult — nodes, edges, truncated 플래그 포함.
@@ -134,38 +201,120 @@ def fetch_causal_graph(
 
     try:
         with driver.session() as session:
-            # S2-2: 전체 노드 수 (truncated 판단용, 가벼운 count)
             count_row = session.run("MATCH (f:Fact) RETURN count(f) AS c").single()
             total_in_db = int(count_row["c"]) if count_row else 0
 
+            resolved_run_id = _resolve_analysis_run_id_for_fetch(
+                session, analysis_run_id
+            )
+            resolved_events = _resolve_trigger_events_for_fetch(session, trigger_events)
+
+            if resolved_run_id:
+                _log(
+                    "2",
+                    f"filter analysis_run_id={resolved_run_id[:8]}… "
+                    f"(explicit={analysis_run_id is not None})",
+                )
+                match_row = session.run(
+                    """
+                    MATCH (f:Fact)
+                    WHERE f.analysis_run_id = $run_id
+                    RETURN count(f) AS c
+                    """,
+                    run_id=resolved_run_id,
+                ).single()
+                matched_in_db = int(match_row["c"]) if match_row else 0
+                node_query = """
+                    MATCH (f:Fact)
+                    WHERE f.analysis_run_id = $run_id
+                    RETURN f.id AS id,
+                           f.subject AS subject,
+                           f.state_change AS state_change,
+                           f.timestamp AS timestamp,
+                           f.trigger_event AS trigger_event,
+                           coalesce(f.source_type, $default_source) AS source_type,
+                           coalesce(f.check_status, $default_check) AS check_status,
+                           coalesce(f.stress_level, $default_stress) AS stress_level,
+                           coalesce(f.is_critical, $default_critical) AS is_critical,
+                           f.anchor_fact_id AS anchor_fact_id,
+                           f.reasoning AS reasoning,
+                           f.author AS author
+                    ORDER BY f.timestamp, f.subject
+                    LIMIT $limit
+                """
+                query_params = {
+                    "run_id": resolved_run_id,
+                    "limit": max_nodes,
+                    "default_source": DEFAULT_SOURCE_TYPE,
+                    "default_check": DEFAULT_CHECK_STATUS,
+                    "default_stress": DEFAULT_STRESS_LEVEL,
+                    "default_critical": DEFAULT_IS_CRITICAL,
+                }
+            elif resolved_events:
+                _log(
+                    "2",
+                    f"filter trigger_event count={len(resolved_events)} "
+                    f"preview={resolved_events[0][:48]!r}…",
+                )
+                match_row = session.run(
+                    """
+                    MATCH (f:Fact)
+                    WHERE f.trigger_event IN $events
+                    RETURN count(f) AS c
+                    """,
+                    events=list(resolved_events),
+                ).single()
+                matched_in_db = int(match_row["c"]) if match_row else 0
+                node_query = """
+                    MATCH (f:Fact)
+                    WHERE f.trigger_event IN $events
+                    RETURN f.id AS id,
+                           f.subject AS subject,
+                           f.state_change AS state_change,
+                           f.timestamp AS timestamp,
+                           f.trigger_event AS trigger_event,
+                           coalesce(f.source_type, $default_source) AS source_type,
+                           coalesce(f.check_status, $default_check) AS check_status,
+                           coalesce(f.stress_level, $default_stress) AS stress_level,
+                           coalesce(f.is_critical, $default_critical) AS is_critical,
+                           f.anchor_fact_id AS anchor_fact_id,
+                           f.reasoning AS reasoning,
+                           f.author AS author
+                    ORDER BY f.timestamp, f.subject
+                    LIMIT $limit
+                """
+                query_params = {
+                    "events": list(resolved_events),
+                    "limit": max_nodes,
+                    "default_source": DEFAULT_SOURCE_TYPE,
+                    "default_check": DEFAULT_CHECK_STATUS,
+                    "default_stress": DEFAULT_STRESS_LEVEL,
+                    "default_critical": DEFAULT_IS_CRITICAL,
+                }
+            else:
+                _log("2", "no run_id / trigger_event filter — empty graph")
+                matched_in_db = 0
+                node_query = None
+                query_params = {}
+
+            if not resolved_run_id and not resolved_events:
+                return GraphFetchResult(
+                    nodes=[],
+                    edges=[],
+                    node_limit=max_nodes,
+                    truncated=False,
+                    total_nodes_in_db=total_in_db,
+                    trigger_events_filter=(),
+                    analysis_run_id_filter=None,
+                    matched_nodes_in_db=0,
+                )
+
             _log(
-                "2",
-                f"fetching Fact nodes (+ source_type, check_status, stress_level, is_critical) "
+                "2b",
+                f"fetching Fact nodes filter matched={matched_in_db} "
                 f"LIMIT {max_nodes} (db_total={total_in_db})",
             )
-            node_rows = session.run(
-                """
-                MATCH (f:Fact)
-                RETURN f.id AS id,
-                       f.subject AS subject,
-                       f.state_change AS state_change,
-                       f.timestamp AS timestamp,
-                       f.trigger_event AS trigger_event,
-                       coalesce(f.source_type, $default_source) AS source_type,
-                       coalesce(f.check_status, $default_check) AS check_status,
-                       coalesce(f.stress_level, $default_stress) AS stress_level,
-                       coalesce(f.is_critical, $default_critical) AS is_critical,
-                       f.anchor_fact_id AS anchor_fact_id,
-                       f.reasoning AS reasoning
-                ORDER BY f.timestamp, f.subject
-                LIMIT $limit
-                """,
-                limit=max_nodes,
-                default_source=DEFAULT_SOURCE_TYPE,
-                default_check=DEFAULT_CHECK_STATUS,
-                default_stress=DEFAULT_STRESS_LEVEL,
-                default_critical=DEFAULT_IS_CRITICAL,
-            ).data()
+            node_rows = session.run(node_query, **query_params).data() if node_query else []
 
             nodes = [
                 GraphNode(
@@ -180,6 +329,7 @@ def fetch_causal_graph(
                     is_critical=bool(row["is_critical"]),
                     anchor_fact_id=row.get("anchor_fact_id"),
                     reasoning=row.get("reasoning") or None,
+                    author=row.get("author") or None,
                 )
                 for row in node_rows
             ]
@@ -189,11 +339,12 @@ def fetch_causal_graph(
 
                 log_critical_nodes_fetched(critical_count)
             node_ids = {n.id for n in nodes}
-            truncated = total_in_db > len(nodes)
+            truncated = matched_in_db > len(nodes)
 
             _log(
                 "3",
-                f"nodes loaded={len(nodes)} truncated={truncated}",
+                f"nodes loaded={len(nodes)} truncated={truncated} "
+                f"(matched_in_db={matched_in_db})",
             )
 
             if not node_ids:
@@ -233,6 +384,9 @@ def fetch_causal_graph(
                 node_limit=max_nodes,
                 truncated=truncated,
                 total_nodes_in_db=total_in_db,
+                trigger_events_filter=resolved_events,
+                analysis_run_id_filter=resolved_run_id,
+                matched_nodes_in_db=matched_in_db,
             )
     finally:
         driver.close()

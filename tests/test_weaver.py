@@ -2,7 +2,10 @@
 
 from deconstructor.models import CausalEdge
 from deconstructor.weaver.console_store import ConsoleWeaver
-from deconstructor.weaver.resolve import facts_for_verified_edges
+from deconstructor.weaver.resolve import (
+    facts_for_verified_edges,
+    orphan_atomic_completed_facts,
+)
 from tests.conftest import GRID_OFF, MOTOR_STOP, WEATHER_HOT
 
 
@@ -25,6 +28,17 @@ def test_resolve_only_edge_endpoints():
 
 def test_resolve_empty_when_no_edges():
     assert facts_for_verified_edges([GRID_OFF, MOTOR_STOP], []) == []
+
+
+def test_orphan_atomic_completed_facts():
+    orphans = orphan_atomic_completed_facts(
+        [GRID_OFF, MOTOR_STOP, WEATHER_HOT],
+        already_persisted_ids={GRID_OFF.id},
+    )
+    ids = {f.id for f in orphans}
+    assert MOTOR_STOP.id in ids
+    assert WEATHER_HOT.id in ids
+    assert GRID_OFF.id not in ids
 
 
 def test_console_weaver_no_db():

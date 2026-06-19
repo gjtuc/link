@@ -78,4 +78,5 @@ class State(TypedDict):
     dropped_hypotheses: list[DroppedHypothesis]
     fact_checker_log: list[str]
     enable_dreamer: bool
+    analysis_run_id: str
     weaver_result: WeaverResult | None

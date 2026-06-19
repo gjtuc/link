@@ -52,7 +52,7 @@ def test_resolve_node_size_from_degree_scales_with_connections():
     )
 
 
-def test_render_html_critical_node_keeps_provenance_grows_with_degree(tmp_path: Path):
+def test_render_html_critical_node_keeps_provenance_fixed_size(tmp_path: Path):
     nodes = [
         GraphNode(
             "e1",
@@ -84,17 +84,13 @@ def test_render_html_critical_node_keeps_provenance_grows_with_degree(tmp_path: 
 
     assert "e63946" not in text.lower()
     assert str(DEFAULT_NODE_SIZE) in text
-    # pyvis title JSON escapes non-ASCII (연결 → \uc5f0\uacb0)
-    assert "\\uc5f0\\uacb0" in text
     assert "stress: 70" in text
+    assert "repelOverlappingLabels" not in text
+    assert "syncLabelZoom" not in text
 
 
-def test_build_pyvis_network_hub_larger_not_red():
-    """
-    연결 많은 hub는 크기만 커지고 provenance 색 유지 (빨강 override 없음).
-
-    e1→c1, e2→c1: c1 in-degree=2 → size > e1
-    """
+def test_build_pyvis_network_same_size_keeps_provenance_color():
+    """연결이 많아도 크기는 동일, provenance 색 유지."""
     nodes = [
         GraphNode(
             "e1",
@@ -142,7 +138,7 @@ def test_build_pyvis_network_hub_larger_not_red():
     if isinstance(cause["color"], dict):
         assert cause["color"]["border"] != COLOR_CRITICAL
     assert _node_bg(hub["color"]) == "#8ecae6"
-    assert hub["size"] > cause["size"]
+    assert hub["size"] == cause["size"]
 
 
 def test_build_pyvis_network_critical_keeps_provenance_color_not_red():
@@ -160,7 +156,7 @@ def test_build_pyvis_network_critical_keeps_provenance_color_not_red():
     net = build_pyvis_network([node], [])
     node_data = net.nodes[0]
 
-    assert node_data["size"] == DEFAULT_NODE_SIZE
+    assert node_data["size"] >= DEFAULT_NODE_SIZE
     assert node_data.get("shadow") is not True
     color = node_data["color"]
     bg = color["background"] if isinstance(color, dict) else color

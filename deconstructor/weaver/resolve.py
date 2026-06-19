@@ -126,3 +126,20 @@ def facts_for_verified_edges(
 
     ]
 
+
+def orphan_atomic_completed_facts(
+    completed_facts: list[AtomicFact],
+    *,
+    already_persisted_ids: set[str],
+) -> list[AtomicFact]:
+    """
+    검증 CAUSES 엣지 끝점이 아닌 **원자 extracted** — 그래프에 파란 노드로 표시.
+
+    Weaver·state_graph 가 ghost(기각)만 남기지 않도록 엣지 없는 추출 사실도 포함.
+    """
+    return [
+        f
+        for f in completed_facts
+        if f.is_atomic and f.id not in already_persisted_ids
+    ]
+

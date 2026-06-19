@@ -30,6 +30,8 @@ Modification guide for other AIs / 다른 AI 수정 가이드
 
 from __future__ import annotations
 
+import uuid
+
 from deconstructor import config
 from deconstructor.pipeline.state import State
 
@@ -43,6 +45,7 @@ def make_initial_state(
     *,
     max_recursion_depth: int | None = None,
     enable_dreamer: bool = False,
+    analysis_run_id: str | None = None,
 ) -> State:
     """Create fresh State dict ready for graph.stream / invoke."""
     cap = (
@@ -52,6 +55,7 @@ def make_initial_state(
     )
     return {
         "raw_text": raw_text,
+        "analysis_run_id": analysis_run_id or str(uuid.uuid4()),
         "extracted_facts": [],
         "completed_facts": [],
         "recursion_depth": 0,

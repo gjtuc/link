@@ -64,6 +64,7 @@ def test_neo4j_persist_merges_storm_fields_on_fact():
 
     weaver.persist(
         trigger_event="headline",
+        analysis_run_id="test-run-id",
         facts=[src, tgt],
         edges=[edge],
     )

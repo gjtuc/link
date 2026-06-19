@@ -58,7 +58,7 @@ def test_inferred_tooltip_hints_hover_line_not_anchor_block():
         anchor_fact_id="src-1",
         reasoning="Lower ionic conductivity reduces cell current.",
     )
-    tip = _node_tooltip(promoted, node_by_id={anchor.id: anchor, promoted.id: promoted})
+    tip = _node_tooltip(promoted)
     assert "ripples from" not in tip
     assert "점선 화살표" in tip
 

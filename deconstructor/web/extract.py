@@ -11,6 +11,7 @@ import urllib.error
 import urllib.request
 from dataclasses import dataclass
 from pathlib import Path
+from urllib.parse import urlparse
 
 from langchain_core.messages import HumanMessage
 
@@ -35,6 +36,30 @@ _DOC_SUMMARIZE_PROMPT = (
     "Summarize the following document into 2-5 short factual sentences suitable for causal graph analysis. "
     "Include times and entity names when present. Korean/English mixed OK. Plain text only.\n\n"
 )
+
+# Link UI 자기 자신 — HTML을 LLM이 "UI 안내문"으로 요약해 원문(원숭이 등)과 섞임
+_SELF_UI_NETLOCS = frozenset({"127.0.0.1:8765", "localhost:8765"})
+
+
+def is_deconstructor_self_url(url: str) -> bool:
+    """메인 UI(/) URL — 뉴스 분석용이 아님."""
+    try:
+        p = urlparse(url.strip())
+    except Exception:
+        return False
+    if p.scheme not in ("http", "https"):
+        return False
+    host = (p.netloc or "").lower()
+    path = (p.path or "/").rstrip("/") or "/"
+    return host in _SELF_UI_NETLOCS and path in ("/", "/index.html")
+
+
+def assert_not_self_ui_url(url: str) -> None:
+    if is_deconstructor_self_url(url):
+        raise ValueError(
+            "Deconstructor 메인 UI 주소(http://127.0.0.1:8765/)는 분석할 수 없습니다. "
+            "뉴스·사실 문장을 텍스트 상자에 직접 입력하세요. (원숭이 문장 등)"
+        )
 
 
 @dataclass
@@ -121,6 +146,7 @@ def _fetch_url_bytes(url: str, timeout: int = 30) -> tuple[bytes, str]:
 
 def from_url(url: str) -> str:
     url = url.strip()
+    assert_not_self_ui_url(url)
     if not _URL_RE.match(url):
         raise ValueError(f"URL 형식이 아닙니다: {url}")
 

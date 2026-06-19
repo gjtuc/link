@@ -105,6 +105,7 @@ from deconstructor.skeptic.rules import DEFAULT_RULES
 from deconstructor.skeptic.rules.base import SkepticRule
 
 from deconstructor.skeptic.scoring import compute_latency_ms, compute_probability
+from deconstructor.web.progress_ctx import progress_detail
 
 from deconstructor.skeptic.schemas import (
 
@@ -352,9 +353,13 @@ class SkepticEngine:
 
         hypotheses = generate_pairwise_hypotheses(facts, mechanisms=mechanisms)
 
-
-
-        verdicts = [self.evaluate_hypothesis(h, index) for h in hypotheses]
+        verdicts: list[HypothesisVerdict] = []
+        total = len(hypotheses)
+        tick = max(1, total // 8) if total > 8 else total + 1
+        for i, h in enumerate(hypotheses, 1):
+            if total > 8 and i % tick == 0:
+                progress_detail(f"인과 쌍 {i}/{total}")
+            verdicts.append(self.evaluate_hypothesis(h, index))
 
 
 

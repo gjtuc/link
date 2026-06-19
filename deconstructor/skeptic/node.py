@@ -90,14 +90,12 @@ from deconstructor.skeptic.retry import retry_inconclusive
 
 from deconstructor.skeptic.run_log import SkepticLogEntry, build_skeptic_log
 
+from deconstructor.web.progress_ctx import progress_sub
 
 
 if TYPE_CHECKING:
 
     from deconstructor.pipeline.state import State
-
-
-
 
 
 def skeptic_node(state: "State", *, dry_run: bool = True) -> dict:
@@ -195,15 +193,18 @@ def skeptic_node(state: "State", *, dry_run: bool = True) -> dict:
 
     engine = SkepticEngine()
 
-    batch = engine.evaluate_batch(facts)
+    pair_count = len(facts) * (len(facts) - 1)
+    with progress_sub(
+        "SKEPTIC-BATCH",
+        "인과 쌍 규칙 검증",
+        f"facts={len(facts)} pairs≈{pair_count}",
+    ):
+        batch = engine.evaluate_batch(facts)
 
-    # Second pass: only INCONCLUSIVE rejections get mechanism text and re-evaluation.
-
-    batch, retry_log = retry_inconclusive(
-
-        engine, facts, batch, dry_run=dry_run
-
-    )
+    with progress_sub("SKEPTIC-RETRY", "INCONCLUSIVE 재검증"):
+        batch, retry_log = retry_inconclusive(
+            engine, facts, batch, dry_run=dry_run
+        )
 
 
 

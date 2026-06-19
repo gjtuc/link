@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Deconstructor — 파이프라인 디버그</title>
+  <style>
+    :root { --bg: #1a1a2e; --card: #252538; --text: #e8e8e8; --muted: #9aa0a6;
+      --blue: #4a90d9; --green: #6bcb77; --yellow: #ffd166; --brown: #8b6914; --accent: #1a73e8; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: "Segoe UI", "Apple SD Gothic Neo", sans-serif;
+      background: var(--bg); color: var(--text); line-height: 1.5; padding: 16px 20px 40px; }
+    h1 { font-size: 1.35rem; margin: 0 0 4px; }
+    .sub { color: var(--muted); font-size: 0.9rem; margin-bottom: 16px; }
+    a { color: var(--accent); }
+    .toolbar { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 18px; }
+    button { background: var(--accent); color: #fff; border: none; border-radius: 8px;
+      padding: 8px 14px; cursor: pointer; font-size: 0.9rem; }
+    button.secondary { background: transparent; border: 1px solid #555; color: var(--text); }
+    .card { background: var(--card); border-radius: 10px; padding: 14px 16px; margin-bottom: 14px; }
+    .card h2 { font-size: 1rem; margin: 0 0 10px; color: #c8d0e0; }
+    .hint { background: #2d2a1a; border-left: 3px solid var(--yellow); padding: 8px 12px;
+      margin: 6px 0; font-size: 0.88rem; }
+    .hint.warn { border-color: #e07a5f; background: #2d1f1a; }
+    .counts { display: flex; flex-wrap: wrap; gap: 10px; }
+    .pill { border-radius: 20px; padding: 4px 12px; font-size: 0.85rem; background: #333; }
+    .pill.blue { border: 2px solid var(--blue); }
+    .pill.green { border: 2px solid var(--green); }
+    .pill.yellow { border: 2px solid var(--yellow); }
+    .pill.brown { border: 2px solid var(--brown); }
+    table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+    th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid #3a3a50; vertical-align: top; }
+    th { color: var(--muted); font-weight: 500; }
+    pre { background: #12121c; padding: 10px; border-radius: 8px; overflow: auto;
+      font-size: 0.75rem; max-height: 280px; }
+    .empty { color: var(--muted); font-style: italic; }
+  </style>
+</head>
+<body>
+  <h1>파이프라인 디버그</h1>
+  <p class="sub">마지막 <strong>전체 분석 시작</strong> 배치 — 파랑·노랑이 왜 없는지 확인</p>
+  <div class="toolbar">
+    <button type="button" id="btn-refresh">새로고침</button>
+    <button type="button" class="secondary" id="btn-raw">JSON 보기</button>
+    <a href="/"><button type="button" class="secondary">메인 UI</button></a>
+    <a href="/graph_output.html?debug=1" target="_blank" rel="noopener">
+      <button type="button" class="secondary">그래프 (debug)</button>
+    </a>
+  </div>
+  <div id="root"><p class="empty">로딩 중…</p></div>
+  <pre id="raw-json" style="display:none"></pre>
+
+  <script>
+    function esc(s) {
+      return String(s ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+    }
+    function tableFromRows(headers, rows) {
+      if (!rows || !rows.length) return "<p class='empty'>없음</p>";
+      let h = "<table><thead><tr>" + headers.map(h => "<th>" + esc(h) + "</th>").join("") + "</tr></thead><tbody>";
+      for (const row of rows) {
+        h += "<tr>" + row.map(c => "<td>" + esc(c) + "</td>").join("") + "</tr>";
+      }
+      return h + "</tbody></table>";
+    }
+    function render(data) {
+      const root = document.getElementById("root");
+      if (!data.ok || !data.pipeline_debug) {
+        root.innerHTML = "<div class='card'><p class='empty'>" + esc(data.message || "분석 기록 없음") +
+          "</p><p>메인 UI에서 문장 입력 후 <strong>전체 분석 시작</strong>을 누르고 이 페이지를 새로고침하세요.</p></div>";
+        return;
+      }
+      const d = data.pipeline_debug;
+      const gf = data.graph_filter || {};
+      const lc = d.graph_rendered?.legend_counts || {};
+      const neo = d.neo4j || {};
+      let html = "";
+
+      html += "<div class='card'><h2>배치 · 필터</h2>";
+      if (data.last_analyze && data.last_analyze.sources && data.last_analyze.sources.length) {
+        html += "<h3 style='font-size:0.9rem;margin:8px 0 6px'>실제 분석된 입력 (sources)</h3>";
+        html += tableFromRows(
+          ["#", "kind", "label", "preview"],
+          data.last_analyze.sources.map(s => [
+            s.index, s.kind, s.label, (s.preview || "").slice(0, 120)
+          ])
+        );
+      }
+      html += "<p>run_id: <code>" + esc(d.batch_run_id) + "</code> · Fact-Checker: " + esc(d.fact_checker_mode) + "</p>";
+      html += "<p>graph_filter: " + esc(JSON.stringify(gf)) + "</p>";
+      html += "<div class='counts'>";
+      html += "<span class='pill blue'>그래프 파랑 " + (lc.extracted_blue||0) + "</span>";
+      html += "<span class='pill green'>그래프 초록 " + (lc.verified_green||0) + "</span>";
+      html += "<span class='pill yellow'>그래프 노랑 " + (lc.inferred_pending_yellow||0) + "</span>";
+      html += "<span class='pill yellow'>promoted " + (lc.promoted_yellow_green||0) + "</span>";
+      html += "<span class='pill brown'>기각 ✕ " + (lc.dropped_brown||0) + "</span>";
+      html += "</div></div>";
+
+      const hints = d.top_diagnosis || [];
+      if (hints.length) {
+        html += "<div class='card'><h2>진단</h2>";
+        for (const h of hints) {
+          html += "<div class='hint" + (h.indexOf("버그") >= 0 ? " warn" : "") + "'>" + esc(h) + "</div>";
+        }
+        html += "</div>";
+      }
+
+      if (neo.available) {
+        html += "<div class='card'><h2>Neo4j (이 run_id)</h2>";
+        html += "<p>DB 전체 Fact: " + neo.db_total_facts + " · 이 run: " + neo.run_matched_facts +
+          " · run_id 없는 레거시: " + neo.legacy_facts_without_run_id + "</p>";
+        html += tableFromRows(
+          ["source_type", "check_status", "count"],
+          (neo.by_source_and_status || []).map(r => [r.st, r.cs, r.c])
+        );
+        html += "<h3 style='margin-top:12px;font-size:0.9rem'>샘플 노드</h3>";
+        html += tableFromRows(
+          ["id", "subject", "source_type", "check_status"],
+          (neo.samples || []).map(r => [r.id, r.subject, r.source_type, r.check_status])
+        );
+        html += "</div>";
+      } else {
+        html += "<div class='card'><p class='empty'>Neo4j: " + esc(neo.reason || "오프라인") + "</p></div>";
+      }
+
+      for (const run of d.pipeline_runs || []) {
+        html += "<div class='card'><h2>파이프라인 run · " + esc(run.raw_text_preview) + "</h2>";
+        html += "<p>completed=" + run.counts.completed_facts + " promoted=" + run.counts.promoted_facts +
+          " dropped=" + run.counts.dropped_ghosts + " edges=" + run.counts.verified_edges + "</p>";
+        html += "<p><strong>Weaver 저장 예정:</strong> endpoint=" + run.weaver_would_persist.endpoint_facts +
+          " orphan_extracted(파랑)=" + run.weaver_would_persist.orphan_extracted +
+          " orphan_promoted=" + run.weaver_would_persist.orphan_promoted +
+          " ghosts=" + run.weaver_would_persist.ghost_facts + "</p>";
+
+        html += "<h3 style='font-size:0.9rem'>completed_facts (추출)</h3>";
+        html += tableFromRows(
+          ["subject", "source_type", "check_status", "atomic"],
+          (run.samples.completed_facts || []).map(f => [f.subject, f.source_type, f.check_status, f.is_atomic])
+        );
+        html += "<h3 style='font-size:0.9rem'>orphan_extracted → 파란으로 저장돼야 함</h3>";
+        html += tableFromRows(
+          ["subject", "source_type", "check_status"],
+          (run.samples.orphan_extracted || []).map(f => [f.subject, f.source_type, f.check_status])
+        );
+        html += "<h3 style='font-size:0.9rem'>dropped ghosts (✕ 갈색)</h3>";
+        html += tableFromRows(
+          ["subject", "source_type", "check_status"],
+          (run.samples.dropped_ghosts || []).map(f => [f.subject, f.source_type, f.check_status])
+        );
+        html += "</div>";
+      }
+
+      root.innerHTML = html;
+    }
+    async function load() {
+      const res = await fetch("/api/debug/pipeline");
+      const data = await res.json();
+      document.getElementById("raw-json").textContent = JSON.stringify(data, null, 2);
+      render(data);
+    }
+    document.getElementById("btn-refresh").addEventListener("click", load);
+    document.getElementById("btn-raw").addEventListener("click", () => {
+      const el = document.getElementById("raw-json");
+      el.style.display = el.style.display === "none" ? "block" : "none";
+    });
+    load();
+  </script>
+</body>
+</html>

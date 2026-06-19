@@ -15,9 +15,11 @@
     header { padding: 16px 24px; background: var(--panel); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
     header h1 { margin: 0; font-size: 20px; font-weight: 500; }
     header p { margin: 4px 0 0; color: var(--muted); font-size: 13px; }
-    .layout { display: grid; grid-template-columns: 1fr 1fr; min-height: calc(100vh - 88px); }
-    @media (max-width: 960px) { .layout { grid-template-columns: 1fr; } }
-    .panel { background: var(--panel); border-right: 1px solid var(--border); display: flex; flex-direction: column; }
+    .layout { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr; height: calc(100vh - 88px); min-height: 0; }
+    @media (max-width: 960px) { .layout { grid-template-columns: 1fr; height: auto; min-height: calc(100vh - 88px); } }
+    .panel { background: var(--panel); border-right: 1px solid var(--border); display: flex; flex-direction: column; min-height: 0; }
+    .layout > .panel:first-child { overflow-x: hidden; overflow-y: auto; }
+    .layout > .panel:last-child { overflow: hidden; height: 100%; }
     .panel:last-child { border-right: none; }
     .tabs { display: flex; border-bottom: 1px solid var(--border); padding: 0 8px; flex-wrap: wrap; }
     .tab { border: none; background: none; padding: 12px 16px; font-size: 14px; color: var(--muted); cursor: pointer; border-bottom: 3px solid transparent; }
@@ -72,6 +74,45 @@
       font-size: 12px; color: #174ea6; line-height: 1.45;
     }
     .actions { display: flex; align-items: center; gap: 12px; padding: 12px 16px 8px; flex-wrap: wrap; }
+    .progress-wrap {
+      flex: 1 1 100%;
+      display: none;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+    .progress-wrap.show { display: flex; flex-wrap: wrap; }
+    .progress-bar {
+      flex: 1 1 auto;
+      height: 8px;
+      background: #e8eaed;
+      border-radius: 999px;
+      overflow: hidden;
+      min-width: 120px;
+    }
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #1a73e8, #34a853);
+      border-radius: 999px;
+      transition: width 0.35s ease;
+    }
+    .progress-meta {
+      flex: 0 0 auto;
+      font-size: 12px;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+    .progress-label {
+      flex: 1 1 100%;
+      font-size: 12px;
+      color: #174ea6;
+      line-height: 1.35;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
     button.primary {
       background: var(--accent); color: #fff; border: none; border-radius: 24px;
       padding: 10px 22px; font-size: 14px; font-weight: 500; cursor: pointer;
@@ -84,7 +125,7 @@
     }
     button.secondary.show { display: inline-block; }
     .hint { font-size: 12px; color: var(--muted); }
-    .right-head { padding: 14px 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .right-head { flex-shrink: 0; padding: 14px 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
     .right-head-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
     .btn-fullscreen {
       background: #fff; color: var(--accent); border: 1px solid var(--accent);
@@ -114,15 +155,30 @@
     }
     .btn-exit-fullscreen:hover { background: var(--accent-hover); }
     .stats { font-size: 12px; color: var(--muted); }
-    .graph-wrap { flex: 1; position: relative; background: #111; min-height: 420px; }
-    .graph-wrap iframe { width: 100%; height: 100%; border: none; min-height: 420px; }
-    .placeholder { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #9aa0a6; font-size: 14px; padding: 24px; text-align: center; background: #1e1e1e; }
+    .graph-wrap { flex: 1 1 auto; position: relative; background: #111; min-height: 0; }
+    .graph-wrap iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: none; }
+    #graph-wrap-home { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; padding: 0 0 8px; }
+    .placeholder {
+      position: absolute; inset: 0; z-index: 2;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 10px; color: #9aa0a6; font-size: 14px; line-height: 1.55;
+      padding: 24px; text-align: center; background: #1e1e1e;
+      pointer-events: none;
+    }
+    .placeholder p { margin: 0; max-width: 340px; }
+    .placeholder .placeholder-sub { font-size: 13px; color: #7a828a; }
     .placeholder.hidden { display: none; }
     .status { margin: 0 16px 12px; padding: 10px 12px; border-radius: 8px; font-size: 13px; display: none; }
     .status.show { display: block; }
     .status.info { background: #e8f0fe; color: #174ea6; }
     .status.error { background: #fce8e6; color: var(--danger); }
     .status.ok { background: #e6f4ea; color: #137333; }
+    .status-steps { margin: 8px 0 0; padding: 0; list-style: none; font-size: 12px; line-height: 1.5; max-height: 220px; overflow-y: auto; }
+    .status-steps li { padding: 2px 0; }
+    .status-steps .ok { color: #137333; }
+    .status-steps .error { color: var(--danger); font-weight: 500; }
+    .status-steps .running { color: #174ea6; }
+    .status-steps .skip { color: var(--muted); }
     .results { margin: 0 16px 12px; font-size: 12px; color: var(--muted); max-height: 120px; overflow: auto; }
     .results div { margin-bottom: 6px; padding-bottom: 6px; border-bottom: 1px solid #eee; }
     .modal {
@@ -195,6 +251,13 @@
         <button class="primary" id="btn-run">전체 분석 시작</button>
         <button class="secondary" id="btn-cancel" type="button">분석 취소</button>
         <span class="hint" id="count-hint">입력 0건</span>
+        <div id="progress-wrap" class="progress-wrap" aria-live="polite">
+          <div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+            <div id="progress-fill" class="progress-fill"></div>
+          </div>
+          <span class="progress-meta" id="progress-pct">0%</span>
+          <span class="progress-label" id="progress-label"></span>
+        </div>
       </div>
       <div id="status" class="status"></div>
       <div id="results" class="results"></div>
@@ -208,13 +271,21 @@
           <span class="stats" id="stats">—</span>
         </div>
       </div>
-      <p class="hint" style="padding:0 16px 8px;margin:0;font-size:11px;color:#5f6368;">
-        그래프 우측 상단 <strong>범례</strong> — 노드 색·크기·화살표 의미 · 분석 후 <strong>전체 화면</strong> 가능
+      <p class="hint graph-hint" style="padding:0 16px 8px;margin:0;font-size:11px;color:#5f6368;flex-shrink:0;">
+        그래프 우측 상단 <strong>범례</strong> — 노드 색·크기·화살표 · <strong>전체 화면</strong> · 크기 이상 시
+        <a href="/debug.html" target="_blank" rel="noopener" style="color:#1a73e8;">파이프라인 디버그</a>
+        ·
+        <a href="/graph_output.html?debug=1" target="_blank" rel="noopener" style="color:#1a73e8;">그래프만 새 탭(debug)</a>
       </p>
       <div id="graph-wrap-home">
         <div class="graph-wrap">
           <div class="placeholder" id="graph-placeholder">
-            왼쪽에 입력 후 「전체 분석 시작」<br />입력·파일이 순서대로 Neo4j에 쌓입니다
+            <p>왼쪽에 입력 후 「전체 분석 시작」</p>
+            <p class="placeholder-sub">그래프는 <strong>이번에 분석한 입력만</strong> 표시합니다 (Neo4j DB는 누적 저장).</p>
+          </div>
+          <div class="placeholder hidden" id="graph-placeholder-busy" aria-live="polite">
+            <p>분석 중…</p>
+            <p class="placeholder-sub" id="graph-busy-detail">그래프가 완료되면 자동으로 갱신됩니다.</p>
           </div>
           <iframe id="graph-frame" title="Causal Graph"></iframe>
         </div>
@@ -275,6 +346,29 @@
       if (["png", "jpg", "jpeg", "webp", "gif", "bmp"].includes(ext)) return "이미지";
       if (["pdf", "docx", "txt", "md", "csv"].includes(ext)) return "문서";
       return "자동";
+    }
+
+    function isSelfDeconstructorUrl(url) {
+      try {
+        const u = new URL(url.trim());
+        const host = (u.host || "").toLowerCase();
+        const path = (u.pathname || "/").replace(/\/$/, "") || "/";
+        return (host === "127.0.0.1:8765" || host === "localhost:8765") && (path === "" || path === "/" || path === "/index.html");
+      } catch (_) {
+        return false;
+      }
+    }
+
+    function findSelfUiUrls(raw) {
+      const { standaloneUrls, embeddedUrls } = parseInput(raw || "");
+      const hits = new Set();
+      for (const u of standaloneUrls) {
+        if (isSelfDeconstructorUrl(u)) hits.add(u);
+      }
+      for (const item of embeddedUrls) {
+        if (isSelfDeconstructorUrl(item.url)) hits.add(item.url);
+      }
+      return [...hits];
     }
 
     function parseInput(raw) {
@@ -443,8 +537,99 @@
     const statsEl = document.getElementById("stats");
     const btn = document.getElementById("btn-run");
     const btnCancel = document.getElementById("btn-cancel");
-    const frame = document.getElementById("graph-frame");
+    const progressWrap = document.getElementById("progress-wrap");
+    const progressFill = document.getElementById("progress-fill");
+    const progressPct = document.getElementById("progress-pct");
+    const progressLabel = document.getElementById("progress-label");
+    const progressBar = progressWrap?.querySelector(".progress-bar");
     const placeholder = document.getElementById("graph-placeholder");
+    const graphPlaceholderBusy = document.getElementById("graph-placeholder-busy");
+    const graphBusyDetail = document.getElementById("graph-busy-detail");
+    let progressPollTimer = null;
+    let analyzeStartedAt = 0;
+    let lastServerPct = 1;
+
+    function updateProgressUI(percent, label) {
+      const pct = Math.max(0, Math.min(100, Number(percent) || 0));
+      if (progressFill) progressFill.style.width = `${pct}%`;
+      if (progressPct) progressPct.textContent = `${pct}%`;
+      if (progressLabel) progressLabel.textContent = label || "";
+      if (progressBar) progressBar.setAttribute("aria-valuenow", String(pct));
+      if (graphBusyDetail && label) graphBusyDetail.textContent = label;
+    }
+
+    function mergeProgressDisplay(serverPct, label, running) {
+      const pct = Math.max(lastServerPct, Number(serverPct) || 0);
+      lastServerPct = pct;
+      updateProgressUI(pct, label || (running ? "분석 중…" : ""));
+      return pct;
+    }
+
+    async function pollProgressOnce() {
+      try {
+        const res = await fetch("/api/analyze/progress", { cache: "no-store" });
+        if (!res.ok) return null;
+        const p = await res.json();
+        const running = !!(p.running || p.analyze_thread);
+        mergeProgressDisplay(p.percent ?? 0, p.label, running);
+        return { ...p, running };
+      } catch (_) {
+        return null;
+      }
+    }
+
+    function startProgressPoll() {
+      analyzeStartedAt = Date.now();
+      lastServerPct = 1;
+      progressWrap?.classList.add("show");
+      placeholder?.classList.add("hidden");
+      graphPlaceholderBusy?.classList.remove("hidden");
+      updateProgressUI(2, "시작 중…");
+      if (progressPollTimer) clearInterval(progressPollTimer);
+      progressPollTimer = setInterval(() => { pollProgressOnce(); }, 400);
+      pollProgressOnce();
+    }
+
+    function stopProgressPoll(hide = true) {
+      if (progressPollTimer) {
+        clearInterval(progressPollTimer);
+        progressPollTimer = null;
+      }
+      if (hide) {
+        progressWrap?.classList.remove("show");
+        graphPlaceholderBusy?.classList.add("hidden");
+        updateProgressUI(0, "");
+      }
+    }
+
+    function showGraphIdlePlaceholder() {
+      graphPlaceholderBusy?.classList.add("hidden");
+      placeholder?.classList.remove("hidden");
+    }
+
+    async function waitForAnalyzeComplete(signal) {
+      for (;;) {
+        if (signal?.aborted) {
+          const err = new Error("Aborted");
+          err.name = "AbortError";
+          throw err;
+        }
+        const p = await pollProgressOnce();
+        if (p && !p.running && !p.analyze_thread) break;
+        await new Promise((r) => setTimeout(r, 300));
+      }
+      const res = await fetch("/api/analyze/result", { cache: "no-store", signal });
+      const raw = await res.text();
+      let data = {};
+      try {
+        data = raw ? JSON.parse(raw) : {};
+      } catch {
+        throw new Error("서버 결과 파싱 실패");
+      }
+      return { res, data };
+    }
+
+    const frame = document.getElementById("graph-frame");
     const btnGraphFs = document.getElementById("btn-graph-fs");
     const btnExitFs = document.getElementById("btn-exit-fs");
     const graphWrap = document.querySelector(".graph-wrap");
@@ -453,6 +638,15 @@
     const graphFullscreenBody = document.getElementById("graph-fullscreen-body");
     const fsStats = document.getElementById("fs-stats");
 
+    function notifyGraphResize(fit) {
+      try {
+        frame.contentWindow?.postMessage(
+          { type: "deconstructor-resize", fit: !!fit },
+          "*"
+        );
+      } catch (_) {}
+    }
+
     function enterGraphFullscreen() {
       if (placeholder && !placeholder.classList.contains("hidden")) return;
       graphFullscreenBody.appendChild(graphWrap);
@@ -460,6 +654,7 @@
       graphFullscreen.setAttribute("aria-hidden", "false");
       document.body.style.overflow = "hidden";
       fsStats.textContent = statsEl.textContent;
+      setTimeout(() => notifyGraphResize(true), 80);
     }
 
     function exitGraphFullscreen() {
@@ -468,8 +663,21 @@
         graphFullscreen.classList.add("hidden");
         graphFullscreen.setAttribute("aria-hidden", "true");
         document.body.style.overflow = "";
+        setTimeout(() => notifyGraphResize(true), 80);
       }
     }
+
+    frame.addEventListener("load", () => setTimeout(() => notifyGraphResize(true), 120));
+
+    if (typeof ResizeObserver !== "undefined" && graphWrap) {
+      new ResizeObserver(() => notifyGraphResize(false)).observe(graphWrap);
+    }
+
+    window.addEventListener("message", (e) => {
+      if (e.data?.type === "deconstructor-graph-reload" && frame) {
+        frame.src = "/graph_output.html?ts=" + Date.now();
+      }
+    });
 
     btnGraphFs.addEventListener("click", enterGraphFullscreen);
     btnExitFs.addEventListener("click", exitGraphFullscreen);
@@ -483,14 +691,66 @@
     const linkModalYes = document.getElementById("link-modal-yes");
     const linkModalNo = document.getElementById("link-modal-no");
 
-    function setStatus(msg, kind) {
-      statusEl.textContent = msg;
+    function setStatus(msg, kind, steps) {
+      statusEl.innerHTML = "";
+      const head = document.createElement("div");
+      head.textContent = msg;
+      statusEl.appendChild(head);
+      if (steps && steps.length) {
+        const ul = document.createElement("ul");
+        ul.className = "status-steps";
+        for (const s of steps) {
+          const li = document.createElement("li");
+          const icon = s.status === "ok" ? "✓" : s.status === "error" ? "✗" : s.status === "skip" ? "−" : "…";
+          li.className = s.status;
+          li.textContent = `${icon} [${s.step}] ${s.label}${s.detail ? " — " + s.detail : ""}`;
+          ul.appendChild(li);
+        }
+        statusEl.appendChild(ul);
+      }
       statusEl.className = `status show ${kind}`;
+    }
+
+    function formatLinkApiError(data, httpStatus) {
+      const step = data.failed_step ? `[${data.failed_step}] ` : "";
+      const msg = data.error || "분석 실패";
+      return { message: step + msg, steps: data.steps || [] };
+    }
+
+    function isNetworkFetchError(err) {
+      if (!err) return false;
+      const m = String(err.message || err);
+      return err.name === "TypeError" && /fetch|network|Failed to fetch/i.test(m);
+    }
+
+    async function loadLaunchLogSteps() {
+      try {
+        const r = await fetch("/api/launch-log");
+        if (!r.ok) return [];
+        const data = await r.json();
+        return data.steps || [];
+      } catch {
+        return [];
+      }
+    }
+
+    async function showNetworkError(prefix) {
+      const launchSteps = await loadLaunchLogSteps();
+      const failed = launchSteps.find((s) => s.status === "error");
+      const hint = failed
+        ? `[${failed.step}] ${failed.detail || failed.label}`
+        : "Cursor 채팅에 link 입력 후 새로고침";
+      setStatus(`${prefix} — ${hint}`, "error", launchSteps.length ? launchSteps : undefined);
     }
 
     function setRunning(running) {
       btn.disabled = running;
       btnCancel.classList.toggle("show", running);
+      if (running) {
+        btn.textContent = "분석 중…";
+      } else {
+        btn.textContent = "전체 분석 시작";
+      }
     }
 
     function confirmEmbeddedLink(item) {
@@ -544,6 +804,7 @@
         analyzeAbort = null;
       }
       setRunning(false);
+      stopProgressPoll();
       setStatus("분석을 취소했습니다. (서버에서 이미 처리 중인 건은 잠시 더 돌 수 있습니다)", "info");
     });
 
@@ -555,6 +816,14 @@
       }
 
       const linkOnly = isLinkOnlyInput(inputText.value) && uploadFiles.length === 0;
+      const selfUiUrls = findSelfUiUrls(inputText.value);
+      if (selfUiUrls.length) {
+        setStatus(
+          `메인 UI 주소(${selfUiUrls[0]})는 분석할 수 없습니다. URL을 지우고 사실 문장만 입력하세요.`,
+          "error"
+        );
+        return;
+      }
       let payload;
 
       if (linkOnly) {
@@ -572,12 +841,13 @@
 
       analyzeAbort = new AbortController();
       setRunning(true);
+      startProgressPoll();
       btnGraphFs.classList.add("hidden");
       exitGraphFullscreen();
       setStatus(
         linkOnly
           ? `링크 ${payload.urls.split("\n").filter(Boolean).length}건 바로 분석 중…`
-          : `분석 중… ${n}건 (건당 1~2분, 순서대로 Neo4j에 저장)`,
+          : `분석 중… ${n}건 (LLM·검증 파이프라인, 문장 길이와 무관하게 1~2분 걸릴 수 있음)`,
         "info"
       );
       resultsEl.innerHTML = "";
@@ -588,22 +858,63 @@
         fd.append("urls", payload.urls);
         uploadFiles.forEach(({ file }) => fd.append("files", file, file.name));
 
-        const res = await fetch("/api/analyze", {
+        const kickPromise = fetch("/api/analyze", {
           method: "POST",
           body: fd,
           signal: analyzeAbort.signal,
         });
-        const data = await res.json();
-        if (!res.ok || !data.ok) throw new Error(data.error || "분석 실패");
+
+        const kickRes = await kickPromise;
+        let kick = {};
+        const kickRaw = await kickRes.text();
+        try {
+          kick = kickRaw ? JSON.parse(kickRaw) : {};
+        } catch {
+          throw new Error(
+            kickRes.ok || kickRes.status === 202
+              ? "서버 응답 파싱 실패"
+              : `[L0-NETWORK] 서버 오류 (${kickRes.status})`
+          );
+        }
+        if (!kick.ok || (kickRes.status !== 202 && kickRes.status !== 200)) {
+          const { message, steps } = formatLinkApiError(kick, kickRes.status);
+          const err = new Error(message);
+          err.steps = steps;
+          throw err;
+        }
+
+        let res;
+        let data;
+        if (kickRes.status === 200 && kick.items_processed != null && !kick.async) {
+          res = { ok: true, status: 200 };
+          data = kick;
+          mergeProgressDisplay(100, "완료", false);
+        } else {
+          const out = await waitForAnalyzeComplete(analyzeAbort.signal);
+          res = out.res;
+          data = out.data;
+        }
+        if (!res.ok || !data.ok) {
+          const { message, steps } = formatLinkApiError(data, res.status);
+          const err = new Error(message);
+          err.steps = steps;
+          throw err;
+        }
 
         if (data.sources) {
-          resultsEl.innerHTML = data.sources.map((s) =>
-            `<div><strong>${s.index}. ${s.kind}</strong> ${s.label}<br>${s.preview}</div>`
-          ).join("");
+          resultsEl.innerHTML = data.sources.map((s) => {
+            const kindLabel = s.kind === "text" ? "텍스트" : s.kind === "url" ? "URL" : s.kind;
+            return `<div class="result-item"><strong>${s.index}. ${kindLabel}</strong> ${s.label}<br><span class="result-preview">${s.preview}</span></div>`;
+          }).join("");
         }
+        const gf = data.graph_filter || {};
+        const dbTotal = gf.total_nodes_in_db != null ? gf.total_nodes_in_db : "?";
+        const matched = gf.matched_nodes_in_db != null ? gf.matched_nodes_in_db : data.nodes;
+        const runShort = gf.analysis_run_id ? String(gf.analysis_run_id).slice(0, 8) : "?";
         statsEl.textContent =
-          `${data.items_processed}건 처리 · 노드 ${data.nodes} · 엣지 ${data.edges} · 인과 ${data.verified_edges_total}`;
+          `${data.items_processed}건 · 이번 그래프 노드 ${data.nodes} (배치 ${matched}) · 엣지 ${data.edges} · run ${runShort} · DB전체 ${dbTotal}`;
         placeholder.classList.add("hidden");
+        graphPlaceholderBusy?.classList.add("hidden");
         frame.src = `/graph_output.html?t=${Date.now()}`;
         btnGraphFs.classList.remove("hidden");
         const neo4jNote = data.neo4j
@@ -621,11 +932,22 @@
         setStatus(`완료 — ${data.items_processed}건 분석, 그래프 갱신 (${neo4jNote}${syncNote})`, data.neo4j ? "ok" : "info");
         updateBackendStatus(data.neo4j);
       } catch (err) {
-        if (err.name === "AbortError") return;
-        setStatus(err.message || String(err), "error");
+        if (err.name === "AbortError") {
+          stopProgressPoll();
+          showGraphIdlePlaceholder();
+          return;
+        }
+        if (isNetworkFetchError(err)) {
+          await showNetworkError("[L0-NETWORK] 서버에 연결할 수 없습니다");
+          return;
+        }
+        setStatus(err.message || String(err), "error", err.steps);
+        showGraphIdlePlaceholder();
       } finally {
         analyzeAbort = null;
         setRunning(false);
+        updateProgressUI(100, "완료");
+        setTimeout(() => stopProgressPoll(), 1200);
       }
     }
 
@@ -635,10 +957,15 @@
     countInputs();
 
     fetch("/api/status")
-      .then((r) => r.json())
+      .then((r) => {
+        if (!r.ok) throw new Error(`status ${r.status}`);
+        return r.json();
+      })
       .then((data) => updateBackendStatus(data.neo4j, data.install))
-      .catch(() => {
-        document.getElementById("backend-status").textContent = "Gemini API";
+      .catch(async () => {
+        document.getElementById("backend-status").textContent = "서버 오프라인";
+        document.getElementById("backend-status").style.color = "#d93025";
+        await showNetworkError("[L0-NETWORK] Link 서버 무응답 (ERR_EMPTY_RESPONSE)");
       });
 
     function updateBackendStatus(connected, install) {

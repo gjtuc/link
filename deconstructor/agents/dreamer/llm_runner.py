@@ -43,6 +43,7 @@ from deconstructor.agents.dreamer.schemas import (
 )
 from deconstructor.llm import get_chat_model
 from deconstructor.models import AtomicFact
+from deconstructor.web.progress_ctx import progress_sub
 
 logger = logging.getLogger(__name__)
 
@@ -175,10 +176,16 @@ def invoke_dream_hypotheses(
     _log("invoke 2-stage dreamer (flash breadth → pro compress)")
     flash_llm = llm
     pro_llm = llm
-    broad = invoke_flash_breadth(source_facts, headline=headline, llm=flash_llm)
+    with progress_sub("FLASH", "Dreamer Flash (후보 15~20)", f"sources={len(source_facts)}"):
+        broad = invoke_flash_breadth(source_facts, headline=headline, llm=flash_llm)
     _log(f"flash stage done: {len(broad.hypotheses)} candidate(s)")
-    compressed = invoke_pro_compress(
-        source_facts, broad, headline=headline, llm=pro_llm
-    )
+    with progress_sub(
+        "PRO",
+        "Dreamer Pro (≤5 압축)",
+        f"candidates={len(broad.hypotheses)}",
+    ):
+        compressed = invoke_pro_compress(
+            source_facts, broad, headline=headline, llm=pro_llm
+        )
     _log(f"pro stage done: {len(compressed.hypotheses)} finalist(s)")
     return compressed

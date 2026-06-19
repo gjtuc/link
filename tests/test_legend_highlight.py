@@ -14,7 +14,12 @@ def test_build_legend_html_has_filter_items_and_highlight_script():
     assert 'data-filter="promoted"' in html
     assert 'data-filter="edge-dashed"' in html
     assert "__dcAttachLegendHighlight" in html
+    assert "restoreNodeBaseline" in html
+    assert "nodeBaselineOpacity" in html
     assert 'id="legend-side-toggle"' in html
+    assert 'class="legend-title-chevron"' in html
+    assert "범례 ▾" not in html
+    assert "범례 ▸" not in html
 
 
 def test_pyvis_nodes_carry_legend_class():
@@ -41,7 +46,6 @@ def test_pyvis_nodes_carry_legend_class():
     assert by_id["e1"]["legend_class"] == "extracted"
     assert by_id["i1"]["legend_class"] == "inferred"
     assert by_id["p1"]["legend_class"] == "promoted"
-    assert by_id["e1"].get("legend_hub") is False
 
     edge = net.edges[0]
     assert edge.get("legend_class") in ("edge-solid", "edge-dashed")

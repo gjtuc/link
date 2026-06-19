@@ -12,6 +12,7 @@ from deconstructor.provenance.types import DEFAULT_CHECK_STATUS, DEFAULT_SOURCE_
 from deconstructor.storm.stress import compute_stress_delta
 from deconstructor.storm.types import DEFAULT_IS_CRITICAL, DEFAULT_STRESS_LEVEL
 from deconstructor.weaver.schemas import WeaverResult
+from deconstructor.web.graph_context import normalize_trigger_event
 
 logger = logging.getLogger(__name__)
 
@@ -53,6 +54,7 @@ class Neo4jWeaver:
         self,
         *,
         trigger_event: str,
+        analysis_run_id: str,
         facts: list[AtomicFact],
         edges: list[CausalEdge],
         partial_run: bool = False,
@@ -65,7 +67,8 @@ class Neo4jWeaver:
             )
 
         self._ensure_schema()
-        _log_prov(f"MERGE {len(facts)} fact(s) with source_type/check_status")
+        trigger_event = normalize_trigger_event(trigger_event)
+        _log_prov(f"MERGE {len(facts)} fact(s) with source_type/check_status run={analysis_run_id[:8]}")
         _log_storm("4", f"persist init storm fields default stress={DEFAULT_STRESS_LEVEL}")
 
         facts_by_id = {fact.id: fact for fact in facts}
@@ -86,10 +89,12 @@ class Neo4jWeaver:
                         f.is_atomic = true,
                         f.timestamp = $timestamp,
                         f.trigger_event = $trigger_event,
+                        f.analysis_run_id = $analysis_run_id,
                         f.source_type = $source_type,
                         f.check_status = $check_status,
                         f.reasoning = $reasoning,
                         f.anchor_fact_id = $anchor_fact_id,
+                        f.author = $author,
                         f.stress_level = coalesce(f.stress_level, $stress_level),
                         f.is_critical = coalesce(f.is_critical, $is_critical)
                     """,
@@ -98,10 +103,12 @@ class Neo4jWeaver:
                     state_change=fact.state_change,
                     timestamp=fact.timestamp.isoformat() if fact.timestamp else None,
                     trigger_event=trigger_event,
+                    analysis_run_id=analysis_run_id,
                     source_type=source_type,
                     check_status=check_status,
                     reasoning=fact.reasoning or "",
                     anchor_fact_id=fact.anchor_fact_id,
+                    author=fact.author,
                     stress_level=fact.stress_level or DEFAULT_STRESS_LEVEL,
                     is_critical=fact.is_critical if fact.is_critical else DEFAULT_IS_CRITICAL,
                 )
@@ -145,6 +152,7 @@ class Neo4jWeaver:
         self,
         *,
         trigger_event: str,
+        analysis_run_id: str,
         facts: list[AtomicFact],
     ) -> int:
         """
@@ -156,7 +164,8 @@ class Neo4jWeaver:
             return 0
 
         self._ensure_schema()
-        _log_prov(f"persist_ghost_facts count={len(facts)}")
+        trigger_event = normalize_trigger_event(trigger_event)
+        _log_prov(f"persist_ghost_facts count={len(facts)} run={analysis_run_id[:8]}")
         with self._driver.session() as session:
             for fact in facts:
                 session.run(
@@ -167,10 +176,12 @@ class Neo4jWeaver:
                         f.is_atomic = true,
                         f.timestamp = $timestamp,
                         f.trigger_event = $trigger_event,
+                        f.analysis_run_id = $analysis_run_id,
                         f.source_type = $source_type,
                         f.check_status = $check_status,
                         f.reasoning = $reasoning,
                         f.anchor_fact_id = $anchor_fact_id,
+                        f.author = $author,
                         f.stress_level = coalesce(f.stress_level, $stress_level),
                         f.is_critical = coalesce(f.is_critical, $is_critical)
                     """,
@@ -179,10 +190,12 @@ class Neo4jWeaver:
                     state_change=fact.state_change,
                     timestamp=fact.timestamp.isoformat() if fact.timestamp else None,
                     trigger_event=trigger_event,
+                    analysis_run_id=analysis_run_id,
                     source_type=fact.source_type,
                     check_status=fact.check_status,
                     reasoning=fact.reasoning or "",
                     anchor_fact_id=fact.anchor_fact_id,
+                    author=fact.author,
                     stress_level=fact.stress_level or DEFAULT_STRESS_LEVEL,
                     is_critical=fact.is_critical if fact.is_critical else DEFAULT_IS_CRITICAL,
                 )

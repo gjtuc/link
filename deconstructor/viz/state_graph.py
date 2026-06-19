@@ -20,9 +20,10 @@ Pipeline position / 파이프라인 위치
 --------------------
   1. ``verified_edges`` 양 끝 + ``completed_facts`` / ``promoted_facts`` 풀
   2. ``facts_for_verified_edges`` — Skeptic 통과 엔드포인트만 (기본)
-  3. **orphan promoted** — 엣지 없는 Fact-Checker 통과 가설도 포함
-  4. **dropped ghosts** — 기각 가설(흐린 노랑) 시각화
-  5. **anchor 보강** — inferred 의 ``anchor_fact_id`` 원천이 (4)까지 빠졌으면
+  3. **orphan extracted** — CAUSES 없어도 completed 원자(파랑) 표시
+  4. **orphan promoted** — 엣지 없는 Fact-Checker 통과 가설도 포함
+  5. **dropped ghosts** — 기각 가설(흐린 노랑) 시각화
+  6. **anchor 보강** — inferred 의 ``anchor_fact_id`` 원천이 (5)까지 빠졌으면
      completed 풀에서 끌어와 hover 점선·툴팁용 파랑 노드 확보
 
 When to modify / 수정 시점
@@ -35,7 +36,10 @@ from __future__ import annotations
 
 from deconstructor.models import AtomicFact, CausalEdge
 from deconstructor.viz.neo4j_utils import GraphEdge, GraphFetchResult, GraphNode
-from deconstructor.weaver.resolve import facts_for_verified_edges
+from deconstructor.weaver.resolve import (
+    facts_for_verified_edges,
+    orphan_atomic_completed_facts,
+)
 
 
 def _fact_to_node(fact: AtomicFact, trigger_event: str) -> GraphNode:
@@ -84,6 +88,12 @@ def graph_from_pipeline_state(state: dict) -> GraphFetchResult:
         if fact.id not in seen_ids:
             facts.append(fact)
             seen_ids.add(fact.id)
+    for fact in orphan_atomic_completed_facts(
+        state.get("completed_facts") or [],
+        already_persisted_ids=seen_ids,
+    ):
+        facts.append(fact)
+        seen_ids.add(fact.id)
     for dropped in state.get("dropped_hypotheses") or []:
         ghost = dropped.ghost_fact
         if ghost.id not in seen_ids:

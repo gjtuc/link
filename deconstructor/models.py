@@ -31,6 +31,7 @@ from deconstructor.provenance.types import (
     DEFAULT_CHECK_STATUS,
     DEFAULT_SOURCE_TYPE,
     CheckStatus,
+    HypothesisAuthor,
     SourceType,
     validate_check_status,
     validate_source_type,
@@ -90,6 +91,13 @@ class AtomicFact(BaseModel):
         description=(
             "Dreamer 가설이 ripples from 한 completed_fact ID (inferred 전용). "
             "그래프: hover 시 원천→가설 점선. Neo4j: f.anchor_fact_id."
+        ),
+    )
+    author: HypothesisAuthor | None = Field(
+        default=None,
+        description=(
+            "가설 작성 주체. human=사용자 UI 입력, dreamer=Dreamer LLM, "
+            "None=레거시(시각화·검증은 dreamer 와 동일 취급)."
         ),
     )
     stress_level: int = Field(

@@ -38,6 +38,7 @@ from deconstructor.deconstruct.apply import apply_deconstruct_result
 from deconstructor.deconstruct.input import resolve_llm_target
 from deconstructor.deconstruct.llm_runner import invoke_fact_list
 from deconstructor.pipeline.state import State
+from deconstructor.web.progress_ctx import progress_sub
 
 
 def deconstruct_node(state: State) -> dict:
@@ -54,7 +55,8 @@ def deconstruct_node(state: State) -> dict:
         return {}
 
     # R12-2: structured output FactList
-    result = invoke_fact_list(target.text)
+    with progress_sub("LLM", "Gemini FactList 호출", f"{len(target.text)}자"):
+        result = invoke_fact_list(target.text)
 
     # parent_id 있으면 해당 crumb를 children으로 교체; depth +1
     return apply_deconstruct_result(

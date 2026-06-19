@@ -10,7 +10,7 @@ from deconstructor.provenance.viz_style import (
     resolve_node_style,
 )
 from deconstructor.viz.neo4j_utils import GraphEdge, GraphNode
-from deconstructor.viz.visualizer import render_to_html
+from deconstructor.viz.visualizer import build_pyvis_network, render_to_html
 
 
 def test_resolve_node_style_extracted_blue():
@@ -67,6 +67,22 @@ def test_resolve_edge_style_solid_for_verified_causal():
         probability=0.9,
     )
     assert estyle.dashes is False
+
+
+def test_build_pyvis_promoted_node_has_green_border_width():
+    node = GraphNode(
+        "p1",
+        "supply",
+        "restored",
+        "2026-01-01T10:08:00",
+        "h",
+        "inferred",
+        "promoted",
+    )
+    net = build_pyvis_network([node], [])
+    data = net.nodes[0]
+    assert data["borderWidth"] == 3
+    assert data["color"]["border"] == COLOR_VERIFIED
 
 
 def test_render_html_contains_provenance_markers(tmp_path: Path):

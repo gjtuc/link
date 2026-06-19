@@ -5,8 +5,13 @@
 엔드포인트
 ----------
   GET  /           — ``web/index.html`` (PDF·URL·텍스트 입력, 그래프 iframe)
-  POST /api/analyze — 배치 추출 → ``run_pipeline`` → HTML 그래프 갱신
+  POST /api/analyze — 비동기 분석 시작 (202) → GET progress/result 폴링
+  GET  /api/analyze/progress — 진행률 %
+  GET  /api/analyze/result — 완료 후 결과 JSON
+  POST /api/human-hypothesis — 사용자 가설 1건 추가 (MVP: Neo4j·그래프 갱신)
   GET  /graph_output.html — pyvis 산출물 (범례·hover JS 주입됨)
+  GET  /debug.html       — 마지막 배치 파이프라인·Neo4j·색상 디버그
+  GET  /api/debug/pipeline — 동일 JSON
 
 런타임 연동
 -----------
@@ -28,7 +33,6 @@ import mimetypes
 import os
 import sys
 import threading
-import traceback
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -37,130 +41,42 @@ from urllib.parse import urlparse
 from deconstructor.web.extract import (
     ExtractedSource,
     detect_mime,
-    extract_batch,
     split_text_blocks,
     split_urls,
 )
+
+from deconstructor.web.pipeline_batch import run_pipeline_batch
 
 ROOT = Path(__file__).resolve().parents[2]
 WEB_DIR = ROOT / "web"
 GRAPH_HTML = ROOT / "graph_output.html"
 
+# link_launch.py 가 구 서버 재사용 여부 판단에 사용
+LINK_UI_VERSION = "1.2"
+LINK_UI_FEATURES = (
+    "analyze_async",
+    "analyze_progress",
+    "analyze_result",
+    "human_hypothesis",
+    "debug_pipeline",
+)
+
 _run_lock = threading.Lock()
 _last_result: dict | None = None
+_last_pipeline_debug: dict | None = None
 
 
-def _run_pipeline_batch(sources: list[ExtractedSource]) -> dict:
-    global _last_result
-    from deconstructor import config
-    from deconstructor.graph_builder import run_pipeline
-    from deconstructor.neo4j_launcher import (
-        ensure_neo4j_running,
-        persist_state_to_neo4j,
-        probe_neo4j_installation,
-    )
-    from deconstructor.report import format_dry_run_report
-    from deconstructor.viz.neo4j_utils import fetch_causal_graph, neo4j_is_available
-    from deconstructor.viz.state_graph import graph_from_pipeline_state, merge_graph_results
-    from deconstructor.viz.visualizer import render_to_html
-
-    use_db = neo4j_is_available()
-    neo4j_sync: dict | None = None
-    if not use_db:
-        print("[LinkUI] Neo4j offline — console mode (graph from this session only)")
-
-    has_tavily = bool(config.TAVILY_API_KEY)
-    if not has_tavily:
-        print(
-            "[LinkUI] TAVILY_API_KEY 없음 — Dreamer는 live, Fact-Checker는 stub "
-            "(노랑·고스트는 나오지만 웹 검증은 제한됨)"
-        )
-    else:
-        print("[LinkUI] Dreamer + Fact-Checker live (Tavily 검색)")
-
-    runs: list[dict] = []
-    session_graphs: list = []
-    pipeline_states: list = []
+def _run_pipeline_batch(sources: list[ExtractedSource], tracker: LinkStepTracker | None = None) -> dict:
+    global _last_result, _last_pipeline_debug
     with _run_lock:
-        for idx, src in enumerate(sources, start=1):
-            print(f"[LinkUI] 분석 {idx}/{len(sources)} — {src.kind}: {src.label}")
-            state = run_pipeline(
-                src.text,
-                persist_db=use_db,
-                enable_dreamer=True,
-                fact_checker_dry_run=not has_tavily,
-            )
-            pipeline_states.append(state)
-            report = format_dry_run_report(state)
-            verified = state.get("verified_edges") or []
-            completed = state.get("completed_facts") or []
-            promoted = state.get("promoted_facts") or []
-            dropped = state.get("dropped_hypotheses") or []
-            if not use_db:
-                session_graphs.append(graph_from_pipeline_state(state))
-            runs.append(
-                {
-                    "index": idx,
-                    "kind": src.kind,
-                    "label": src.label,
-                    "chars": len(src.text),
-                    "verified_edges": len(verified),
-                    "atomic_facts": len(completed),
-                    "dreamer_promoted": len(promoted),
-                    "dreamer_dropped": len(dropped),
-                    "preview": src.text[:240] + ("…" if len(src.text) > 240 else ""),
-                    "report_excerpt": "\n".join(report.splitlines()[:12]),
-                }
-            )
-
-        if not use_db:
-            probe = probe_neo4j_installation(ROOT)
-            if probe.any_installed:
-                print("[LinkUI] 분석 완료 — Neo4j 자동 기동 시도…")
-                ensure = ensure_neo4j_running(ROOT, wait_timeout_sec=90)
-                neo4j_sync = {
-                    "attempted": True,
-                    "available": ensure.available,
-                    "method": ensure.method,
-                    "message": ensure.message,
-                    "waited_sec": round(ensure.waited_sec, 1),
-                }
-                if ensure.available:
-                    for i, state in enumerate(pipeline_states, start=1):
-                        print(f"[LinkUI] Neo4j 백필 {i}/{len(pipeline_states)}")
-                        persist_state_to_neo4j(state)
-                    use_db = True
-            else:
-                neo4j_sync = {
-                    "attempted": False,
-                    "available": False,
-                    "method": "none",
-                    "message": "Neo4j/Docker 미설치 — DB 저장 생략",
-                }
-
-        if use_db:
-            fetched = fetch_causal_graph(max_nodes=300)
-        else:
-            fetched = merge_graph_results(session_graphs)
-
-        render_to_html(fetched.nodes, fetched.edges, GRAPH_HTML)
-
-        _last_result = {
-            "ok": True,
-            "neo4j": use_db,
-            "neo4j_sync": neo4j_sync,
-            "neo4j_persisted": use_db,
-            "items_processed": len(sources),
-            "sources": runs,
-            "nodes": len(fetched.nodes),
-            "edges": len(fetched.edges),
-            "verified_edges_total": sum(r["verified_edges"] for r in runs),
-            "atomic_facts_total": sum(r["atomic_facts"] for r in runs),
-        }
-        return _last_result
+        result = run_pipeline_batch(sources, tracker=tracker)
+        if result.get("ok"):
+            _last_result = result
+            _last_pipeline_debug = result.get("pipeline_debug")
+        return result
 
 
-def _parse_multipart_batch(form: cgi.FieldStorage) -> list[ExtractedSource]:
+def _parse_multipart_fields(form: cgi.FieldStorage) -> tuple[list[str], list[str], list[tuple[str, bytes, str, str]]]:
     text_raw = form.getfirst("text", "") or ""
     urls_raw = form.getfirst("urls", "") or ""
 
@@ -193,10 +109,10 @@ def _parse_multipart_batch(form: cgi.FieldStorage) -> list[ExtractedSource]:
     if "files" in form:
         _append_file_field(form["files"], "auto")
 
-    return extract_batch(text_blocks=text_blocks, urls=urls, files=files)
+    return text_blocks, urls, files
 
 
-def _parse_json_batch(payload: dict) -> list[ExtractedSource]:
+def _parse_json_fields(payload: dict) -> tuple[list[str], list[str], list[tuple[str, bytes, str, str]]]:
     text_blocks = split_text_blocks(payload.get("text", "") or "")
     extra = payload.get("texts") or []
     if isinstance(extra, list):
@@ -210,7 +126,7 @@ def _parse_json_batch(payload: dict) -> list[ExtractedSource]:
             if u:
                 urls.extend(split_urls(u))
 
-    return extract_batch(text_blocks=text_blocks, urls=urls, files=[])
+    return text_blocks, urls, []
 
 
 class LinkUIHandler(BaseHTTPRequestHandler):
@@ -227,12 +143,29 @@ class LinkUIHandler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
-    def _send_bytes(self, data: bytes, content_type: str) -> None:
+    def _send_bytes(self, data: bytes, content_type: str, *, extra_headers: dict | None = None) -> None:
         self.send_response(HTTPStatus.OK)
         self.send_header("Content-Type", content_type)
         self.send_header("Content-Length", str(len(data)))
+        if extra_headers:
+            for key, val in extra_headers.items():
+                self.send_header(key, val)
         self.end_headers()
         self.wfile.write(data)
+
+    def _serve_graph_html(self) -> None:
+        from deconstructor.viz.legend import prepare_graph_html
+
+        if not GRAPH_HTML.is_file():
+            self.send_error(HTTPStatus.NOT_FOUND, "graph not generated yet")
+            return
+        raw = GRAPH_HTML.read_text(encoding="utf-8")
+        body = prepare_graph_html(raw).encode("utf-8")
+        self._send_bytes(
+            body,
+            "text/html; charset=utf-8",
+            extra_headers={"Cache-Control": "no-store, no-cache, must-revalidate"},
+        )
 
     def _read_body(self) -> bytes:
         length = int(self.headers.get("Content-Length", "0"))
@@ -251,14 +184,90 @@ class LinkUIHandler(BaseHTTPRequestHandler):
             return
 
         if path == "/graph_output.html":
-            if not GRAPH_HTML.is_file():
-                self.send_error(HTTPStatus.NOT_FOUND, "graph not generated yet")
-                return
-            self._send_bytes(GRAPH_HTML.read_bytes(), "text/html; charset=utf-8")
+            self._serve_graph_html()
             return
 
         if path == "/api/last":
             self._send_json(_last_result or {"ok": False, "message": "아직 실행 기록 없음"})
+            return
+
+        if path == "/api/graph-filter":
+            from deconstructor.web.graph_context import get_graph_filter_snapshot
+
+            self._send_json(get_graph_filter_snapshot())
+            return
+
+        if path == "/api/analyze/progress":
+            from deconstructor.web.analyze_job import is_analyze_running
+            from deconstructor.web.analyze_progress import snapshot
+
+            snap = snapshot()
+            snap["ok"] = True
+            snap["analyze_thread"] = is_analyze_running()
+            self._send_json(snap)
+            return
+
+        if path == "/api/analyze/result":
+            from deconstructor.web.analyze_job import (
+                get_analyze_error,
+                get_analyze_result,
+                is_analyze_running,
+            )
+            from deconstructor.web.analyze_progress import snapshot
+
+            if is_analyze_running():
+                self._send_json(
+                    {"ok": False, "running": True, "message": "분석 진행 중"},
+                    status=202,
+                )
+                return
+            err = get_analyze_error()
+            if err:
+                self._send_json(err, status=500)
+                return
+            result = get_analyze_result()
+            if result:
+                self._send_json(result)
+                return
+            prog = snapshot()
+            if prog.get("percent", 0) >= 100:
+                self._send_json({"ok": False, "message": "결과 없음 — 다시 분석하세요"}, status=404)
+                return
+            self._send_json({"ok": False, "running": False, "message": "아직 분석 기록 없음"}, status=404)
+            return
+
+        if path == "/api/debug/pipeline":
+            from deconstructor.web.graph_context import get_graph_filter_snapshot
+
+            payload = {
+                "ok": _last_pipeline_debug is not None,
+                "graph_filter": get_graph_filter_snapshot(),
+                "last_analyze": _last_result,
+                "pipeline_debug": _last_pipeline_debug,
+            }
+            if not _last_pipeline_debug:
+                payload["message"] = "아직 분석 기록 없음 — 메인 UI에서 전체 분석 시작"
+            self._send_json(payload)
+            return
+
+        if path == "/debug.html":
+            debug_page = WEB_DIR / "debug.html"
+            if not debug_page.is_file():
+                self.send_error(HTTPStatus.NOT_FOUND, "debug.html missing")
+                return
+            self._send_bytes(debug_page.read_bytes(), "text/html; charset=utf-8")
+            return
+
+        if path == "/api/launch-log":
+            launch_log = ROOT / "logs" / "link_launch.log"
+            if launch_log.is_file():
+                try:
+                    payload = json.loads(launch_log.read_text(encoding="utf-8"))
+                except json.JSONDecodeError:
+                    payload = {"ok": False, "error": "link_launch.log 파싱 실패"}
+            else:
+                payload = {"ok": False, "error": "link_launch.log 없음 — Cursor에 link 입력"}
+            self._send_json(payload)
             return
 
         if path == "/api/status":
@@ -274,6 +283,10 @@ class LinkUIHandler(BaseHTTPRequestHandler):
             probe = probe_neo4j_installation(ROOT)
             self._send_json(
                 {
+                    "link_ui": {
+                        "version": LINK_UI_VERSION,
+                        "features": list(LINK_UI_FEATURES),
+                    },
                     "neo4j": neo4j_is_available(),
                     "neo4j_managed": is_managed_neo4j(),
                     "neo4j_link_session": link_neo4j_ui_session_active(),
@@ -337,15 +350,31 @@ class LinkUIHandler(BaseHTTPRequestHandler):
             )
             return
 
+        if parsed.path == "/api/human-hypothesis":
+            self._handle_human_hypothesis()
+            return
+
         if parsed.path != "/api/analyze":
             self.send_error(HTTPStatus.NOT_FOUND)
             return
 
+        from deconstructor.web.analyze_job import is_analyze_running, start_analyze_job
+        from deconstructor.web.analyze_progress import begin_job, set_label, snapshot
+        from deconstructor.web.link_steps import LinkStepTracker
+
+        if is_analyze_running():
+            self._send_json(
+                {"ok": False, "error": "이미 분석이 진행 중입니다.", "failed_step": "S0-BUSY"},
+                status=409,
+            )
+            return
+
         ctype = self.headers.get("Content-Type", "")
+
         try:
             if ctype.startswith("application/json"):
                 payload = json.loads(self._read_body().decode("utf-8"))
-                sources = _parse_json_batch(payload)
+                text_blocks, urls, files = _parse_json_fields(payload)
             elif ctype.startswith("multipart/form-data"):
                 environ = {
                     "REQUEST_METHOD": "POST",
@@ -353,21 +382,112 @@ class LinkUIHandler(BaseHTTPRequestHandler):
                     "CONTENT_LENGTH": self.headers.get("Content-Length", "0"),
                 }
                 form = cgi.FieldStorage(fp=self.rfile, headers=self.headers, environ=environ)
-                sources = _parse_multipart_batch(form)
+                text_blocks, urls, files = _parse_multipart_fields(form)
             else:
                 raise ValueError("Content-Type must be multipart/form-data or application/json")
-
-            result = _run_pipeline_batch(sources)
-            self._send_json(result)
         except Exception as exc:
             self._send_json(
-                {
-                    "ok": False,
-                    "error": str(exc),
-                    "detail": traceback.format_exc(limit=4),
-                },
-                status=500,
+                {"ok": False, "error": str(exc), "failed_step": "S0-PARSE-CTYPE"},
+                status=400,
             )
+            return
+
+        n_files = len(files)
+        n_urls = len(urls)
+        n_text = len(text_blocks)
+        source_count = max(1, n_text + n_urls + n_files)
+        job_id = begin_job(source_count=source_count)
+        set_label("요청 접수 · 분석 준비…", percent=3)
+
+        def _worker() -> dict:
+            from deconstructor.web.analyze_progress import clear_job, finish_job, set_label, set_source_count, sync_tracker
+            from deconstructor.web.extract_tracked import extract_batch_tracked
+            from deconstructor.web.link_steps import LinkStepTracker
+
+            def _on_step(tr: LinkStepTracker) -> None:
+                sync_tracker(tr)
+
+            tracker = LinkStepTracker(on_change=_on_step)
+            sync_tracker(tracker)
+            set_source_count(source_count)
+            set_label("파이프라인 기동…", percent=5)
+
+            try:
+                tracker.start("S0-PARSE-CTYPE", "Content-Type 확인", ctype.split(";")[0])
+                tracker.ok(
+                    "S0-PARSE-FIELDS",
+                    f"text={n_text} url={n_urls} file={n_files}",
+                )
+                tracker.ok("S0-PARSE-CTYPE")
+
+                sources = extract_batch_tracked(
+                    tracker,
+                    text_blocks=text_blocks,
+                    urls=urls,
+                    files=files,
+                )
+
+                result = _run_pipeline_batch(sources, tracker=tracker)
+                pre_steps = tracker.to_list()
+                if result.get("steps"):
+                    result["steps"] = pre_steps + result["steps"]
+                else:
+                    result["steps"] = pre_steps
+                if not result.get("ok"):
+                    clear_job()
+                    return result
+                finish_job()
+                return result
+            except Exception as exc:
+                clear_job()
+                return tracker.fail(exc)
+
+        if not start_analyze_job(_worker):
+            from deconstructor.web.analyze_progress import clear_job
+
+            clear_job()
+            self._send_json(
+                {"ok": False, "error": "분석 시작 실패", "failed_step": "S0-BUSY"},
+                status=409,
+            )
+            return
+
+        self._send_json(
+            {
+                "ok": True,
+                "async": True,
+                "job_id": job_id,
+                "message": "분석 시작됨 — 진행률 폴링",
+            },
+            status=202,
+        )
+
+    def _handle_human_hypothesis(self) -> None:
+        """POST /api/human-hypothesis — 파란 노드에서 이은 사용자 가설 (MVP)."""
+        from pydantic import ValidationError
+
+        from deconstructor.web.human_hypothesis import (
+            HumanHypothesisCreate,
+            submit_human_hypothesis,
+        )
+        from deconstructor.web.human_hypothesis.store import HumanHypothesisStoreError
+
+        try:
+            raw = json.loads(self._read_body().decode("utf-8") or "{}")
+            payload = HumanHypothesisCreate.model_validate(raw)
+        except (json.JSONDecodeError, ValidationError) as exc:
+            self._send_json(
+                {"ok": False, "error": str(exc), "failed_step": "H0-PARSE"},
+                status=400,
+            )
+            return
+
+        result = submit_human_hypothesis(payload)
+        if not result.get("ok", True):
+            status = 400 if result.get("failed_step", "").startswith("H1") else 500
+            self._send_json(result, status=status)
+            return
+        self._send_json(result)
 
 
 def main(host: str = "127.0.0.1", port: int = 8765) -> None:

@@ -7,7 +7,10 @@ from typing import TYPE_CHECKING
 from deconstructor.agents.watcher.run import run_watcher_in_memory, run_watcher_neo4j
 from deconstructor.weaver.console_store import ConsoleWeaver
 from deconstructor.weaver.neo4j_store import Neo4jWeaver
-from deconstructor.weaver.resolve import facts_for_verified_edges
+from deconstructor.weaver.resolve import (
+    facts_for_verified_edges,
+    orphan_atomic_completed_facts,
+)
 
 if TYPE_CHECKING:
     from deconstructor.pipeline.state import State
@@ -31,6 +34,12 @@ def weaver_node(state: "State", *, persist_db: bool) -> dict:
         for f in (state.get("promoted_facts") or [])
         if f.id not in endpoint_ids
     ]
+    orphan_extracted = orphan_atomic_completed_facts(
+        state.get("completed_facts") or [],
+        already_persisted_ids=endpoint_ids
+        | {f.id for f in orphan_promoted}
+        | {f.id for f in ghost_facts},
+    )
     partial_run = state.get("partial_run", False)
 
     if persist_db:
@@ -38,19 +47,24 @@ def weaver_node(state: "State", *, persist_db: bool) -> dict:
         try:
             result = store.persist(
                 trigger_event=state["raw_text"],
+                analysis_run_id=state["analysis_run_id"],
                 facts=facts,
                 edges=edges,
                 partial_run=partial_run,
             )
             ghosts_written = 0
-            extra_facts = list(ghost_facts) + list(orphan_promoted)
+            extra_facts = (
+                list(ghost_facts) + list(orphan_promoted) + list(orphan_extracted)
+            )
             if extra_facts:
                 print(
                     f"[STEP4-weaver] persist_ghost_facts count={len(extra_facts)} "
-                    f"(ghosts={len(ghost_facts)}, promoted_orphans={len(orphan_promoted)})"
+                    f"(ghosts={len(ghost_facts)}, promoted_orphans={len(orphan_promoted)}, "
+                    f"extracted_orphans={len(orphan_extracted)})"
                 )
                 ghosts_written = store.persist_ghost_facts(
                     trigger_event=state["raw_text"],
+                    analysis_run_id=state["analysis_run_id"],
                     facts=extra_facts,
                 )
             if ghosts_written:
