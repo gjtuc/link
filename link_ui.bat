@@ -12,8 +12,8 @@ if not exist "venv\Scripts\python.exe" (
 
 call venv\Scripts\activate.bat
 
-echo [1/2] 문서 추출 패키지 확인...
-pip install pypdf python-docx -q
+echo [1/2] 패키지 확인 (문서 추출 + SSL 프록시)...
+pip install pypdf python-docx pip-system-certs -q
 
 echo [2/2] 웹 UI 시작 (http://127.0.0.1:8765)
 set "CHROME_EXE="

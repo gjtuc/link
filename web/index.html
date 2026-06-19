@@ -653,7 +653,7 @@
           ? ` · DB: ${install.desktop_dbms_names.join(", ")}`
           : "";
         el.textContent = install.desktop
-          ? `Neo4j Desktop 설치됨${db} — 분석 후 자동 기동 시도`
+          ? `Neo4j Desktop 설치됨${db} — 분석 시 stock 자동 기동 (Play 수동 불필요)`
           : `Docker 설치됨 — 분석 후 자동 기동 시도`;
         el.style.color = "#e37400";
       } else {

@@ -26,6 +26,11 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
+from deconstructor.ssl_trust import bootstrap_ssl_trust
+
+# HTTPS (Tavily·Gemini 등) — Windows 회사 SSL 프록시 대응, 최대한 먼저 실행
+bootstrap_ssl_trust()
+
 # deconstructor/ 패키지의 부모 = 프로젝트 루트 (requirements.txt, main.py 위치)
 _PROJECT_ROOT = Path(__file__).resolve().parent.parent
 load_dotenv(_PROJECT_ROOT / ".env")

@@ -47,6 +47,7 @@ _watchdog_started = False
 _desktop_proc: subprocess.Popen | None = None
 _desktop_launched_by_link = False
 _link_neo4j_ui_session = False
+_neo4j_console_proc: subprocess.Popen | None = None
 
 
 @dataclass(frozen=True)
@@ -379,27 +380,49 @@ def _neo4j_subprocess_env(bin_dir: Path) -> dict[str, str]:
 
 
 def _start_desktop_dbms(bin_dir: Path) -> bool:
-    neo4j_bat = bin_dir / "neo4j.bat"
-    if not neo4j_bat.is_file():
+    """
+  Neo4j Desktop 관리 DB 기동 — ``neo4j start``(Windows 서비스) 대신
+  Desktop과 동일하게 ``neo4j.ps1 console`` (백그라운드, 로그 파일).
+    """
+    global _neo4j_console_proc
+    ps1 = bin_dir / "neo4j.ps1"
+    if not ps1.is_file():
         return False
-    _log(f"neo4j start → {bin_dir}")
+
+    logs_dir = bin_dir.parent / "logs"
+    logs_dir.mkdir(parents=True, exist_ok=True)
+    log_path = logs_dir / "neo4j.log"
+    env = _neo4j_subprocess_env(bin_dir)
+
+    _log(f"neo4j console → {bin_dir} (Desktop 방식, JAVA_HOME={env.get('JAVA_HOME', '-')})")
     try:
-        proc = subprocess.run(
-            [str(neo4j_bat), "start"],
+        _neo4j_console_proc = subprocess.Popen(
+            [
+                "powershell",
+                "-NoProfile",
+                "-NonInteractive",
+                "-NoLogo",
+                "-WindowStyle",
+                "Hidden",
+                "-ExecutionPolicy",
+                "Bypass",
+                "-Command",
+                (
+                    f"& '{ps1}' console 2>&1 3>&1 6>&1 | "
+                    f"Out-File -Append -Encoding utf8 '{log_path}'"
+                ),
+            ],
             cwd=str(bin_dir),
-            env=_neo4j_subprocess_env(bin_dir),
-            capture_output=True,
-            text=True,
-            timeout=60,
-            check=False,
+            env=env,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            creationflags=subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0,
         )
-    except (OSError, subprocess.TimeoutExpired) as exc:
-        _log(f"neo4j start failed: {exc}")
+    except OSError as exc:
+        _log(f"neo4j console failed: {exc}")
+        _neo4j_console_proc = None
         return False
-    if proc.returncode != 0:
-        err = (proc.stderr or proc.stdout or "").strip()[:200]
-        _log(f"neo4j start exit {proc.returncode}: {err}")
-        return False
+
     return True
 
 
@@ -426,28 +449,44 @@ def _stop_docker_compose(project_root: Path) -> bool:
 
 
 def _stop_desktop_dbms(bin_dir: Path) -> bool:
+    global _neo4j_console_proc
     neo4j_bat = bin_dir / "neo4j.bat"
-    if not neo4j_bat.is_file():
-        return False
-    _log(f"neo4j stop → {bin_dir}")
-    try:
-        proc = subprocess.run(
-            [str(neo4j_bat), "stop"],
-            cwd=str(bin_dir),
-            env=_neo4j_subprocess_env(bin_dir),
-            capture_output=True,
-            text=True,
-            timeout=60,
-            check=False,
-        )
-    except (OSError, subprocess.TimeoutExpired) as exc:
-        _log(f"neo4j stop failed: {exc}")
-        return False
-    if proc.returncode != 0:
-        err = (proc.stderr or proc.stdout or "").strip()[:200]
-        _log(f"neo4j stop exit {proc.returncode}: {err}")
-        return False
-    return True
+    ok = False
+    if neo4j_bat.is_file():
+        _log(f"neo4j stop → {bin_dir}")
+        try:
+            proc = subprocess.run(
+                [str(neo4j_bat), "stop"],
+                cwd=str(bin_dir),
+                env=_neo4j_subprocess_env(bin_dir),
+                capture_output=True,
+                text=True,
+                timeout=60,
+                check=False,
+            )
+        except (OSError, subprocess.TimeoutExpired) as exc:
+            _log(f"neo4j stop failed: {exc}")
+        else:
+            if proc.returncode == 0:
+                ok = True
+            else:
+                err = (proc.stderr or proc.stdout or "").strip()[:200]
+                _log(f"neo4j stop exit {proc.returncode}: {err}")
+
+    if _neo4j_console_proc is not None and _neo4j_console_proc.poll() is None:
+        try:
+            _neo4j_console_proc.terminate()
+            _neo4j_console_proc.wait(timeout=8)
+            ok = True
+        except subprocess.TimeoutExpired:
+            _neo4j_console_proc.kill()
+            ok = True
+        except OSError as exc:
+            _log(f"neo4j console proc stop failed: {exc}")
+        finally:
+            _neo4j_console_proc = None
+
+    return ok
 
 
 def _launch_desktop_app(exe: Path) -> None:
@@ -601,7 +640,11 @@ def ensure_neo4j_running(
     elif probe.desktop_exe:
         names = [_dbms_display_name(b) for b in probe.desktop_dbms]
         db_hint = f" (DB: {', '.join(names)})" if names else ""
-        hint = f"Neo4j Desktop 2에서 DB를 Start 하세요{db_hint}. local_settings NEO4J_PASSWORD 확인"
+        hint = (
+            f"Neo4j bolt 연결 실패{db_hint}. "
+            "Desktop이 떠 있으면 stock Start, 아니면 link_ui.bat 재시작 후 다시 분석. "
+            "local_settings NEO4J_PASSWORD 확인"
+        )
     else:
         hint = "Neo4j 설치 경로를 찾지 못했습니다"
 
