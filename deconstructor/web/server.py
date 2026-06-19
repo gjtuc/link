@@ -373,7 +373,7 @@ def main(host: str = "127.0.0.1", port: int = 8765) -> None:
     server = ThreadingHTTPServer((host, port), LinkUIHandler)
     url = f"http://{host}:{port}/"
     print(f"[LinkUI] Deconstructor web UI → {url}")
-    print(f"[LinkUI] 지원: 텍스트·URL·이미지·PDF/DOCX — 여러 개 동시 입력")
+    print("[LinkUI] 지원: 텍스트·URL·이미지·PDF/DOCX - 여러 개 동시 입력")
     print("[LinkUI] 브라우저 탭·창이 닫히거나 45초 이상 숨겨지면 Link가 켠 Neo4j·Desktop 자동 정리")
     print("[LinkUI] 종료: Ctrl+C")
     try:
