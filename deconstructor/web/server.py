@@ -17,6 +17,11 @@
 
 from __future__ import annotations
 
+# 회사 SSL 프록시(PRISM) — requests 패치는 가장 먼저 (Tavily·Gemini HTTPS)
+from deconstructor.ssl_trust import bootstrap_ssl_trust
+
+bootstrap_ssl_trust()
+
 import cgi
 import json
 import mimetypes
@@ -368,6 +373,7 @@ class LinkUIHandler(BaseHTTPRequestHandler):
 def main(host: str = "127.0.0.1", port: int = 8765) -> None:
     from deconstructor.neo4j_launcher import _cleanup_on_process_exit, start_ui_watchdog
 
+    bootstrap_ssl_trust()
     os.chdir(ROOT)
     start_ui_watchdog()
     server = ThreadingHTTPServer((host, port), LinkUIHandler)

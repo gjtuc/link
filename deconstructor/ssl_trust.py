@@ -41,7 +41,11 @@ def bootstrap_ssl_trust() -> None:
         return
 
     try:
-        import pip_system_certs.wrapt_requests  # noqa: F401 — side effect: patch SSL
+        import pip_system_certs.wrapt_requests  # noqa: F401
+        try:
+            import pip_system_certs.wrapt_urllib3  # noqa: F401
+        except ImportError:
+            pass
     except ImportError:
         logger.warning(
             "pip-system-certs not installed — HTTPS may fail behind corporate SSL proxy. "
