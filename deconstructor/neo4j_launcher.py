@@ -3,10 +3,16 @@ Neo4j 설치 감지 및 자동 기동/종료 (Docker / Neo4j Desktop dbms)
 ================================================================
 
 Link UI 세션 종료 시:
-  - Link가 켠 DB는 stop 시도 (선택)
+  - Link가 켠 DB는 stop 시도
   - **Link가 연 Neo4j Desktop 창은 닫음** (DB STOPPED 여부와 무관)
 
-사용자가 분석 전부터 Desktop을 직접 켜 둔 경우( managed 아님 )는 창을 건드리지 않음.
+세션 추적 (2026-06)
+-------------------
+  ``register_link_neo4j_ui_session`` — Desktop 실행·managed 기동 시 등록.
+  managed 없이 Desktop만 띄운 경우(neo4j.bat 실패 → Desktop.exe)도
+  UI idle 시 ``maybe_cleanup_if_ui_idle`` 이 창을 닫음.
+
+사용자가 분석 전부터 Desktop을 직접 켜 둔 경우(``already_running``)는 창을 건드리지 않음.
 """
 
 from __future__ import annotations
@@ -40,6 +46,7 @@ _heartbeat_lock = threading.Lock()
 _watchdog_started = False
 _desktop_proc: subprocess.Popen | None = None
 _desktop_launched_by_link = False
+_link_neo4j_ui_session = False
 
 
 @dataclass(frozen=True)
@@ -84,6 +91,23 @@ def is_managed_neo4j() -> bool:
         return _managed is not None
 
 
+def link_neo4j_ui_session_active() -> bool:
+    """Link가 이번 서버 실행에서 Desktop을 띄웠거나 managed Neo4j 세션을 연 경우."""
+    return _link_neo4j_ui_session or _desktop_launched_by_link or is_managed_neo4j()
+
+
+def register_link_neo4j_ui_session() -> None:
+    """분석·자동 기동으로 Neo4j Desktop/DB 세션이 열렸음 — UI idle 시 정리 대상."""
+    global _link_neo4j_ui_session
+    _link_neo4j_ui_session = True
+    _log("registered link neo4j ui session (idle 시 Desktop·DB 정리)")
+
+
+def clear_link_neo4j_ui_session() -> None:
+    global _link_neo4j_ui_session
+    _link_neo4j_ui_session = False
+
+
 def mark_managed(
     *,
     method: str,
@@ -105,6 +129,7 @@ def mark_managed(
         f"marked managed neo4j method={method} label={label or '-'} "
         f"close_desktop={close_desktop_window}"
     )
+    register_link_neo4j_ui_session()
 
 
 def clear_managed() -> None:
@@ -137,12 +162,29 @@ def active_ui_tab_count() -> int:
 
 
 def maybe_stop_managed_if_ui_idle(*, reason: str = "no_ui_tabs") -> bool:
-    """브라우저 탭 heartbeat 가 모두 사라졌을 때 managed Neo4j 즉시 stop."""
+    """브라우저 UI idle 시 managed Neo4j stop + Link가 연 Desktop 창 닫기."""
+    return maybe_cleanup_if_ui_idle(reason=reason)
+
+
+def maybe_cleanup_if_ui_idle(*, reason: str = "no_ui_tabs") -> bool:
     if active_ui_tab_count() > 0:
         return False
-    if not is_managed_neo4j():
-        return False
-    return stop_managed_neo4j(reason=reason)
+    if is_managed_neo4j():
+        return stop_managed_neo4j(reason=reason)
+    if _link_neo4j_ui_session or _desktop_launched_by_link:
+        _log(f"cleanup link neo4j ui session ({reason}) — managed 없음, Desktop만 닫기")
+        _close_neo4j_desktop_app(reason=reason)
+        clear_link_neo4j_ui_session()
+        return True
+    return False
+
+
+def _cleanup_on_process_exit() -> None:
+    if is_managed_neo4j():
+        stop_managed_neo4j(reason="ui_server_exit")
+    elif _link_neo4j_ui_session or _desktop_launched_by_link:
+        _close_neo4j_desktop_app(reason="ui_server_exit")
+        clear_link_neo4j_ui_session()
 
 
 def stop_managed_neo4j(*, reason: str = "shutdown") -> bool:
@@ -179,7 +221,7 @@ def stop_managed_neo4j(*, reason: str = "shutdown") -> bool:
 def _watchdog_loop() -> None:
     while True:
         time.sleep(WATCHDOG_POLL_SEC)
-        maybe_stop_managed_if_ui_idle(reason="watchdog_no_ui_tabs")
+        maybe_cleanup_if_ui_idle(reason="watchdog_no_ui_tabs")
 
 
 def start_ui_watchdog() -> None:
@@ -189,7 +231,7 @@ def start_ui_watchdog() -> None:
     _watchdog_started = True
     thread = threading.Thread(target=_watchdog_loop, name="neo4j-ui-watchdog", daemon=True)
     thread.start()
-    atexit.register(lambda: stop_managed_neo4j(reason="ui_server_exit"))
+    atexit.register(_cleanup_on_process_exit)
 
 
 def _log(msg: str) -> None:
@@ -419,6 +461,7 @@ def _launch_desktop_app(exe: Path) -> None:
             start_new_session=True,
         )
         _desktop_launched_by_link = True
+        register_link_neo4j_ui_session()
     except OSError as exc:
         _log(f"Desktop launch failed: {exc}")
 
@@ -470,6 +513,7 @@ def _close_neo4j_desktop_app(*, reason: str) -> bool:
             time.sleep(1.5)
 
     _desktop_launched_by_link = False
+    clear_link_neo4j_ui_session()
     return closed
 
 

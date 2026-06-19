@@ -261,6 +261,7 @@ class LinkUIHandler(BaseHTTPRequestHandler):
                 _dbms_display_name,
                 active_ui_tab_count,
                 is_managed_neo4j,
+                link_neo4j_ui_session_active,
                 probe_neo4j_installation,
             )
             from deconstructor.viz.neo4j_utils import neo4j_is_available
@@ -270,6 +271,7 @@ class LinkUIHandler(BaseHTTPRequestHandler):
                 {
                     "neo4j": neo4j_is_available(),
                     "neo4j_managed": is_managed_neo4j(),
+                    "neo4j_link_session": link_neo4j_ui_session_active(),
                     "ui_tabs": active_ui_tab_count(),
                     "install": {
                         "docker": probe.docker_cli,
@@ -364,7 +366,7 @@ class LinkUIHandler(BaseHTTPRequestHandler):
 
 
 def main(host: str = "127.0.0.1", port: int = 8765) -> None:
-    from deconstructor.neo4j_launcher import start_ui_watchdog, stop_managed_neo4j
+    from deconstructor.neo4j_launcher import _cleanup_on_process_exit, start_ui_watchdog
 
     os.chdir(ROOT)
     start_ui_watchdog()
@@ -379,7 +381,7 @@ def main(host: str = "127.0.0.1", port: int = 8765) -> None:
     except KeyboardInterrupt:
         print("\n[LinkUI] stopped")
     finally:
-        stop_managed_neo4j(reason="ui_server_exit")
+        _cleanup_on_process_exit()
 
 
 if __name__ == "__main__":

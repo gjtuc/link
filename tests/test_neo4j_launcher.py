@@ -82,6 +82,27 @@ def test_stop_managed_closes_desktop_for_dbms_method(monkeypatch):
     clear_managed()
 
 
+def test_cleanup_desktop_session_without_managed(monkeypatch):
+    from deconstructor import neo4j_launcher as nl
+    from deconstructor.neo4j_launcher import (
+        clear_link_neo4j_ui_session,
+        clear_managed,
+        maybe_cleanup_if_ui_idle,
+        register_link_neo4j_ui_session,
+    )
+
+    clear_managed()
+    clear_link_neo4j_ui_session()
+    nl._desktop_launched_by_link = False
+    closed: list[str] = []
+    monkeypatch.setattr(nl, "_close_neo4j_desktop_app", lambda *, reason: closed.append(reason) or True)
+
+    register_link_neo4j_ui_session()
+    assert maybe_cleanup_if_ui_idle(reason="test_idle") is True
+    assert closed == ["test_idle"]
+    clear_link_neo4j_ui_session()
+
+
 def test_maybe_stop_skips_when_tabs_active():
     from deconstructor.neo4j_launcher import (
         clear_managed,
