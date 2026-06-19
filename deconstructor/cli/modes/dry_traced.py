@@ -34,7 +34,6 @@ from __future__ import annotations
 from deconstructor.cli.print_util import safe_print
 from deconstructor.pipeline_trace import run_pipeline_traced
 from deconstructor.report import format_traced_report, state_to_json
-from deconstructor.viz.export import maybe_visualize_after_pipeline
 
 
 def run_dry_traced(
@@ -52,8 +51,6 @@ def run_dry_traced(
     )
     if as_json:
         safe_print(state_to_json(traced.final_state))
-        maybe_visualize_after_pipeline(persist_db=persist_db)
         return 0
     safe_print(format_traced_report(traced))
-    maybe_visualize_after_pipeline(persist_db=persist_db)
     return 0

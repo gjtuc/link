@@ -176,4 +176,4 @@ def verify_truth_table(rows: list[TruthTableRow]) -> list[str]:
         if cls != row.expected_classification:
             errors.append(f"{row.pattern}: class {cls}")
     return errors
-
+

@@ -134,4 +134,4 @@ def proposals_to_mechanism_map(
         (p.source_fact_id, p.target_fact_id): p.proposed_mechanism
         for p in batch.proposals
     }
-
+

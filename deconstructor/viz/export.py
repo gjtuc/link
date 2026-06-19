@@ -1,76 +1,90 @@
 """
-Neo4j → HTML보내기 및 기본 브라우저 자동 오픈
-================================================
+Step 4 — 브라우저 자동화 및 파이프라인 결합 (Micro-step)
+========================================================
 
-## 파이프라인 연동
+Micro-steps ([VIZ-S4-...] 로그):
+  S4-1  persist_db / --db 가드
+  S4-2  Step 2 fetch_causal_graph()
+  S4-3  Step 3 render_to_html()
+  S4-4  webbrowser.open(file://...)
+  S4-5  완료 요약
 
-  cli/modes/live.py, dry_traced.py 가 파이프라인 리포트 출력 **직후**
-  maybe_visualize_after_pipeline(persist_db=...) 호출.
-
-  --db 없으면 Neo4j에 쓰지 않으므로 viz 스킵.
-
-## 출력 위치
-
-  DEFAULT_OUTPUT = 프로젝트 루트 graph_output.html
-  (deconstructor/viz/export.py 기준 parents[2])
-
-## 다른 AI가 수정할 때
-
-  - 브라우저 자동 오픈 끄려면: maybe_visualize_after_pipeline 에 플래그 추가하거나
-    cli/parser.py 에 --no-viz 옵션 연결
-  - viz 실패는 파이프라인 성공을 막지 않음 (try/except + 경고 출력)
+main.py 마지막에서 maybe_visualize_after_pipeline() 호출.
 """
 
 from __future__ import annotations
 
+import logging
 import webbrowser
 from pathlib import Path
 
-from deconstructor.viz.neo4j_fetch import fetch_full_graph
-from deconstructor.viz.pyvis_render import render_to_html
+from deconstructor.viz.neo4j_utils import fetch_causal_graph
+from deconstructor.viz.visualizer import render_to_html
 
-# .../deconstructor/graph_output.html (gitignore 대상)
+logger = logging.getLogger(__name__)
+
 DEFAULT_OUTPUT = Path(__file__).resolve().parents[2] / "graph_output.html"
+
+
+def _log(step: str, msg: str) -> None:
+    line = f"[VIZ-S4-{step}] {msg}"
+    logger.info(line)
+    print(line)
 
 
 def open_graph_in_browser(
     output_path: Path | None = None,
     *,
     title: str = "Deconstructor Causal Graph",
+    max_nodes: int = 300,
 ) -> Path:
     """
-    Neo4j 전체 그래프 → HTML 저장 → 시스템 기본 브라우저에서 file:// URI 오픈.
+    End-to-end: Neo4j fetch → pyvis HTML → 기본 브라우저 오픈.
 
     Args:
-        output_path: None이면 DEFAULT_OUTPUT
-        title: pyvis 페이지 제목
-
-    Returns:
-        저장된 HTML 절대 경로
-
-    Side effects:
-        webbrowser.open(), stdout [VIZ] 로그
+        output_path: None이면 프로젝트 루트 graph_output.html
+        max_nodes: Step 2 노드 상한 (기본 300)
     """
     out = output_path or DEFAULT_OUTPUT
-    nodes, edges = fetch_full_graph()
-    path = render_to_html(nodes, edges, out, title=title)
 
-    uri = path.as_uri()
-    webbrowser.open(uri)
+    _log("2", "start fetch_causal_graph (Step 2)")
+    fetched = fetch_causal_graph(max_nodes=max_nodes)
+    if fetched.truncated:
+        _log(
+            "2",
+            f"WARNING truncated: showing {len(fetched.nodes)}/{fetched.total_nodes_in_db} nodes",
+        )
+
+    _log("3", f"start render_to_html → {out} (Step 3)")
+    path = render_to_html(fetched.nodes, fetched.edges, out, title=title)
+
+    _log("4", f"webbrowser.open {path.as_uri()}")
+    webbrowser.open(path.as_uri())
+
+    _log(
+        "5",
+        f"done nodes={len(fetched.nodes)} edges={len(fetched.edges)} "
+        f"file={path}",
+    )
     print(f"\n[VIZ] graph saved: {path}")
-    print(f"[VIZ] opened in browser ({len(nodes)} nodes, {len(edges)} edges)")
+    print(
+        f"[VIZ] opened in browser "
+        f"({len(fetched.nodes)} nodes, {len(fetched.edges)} verified edges)"
+    )
     return path
 
 
 def maybe_visualize_after_pipeline(*, persist_db: bool) -> None:
     """
-    CLI 후처리 훅 — persist_db=True (--db) 일 때만 시각화.
+    main.py 후처리 훅 — --db 로 Neo4j에 썼을 때만 Step 2~4 실행.
 
-    Neo4j 미사용 run 에서는 DB가 비어 있거나 stale 일 수 있으므로 스킵.
-    예외는 삼켜서 파이프라인 exit code 0 유지.
+    파이프라인 실패(exit!=0) 시 main.py 에서 호출하지 않음.
     """
     if not persist_db:
+        _log("1", "skip: persist_db=False (--db not set)")
         return
+
+    _log("1", "persist_db=True → running end-to-end visualization")
     try:
         open_graph_in_browser()
     except Exception as exc:

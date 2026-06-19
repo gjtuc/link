@@ -46,4 +46,4 @@ def stub_mechanism(source: AtomicFact, target: AtomicFact) -> str:
         f"{source.subject} {source.state_change} propagates to "
         f"{target.subject} {target.state_change}"
     )
-
+

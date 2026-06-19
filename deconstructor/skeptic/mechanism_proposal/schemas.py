@@ -47,4 +47,4 @@ class MechanismProposalBatch(BaseModel):
     """
 
     proposals: list[MechanismProposal] = Field(default_factory=list)
-
+

@@ -42,4 +42,4 @@ Target fact:
   state_change: {target_change}
 
 Return a MechanismProposal with proposed_mechanism only."""
-
+

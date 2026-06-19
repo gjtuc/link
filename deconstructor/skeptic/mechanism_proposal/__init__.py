@@ -50,4 +50,4 @@ __all__ = [
     "proposals_to_mechanism_map",
     "stub_mechanism",
 ]
-
+

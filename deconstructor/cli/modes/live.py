@@ -35,7 +35,6 @@ from deconstructor.cli.json_util import encode_pipeline_result
 from deconstructor.cli.print_util import safe_print
 from deconstructor.graph_builder import run_pipeline
 from deconstructor.report import format_dry_run_report
-from deconstructor.viz.export import maybe_visualize_after_pipeline
 
 
 def run_live(
@@ -47,8 +46,6 @@ def run_live(
     result = run_pipeline(headline, dry_run=False, persist_db=persist_db)
     if as_json:
         print(encode_pipeline_result(result))
-        maybe_visualize_after_pipeline(persist_db=persist_db)
         return 0
     safe_print(format_dry_run_report(result))
-    maybe_visualize_after_pipeline(persist_db=persist_db)
     return 0
