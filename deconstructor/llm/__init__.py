@@ -33,14 +33,20 @@ from __future__ import annotations
 from langchain_core.language_models import BaseChatModel
 
 from deconstructor import config
-from deconstructor.llm.gemini_provider import build_gemini_model
+from deconstructor.llm.gemini_provider import GeminiTier, build_gemini_model
 from deconstructor.llm.openai_provider import build_openai_model
 
 
-def get_chat_model() -> BaseChatModel:
+def get_chat_model(*, tier: GeminiTier = "pro") -> BaseChatModel:
+    """
+    LLM 인스턴스 반환.
+
+    tier=pro   — Deconstruct·Skeptic·긴 문서 요약 (Gemini 3.1 Pro, thinking high)
+    tier=flash — 이미지 OCR·가벼운 추출 (Gemini 3.5 Flash)
+    """
     provider = config.resolve_llm_provider()
     if provider == "gemini":
-        return build_gemini_model()
+        return build_gemini_model(tier=tier)
     if provider == "openai":
         return build_openai_model()
     raise RuntimeError(

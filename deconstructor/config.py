@@ -50,8 +50,15 @@ GEMINI_API_KEY = _first_env(
     "GOOGLE_API_KEY",
     "GOOGLE_GENERATIVE_AI_API_KEY",
 )
-# gemini-2.0-flash 는 일부 계정에서 404 — 2.5-flash 권장
-GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+# gemini-2.0-flash 는 일부 계정에서 404 — 3.x Flash/Pro 권장 (README 참고)
+GEMINI_MODEL_FLASH = os.getenv("GEMINI_MODEL_FLASH", "gemini-3.5-flash")
+GEMINI_MODEL_PRO = os.getenv("GEMINI_MODEL_PRO", "gemini-3.1-pro-preview")
+# 하위 호환: GEMINI_MODEL 단일 지정 시 Flash 로 취급
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", GEMINI_MODEL_FLASH)
+
+# Gemini 3+ thinking_level: minimal | low | medium | high
+GEMINI_THINKING_LEVEL_FLASH = os.getenv("GEMINI_THINKING_LEVEL_FLASH", "medium")
+GEMINI_THINKING_LEVEL_PRO = os.getenv("GEMINI_THINKING_LEVEL_PRO", "high")
 
 # auto | gemini | openai
 LLM_PROVIDER = os.getenv("LLM_PROVIDER", "auto").lower()
@@ -75,6 +82,8 @@ def _apply_local_settings() -> None:
     ImportError면 무시 (CI·테스트는 env만 사용 가능).
     """
     global OPENAI_API_KEY, OPENAI_MODEL, GEMINI_API_KEY, GEMINI_MODEL
+    global GEMINI_MODEL_FLASH, GEMINI_MODEL_PRO
+    global GEMINI_THINKING_LEVEL_FLASH, GEMINI_THINKING_LEVEL_PRO
     global LLM_PROVIDER, NEO4J_URI, NEO4J_USER, NEO4J_PASSWORD, TAVILY_API_KEY
 
     try:
@@ -87,6 +96,10 @@ def _apply_local_settings() -> None:
         "OPENAI_MODEL",
         "GEMINI_API_KEY",
         "GEMINI_MODEL",
+        "GEMINI_MODEL_FLASH",
+        "GEMINI_MODEL_PRO",
+        "GEMINI_THINKING_LEVEL_FLASH",
+        "GEMINI_THINKING_LEVEL_PRO",
         "LLM_PROVIDER",
         "NEO4J_URI",
         "NEO4J_USER",

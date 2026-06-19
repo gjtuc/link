@@ -35,7 +35,8 @@ def main() -> int:
     # 키 값 자체는 출력하지 않음 (보안)
     print(f"GEMINI_API_KEY: {'set' if config.GEMINI_API_KEY else 'missing'}")
     print(f"OPENAI_API_KEY: {'set' if config.OPENAI_API_KEY else 'missing'}")
-    print(f"GEMINI_MODEL  : {config.GEMINI_MODEL}")
+    print(f"GEMINI_MODEL_FLASH : {config.GEMINI_MODEL_FLASH} (thinking={config.GEMINI_THINKING_LEVEL_FLASH})")
+    print(f"GEMINI_MODEL_PRO   : {config.GEMINI_MODEL_PRO} (thinking={config.GEMINI_THINKING_LEVEL_PRO})")
     print(f"NEO4J_URI     : {config.NEO4J_URI}")
     print(f"NEO4J_PASSWORD: {'set' if config.NEO4J_PASSWORD else 'missing'}")
 
@@ -47,8 +48,10 @@ def main() -> int:
         try:
             from deconstructor.llm import get_chat_model
 
-            model = get_chat_model()
-            print(f"\n[OK] LLM client: {type(model).__name__}")
+            flash = get_chat_model(tier="flash")
+            pro = get_chat_model(tier="pro")
+            print(f"\n[OK] LLM Flash: {type(flash).__name__} model={getattr(flash, 'model', '?')}")
+            print(f"[OK] LLM Pro  : {type(pro).__name__} model={getattr(pro, 'model', '?')}")
         except Exception as exc:
             print(f"\n[FAIL] LLM client: {exc}")
             ok = False

@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Deconstructor — 인과 그래프</title>
+  <style>
+    :root {
+      --bg: #f8f9fa; --panel: #fff; --border: #dadce0;
+      --accent: #1a73e8; --accent-hover: #1765cc;
+      --muted: #5f6368; --danger: #d93025;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: "Segoe UI", "Apple SD Gothic Neo", sans-serif; background: var(--bg); color: #202124; min-height: 100vh; }
+    header { padding: 16px 24px; background: var(--panel); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+    header h1 { margin: 0; font-size: 20px; font-weight: 500; }
+    header p { margin: 4px 0 0; color: var(--muted); font-size: 13px; }
+    .layout { display: grid; grid-template-columns: 1fr 1fr; min-height: calc(100vh - 88px); }
+    @media (max-width: 960px) { .layout { grid-template-columns: 1fr; } }
+    .panel { background: var(--panel); border-right: 1px solid var(--border); display: flex; flex-direction: column; }
+    .panel:last-child { border-right: none; }
+    .tabs { display: flex; border-bottom: 1px solid var(--border); padding: 0 8px; flex-wrap: wrap; }
+    .tab { border: none; background: none; padding: 12px 16px; font-size: 14px; color: var(--muted); cursor: pointer; border-bottom: 3px solid transparent; }
+    .tab.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 500; }
+    .pane { display: none; flex-direction: column; padding: 14px 16px; gap: 8px; }
+    .pane.active { display: flex; }
+    textarea {
+      width: 100%; min-height: 160px; border: 1px solid var(--border); border-radius: 8px;
+      padding: 12px; font-size: 14px; line-height: 1.5; resize: vertical; font-family: inherit;
+    }
+    textarea:focus { outline: 2px solid rgba(26,115,232,.25); border-color: var(--accent); }
+    .dropzone {
+      min-height: 140px; border: 2px dashed var(--border); border-radius: 12px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 8px; color: var(--muted); cursor: pointer; text-align: center; padding: 16px;
+    }
+    .dropzone.dragover { border-color: var(--accent); background: #e8f0fe; }
+    .dropzone input { display: none; }
+    .file-list { width: 100%; font-size: 12px; color: var(--accent); text-align: left; max-height: 100px; overflow: auto; }
+    .file-list div { padding: 2px 0; word-break: break-all; }
+    .batch-note {
+      margin: 0 16px; padding: 10px 12px; background: #e8f0fe; border-radius: 8px;
+      font-size: 12px; color: #174ea6; line-height: 1.45;
+    }
+    .actions { display: flex; align-items: center; gap: 12px; padding: 12px 16px 8px; flex-wrap: wrap; }
+    button.primary {
+      background: var(--accent); color: #fff; border: none; border-radius: 24px;
+      padding: 10px 22px; font-size: 14px; font-weight: 500; cursor: pointer;
+    }
+    button.primary:hover:not(:disabled) { background: var(--accent-hover); }
+    button.primary:disabled { opacity: .55; cursor: wait; }
+    .hint { font-size: 12px; color: var(--muted); }
+    .right-head { padding: 14px 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; gap: 8px; }
+    .stats { font-size: 12px; color: var(--muted); }
+    .graph-wrap { flex: 1; position: relative; background: #111; min-height: 420px; }
+    .graph-wrap iframe { width: 100%; height: 100%; border: none; min-height: 420px; }
+    .placeholder { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #9aa0a6; font-size: 14px; padding: 24px; text-align: center; background: #1e1e1e; }
+    .placeholder.hidden { display: none; }
+    .status { margin: 0 16px 12px; padding: 10px 12px; border-radius: 8px; font-size: 13px; display: none; }
+    .status.show { display: block; }
+    .status.info { background: #e8f0fe; color: #174ea6; }
+    .status.error { background: #fce8e6; color: var(--danger); }
+    .status.ok { background: #e6f4ea; color: #137333; }
+    .results { margin: 0 16px 12px; font-size: 12px; color: var(--muted); max-height: 120px; overflow: auto; }
+    .results div { margin-bottom: 6px; padding-bottom: 6px; border-bottom: 1px solid #eee; }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>Deconstructor</h1>
+      <p>텍스트 · 링크 · 이미지 · PDF/DOCX — <strong>여러 개 동시</strong> → 인과 그래프</p>
+    </div>
+    <div class="hint">Neo4j Desktop <code>link</code> RUNNING · Gemini API</div>
+  </header>
+
+  <div class="layout">
+    <section class="panel">
+      <div class="tabs">
+        <button class="tab active" data-tab="text">텍스트</button>
+        <button class="tab" data-tab="link">링크</button>
+        <button class="tab" data-tab="image">이미지</button>
+        <button class="tab" data-tab="document">문서</button>
+      </div>
+
+      <div class="batch-note">
+        <strong>동시 입력:</strong> 탭마다 넣은 내용이 <em>한 번에</em> 모두 분석됩니다.<br />
+        텍스트는 빈 줄로 여러 건 구분 · 링크는 한 줄에 하나 · 이미지/문서는 여러 파일 선택
+      </div>
+
+      <div id="pane-text" class="pane active">
+        <textarea id="input-text" placeholder="뉴스·사실 관계 (여러 건은 빈 줄로 구분)&#10;&#10;예)&#10;[단독] 10:00 grid power가 off됐다.&#10;10:02 factory A power supply가 interrupted됐다.&#10;&#10;두 번째 기사 텍스트..."></textarea>
+      </div>
+
+      <div id="pane-link" class="pane">
+        <textarea id="input-urls" placeholder="URL 한 줄에 하나&#10;&#10;https://example.com/news/...&#10;https://example.com/report.pdf"></textarea>
+      </div>
+
+      <div id="pane-image" class="pane">
+        <label class="dropzone" id="drop-image">
+          <input type="file" id="file-image" accept="image/*" multiple />
+          <strong>이미지 여러 장 — 드래그 또는 클릭</strong>
+          <span>PNG, JPG, WEBP (기사 캡처·스크린샷)</span>
+          <div class="file-list" id="list-image"></div>
+        </label>
+      </div>
+
+      <div id="pane-document" class="pane">
+        <label class="dropzone" id="drop-document">
+          <input type="file" id="file-document" accept=".txt,.md,.pdf,.docx,.csv" multiple />
+          <strong>문서 여러 개 — 드래그 또는 클릭</strong>
+          <span>TXT, MD, PDF, DOCX</span>
+          <div class="file-list" id="list-document"></div>
+        </label>
+      </div>
+
+      <div class="actions">
+        <button class="primary" id="btn-run">전체 분석 시작</button>
+        <span class="hint" id="count-hint">입력 0건</span>
+      </div>
+      <div id="status" class="status"></div>
+      <div id="results" class="results"></div>
+    </section>
+
+    <section class="panel">
+      <div class="right-head">
+        <span>인과 그래프</span>
+        <span class="stats" id="stats">—</span>
+      </div>
+      <p class="hint" style="padding:0 16px 8px;margin:0;font-size:11px;color:#5f6368;">
+        그래프 우측 상단 <strong>범례</strong> — 노드 색·크기·화살표 의미
+      </p>
+      <div class="graph-wrap">
+        <div class="placeholder" id="graph-placeholder">
+          왼쪽에 입력 후 「전체 분석 시작」<br />모든 탭의 내용이 순서대로 Neo4j에 쌓입니다
+        </div>
+        <iframe id="graph-frame" title="Causal Graph"></iframe>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const tabs = document.querySelectorAll(".tab");
+    const panes = document.querySelectorAll(".pane");
+    let imageFiles = [];
+    let documentFiles = [];
+
+    tabs.forEach((tab) => {
+      tab.addEventListener("click", () => {
+        tabs.forEach((t) => t.classList.toggle("active", t === tab));
+        panes.forEach((p) => p.classList.toggle("active", p.id === `pane-${tab.dataset.tab}`));
+      });
+    });
+
+    function renderFileList(listEl, files) {
+      listEl.innerHTML = files.length
+        ? files.map((f) => `<div>• ${f.name}</div>`).join("")
+        : "";
+    }
+
+    function countInputs() {
+      const text = document.getElementById("input-text").value.trim();
+      const urls = document.getElementById("input-urls").value.trim();
+      let n = 0;
+      if (text) n += text.split(/\n\s*\n+/).filter(Boolean).length;
+      if (urls) n += urls.split("\n").filter((l) => l.trim()).length;
+      n += imageFiles.length + documentFiles.length;
+      document.getElementById("count-hint").textContent = `입력 ${n}건`;
+      return n;
+    }
+
+    function setupMultiDropzone(zoneId, inputId, listId, store) {
+      const zone = document.getElementById(zoneId);
+      const input = document.getElementById(inputId);
+      const listEl = document.getElementById(listId);
+
+      const setFiles = (fileList) => {
+        store.length = 0;
+        for (const f of fileList) store.push(f);
+        renderFileList(listEl, store);
+        countInputs();
+      };
+
+      zone.addEventListener("click", (e) => { if (e.target.tagName !== "A") input.click(); });
+      zone.addEventListener("dragover", (e) => { e.preventDefault(); zone.classList.add("dragover"); });
+      zone.addEventListener("dragleave", () => zone.classList.remove("dragover"));
+      zone.addEventListener("drop", (e) => {
+        e.preventDefault();
+        zone.classList.remove("dragover");
+        if (e.dataTransfer.files.length) setFiles(e.dataTransfer.files);
+      });
+      input.addEventListener("change", () => setFiles(input.files));
+    }
+
+    setupMultiDropzone("drop-image", "file-image", "list-image", imageFiles);
+    setupMultiDropzone("drop-document", "file-document", "list-document", documentFiles);
+    document.getElementById("input-text").addEventListener("input", countInputs);
+    document.getElementById("input-urls").addEventListener("input", countInputs);
+
+    const statusEl = document.getElementById("status");
+    const resultsEl = document.getElementById("results");
+    const statsEl = document.getElementById("stats");
+    const btn = document.getElementById("btn-run");
+    const frame = document.getElementById("graph-frame");
+    const placeholder = document.getElementById("graph-placeholder");
+
+    function setStatus(msg, kind) {
+      statusEl.textContent = msg;
+      statusEl.className = `status show ${kind}`;
+    }
+
+    btn.addEventListener("click", async () => {
+      const n = countInputs();
+      if (n === 0) {
+        setStatus("텍스트·링크·이미지·문서 중 하나 이상 입력하세요.", "error");
+        return;
+      }
+
+      btn.disabled = true;
+      setStatus(`분석 중… ${n}건 (건당 1~2분, 순서대로 Neo4j에 저장)`, "info");
+      resultsEl.innerHTML = "";
+
+      try {
+        const fd = new FormData();
+        fd.append("text", document.getElementById("input-text").value);
+        fd.append("urls", document.getElementById("input-urls").value);
+        imageFiles.forEach((f) => fd.append("images", f, f.name));
+        documentFiles.forEach((f) => fd.append("documents", f, f.name));
+
+        const res = await fetch("/api/analyze", { method: "POST", body: fd });
+        const data = await res.json();
+        if (!res.ok || !data.ok) throw new Error(data.error || "분석 실패");
+
+        if (data.sources) {
+          resultsEl.innerHTML = data.sources.map((s) =>
+            `<div><strong>${s.index}. ${s.kind}</strong> ${s.label}<br>${s.preview}</div>`
+          ).join("");
+        }
+        statsEl.textContent =
+          `${data.items_processed}건 처리 · 노드 ${data.nodes} · 엣지 ${data.edges} · 인과 ${data.verified_edges_total}`;
+        placeholder.classList.add("hidden");
+        frame.src = `/graph_output.html?t=${Date.now()}`;
+        setStatus(`완료 — ${data.items_processed}건 분석, 그래프 갱신`, "ok");
+      } catch (err) {
+        setStatus(err.message || String(err), "error");
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
+    countInputs();
+  </script>
+</body>
+</html>

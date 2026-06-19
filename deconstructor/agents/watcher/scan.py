@@ -16,13 +16,13 @@ STORM_CANDIDATES_CYPHER = """
 MATCH (t:Fact)
 WHERE coalesce(t.is_critical, false) = false
   AND (
-    size((t)<-[:CAUSES]-()) >= $min_incoming
+    COUNT { (t)<-[:CAUSES]-() } >= $min_incoming
     OR coalesce(t.stress_level, 0) > $stress_threshold
   )
 RETURN t.id AS id,
        t.subject AS subject,
        coalesce(t.stress_level, 0) AS stress_level,
-       size((t)<-[:CAUSES]-()) AS incoming_count
+       COUNT { (t)<-[:CAUSES]-() } AS incoming_count
 ORDER BY stress_level DESC, incoming_count DESC
 """
 

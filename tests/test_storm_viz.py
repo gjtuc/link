@@ -77,6 +77,47 @@ def test_render_html_critical_node_red_large_shadow(tmp_path: Path):
     assert "white" in text.lower()
 
 
+def test_build_pyvis_network_critical_cause_gets_red_border():
+    """
+    CRITICAL upstream 강조: 원인(extracted 파랑)은 fill 유지 + border=#ff0033.
+
+    시나리오: Trump(extracted) --CAUSES--> US and Iran(critical)
+    → e1.border == COLOR_CRITICAL, e1.background == extracted blue
+    """
+    nodes = [
+        GraphNode(
+            "e1",
+            "Trump",
+            "signed MOU",
+            "2026-01-01T10:00:00",
+            "h",
+            "extracted",
+            "active",
+        ),
+        GraphNode(
+            "c1",
+            "US and Iran",
+            "negotiations",
+            "2026-01-01T10:05:00",
+            "h",
+            "extracted",
+            "active",
+            stress_level=110,
+            is_critical=True,
+        ),
+    ]
+    edges = [GraphEdge("e1", "c1", 1.0, 60000)]
+    net = build_pyvis_network(nodes, edges)
+
+    cause = next(n for n in net.nodes if n["id"] == "e1")
+    critical = next(n for n in net.nodes if n["id"] == "c1")
+
+    assert cause["color"]["background"] == "#4cc9f0"
+    assert cause["color"]["border"] == COLOR_CRITICAL
+    assert cause["borderWidth"] == 3
+    assert critical["color"]["background"] == COLOR_CRITICAL
+
+
 def test_build_pyvis_network_critical_overrides_verified_color():
     node = GraphNode(
         "c1",

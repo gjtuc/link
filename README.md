@@ -82,8 +82,13 @@ cp deconstructor/local_settings.example.py deconstructor/local_settings.py
 
 ```python
 GEMINI_API_KEY = "your-key"
-GEMINI_MODEL = "gemini-2.5-flash"   # 2.0-flash는 일부 계정에서 404
 LLM_PROVIDER = "gemini"
+
+# 상황별 모델 (API model code)
+GEMINI_MODEL_FLASH = "gemini-3.5-flash"          # 빠른 작업: 이미지 OCR
+GEMINI_MODEL_PRO = "gemini-3.1-pro-preview"      # 깊은 추론: 분해·요약·검증
+GEMINI_THINKING_LEVEL_FLASH = "medium"           # minimal | low | medium | high
+GEMINI_THINKING_LEVEL_PRO = "high"               # Pro는 high 권장 (thinking 시간↑)
 
 NEO4J_URI = "bolt://localhost:7687"
 NEO4J_USER = "neo4j"
@@ -94,9 +99,22 @@ NEO4J_PASSWORD = "your-neo4j-password"
 
 대안: 프로젝트 루트에 `.env` 파일 사용 가능 (`python-dotenv`).
 
+### Gemini 모델 이원화 (Flash vs Pro)
+
+| tier | 기본 모델 | thinking | 쓰는 곳 |
+|------|-----------|----------|---------|
+| **Flash** | `gemini-3.5-flash` | `medium` | 이미지 OCR, 짧은 추출 |
+| **Pro** | `gemini-3.1-pro-preview` | `high` | Deconstruct, URL/PDF 요약, Dreamer, Fact-Checker, Skeptic mechanism |
+
+코드: `get_chat_model(tier="pro")` (파이프라인 기본) / `get_chat_model(tier="flash")` (웹 UI 이미지)
+
 | 변수 | 설명 |
 |------|------|
 | `GEMINI_API_KEY` / `GOOGLE_API_KEY` | Gemini API 키 |
+| `GEMINI_MODEL_FLASH` | Flash model code (속도) |
+| `GEMINI_MODEL_PRO` | Pro model code (추론) |
+| `GEMINI_THINKING_LEVEL_FLASH` | Flash thinking: `minimal`~`high` |
+| `GEMINI_THINKING_LEVEL_PRO` | Pro thinking: `high` 권장 |
 | `OPENAI_API_KEY` | OpenAI 대안 |
 | `LLM_PROVIDER` | `auto` \| `gemini` \| `openai` |
 | `NEO4J_URI` | Bolt URI |
@@ -264,7 +282,8 @@ python test_skeptic_run.py
 | 증상 | 조치 |
 |------|------|
 | `No LLM API key` | `local_settings.py` 저장 여부·키 확인 |
-| Gemini 404 | `GEMINI_MODEL=gemini-2.5-flash` 로 변경 |
+| Gemini 404 | model code 확인 — Flash `gemini-3.5-flash`, Pro `gemini-3.1-pro-preview` |
+| Pro 느림 | 정상 — `GEMINI_THINKING_LEVEL_PRO=high` 는 thought 시간↑. Flash tier 는 OCR만 사용 |
 | Neo4j 연결 실패 | Desktop 기동·비밀번호·`NEO4J_URI` 확인 |
 | `[VIZ] could not open graph` | Neo4j up + `--db` + 노드 존재 여부 확인 |
 | Windows 한글 깨짐 | `cli/print_util.py` cp949 폴백 적용됨 |
