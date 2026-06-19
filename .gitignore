@@ -5,6 +5,7 @@ local_settings.py
 
 # Generated
 graph_output.html
+logs/
 
 # Python
 __pycache__/

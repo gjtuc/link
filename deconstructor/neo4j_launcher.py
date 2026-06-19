@@ -642,7 +642,7 @@ def ensure_neo4j_running(
         db_hint = f" (DB: {', '.join(names)})" if names else ""
         hint = (
             f"Neo4j bolt 연결 실패{db_hint}. "
-            "Desktop이 떠 있으면 stock Start, 아니면 link_ui.bat 재시작 후 다시 분석. "
+            "Desktop이 떠 있으면 stock Start, 아니면 Link UI 서버 재시작 후 다시 분석. "
             "local_settings NEO4J_PASSWORD 확인"
         )
     else:
