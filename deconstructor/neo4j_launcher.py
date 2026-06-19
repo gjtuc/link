@@ -29,8 +29,9 @@ logger = logging.getLogger(__name__)
 DEFAULT_WAIT_SEC = 90
 POLL_INTERVAL_SEC = 2.0
 
-HEARTBEAT_STALE_SEC = 50.0
-WATCHDOG_POLL_SEC = 20.0
+HEARTBEAT_STALE_SEC = 35.0
+WATCHDOG_POLL_SEC = 10.0
+HIDDEN_TAB_BYE_SEC = 45.0
 
 _managed_lock = threading.Lock()
 _managed: "ManagedNeo4j | None" = None
@@ -158,7 +159,12 @@ def stop_managed_neo4j(*, reason: str = "shutdown") -> bool:
     elif target.method == "desktop_dbms" and target.dbms_bin:
         ok = _stop_desktop_dbms(target.dbms_bin)
 
-    if target.close_desktop_window or _desktop_launched_by_link:
+    # desktop_dbms: Link가 neo4j.bat 으로 기동한 세션 — DB stop 후 Desktop GUI도 닫음
+    if (
+        target.method == "desktop_dbms"
+        or target.close_desktop_window
+        or _desktop_launched_by_link
+    ):
         _close_neo4j_desktop_app(reason=reason)
 
     if ok or not neo4j_is_available():
@@ -437,26 +443,31 @@ def _close_neo4j_desktop_app(*, reason: str) -> bool:
             _desktop_proc = None
 
     if os.name == "nt":
-        for image in ("Neo4j Desktop 2.exe", "Neo4j Desktop.exe"):
-            try:
-                proc = subprocess.run(
-                    ["taskkill", "/IM", image, "/F"],
-                    capture_output=True,
-                    text=True,
-                    timeout=15,
-                    check=False,
-                )
-            except (OSError, subprocess.TimeoutExpired) as exc:
-                _log(f"taskkill {image} failed: {exc}")
-                continue
-            if proc.returncode == 0:
-                _log(f"taskkill ok: {image}")
-                closed = True
-            elif proc.returncode == 128:
-                _log(f"taskkill: {image} not running")
-            else:
-                err = (proc.stderr or proc.stdout or "").strip()[:120]
-                _log(f"taskkill {image} exit {proc.returncode}: {err}")
+        images = ("Neo4j Desktop 2.exe", "Neo4j Desktop.exe")
+        for attempt in (1, 2):
+            for image in images:
+                try:
+                    proc = subprocess.run(
+                        ["taskkill", "/IM", image, "/T", "/F"],
+                        capture_output=True,
+                        text=True,
+                        timeout=20,
+                        check=False,
+                    )
+                except (OSError, subprocess.TimeoutExpired) as exc:
+                    _log(f"taskkill {image} failed: {exc}")
+                    continue
+                if proc.returncode == 0:
+                    _log(f"taskkill ok: {image} (attempt {attempt})")
+                    closed = True
+                elif proc.returncode == 128:
+                    _log(f"taskkill: {image} not running")
+                else:
+                    err = (proc.stderr or proc.stdout or "").strip()[:120]
+                    _log(f"taskkill {image} exit {proc.returncode}: {err}")
+            if closed:
+                break
+            time.sleep(1.5)
 
     _desktop_launched_by_link = False
     return closed
@@ -481,7 +492,10 @@ def ensure_neo4j_running(
         return Neo4jEnsureResult(
             available=True,
             method="already_running",
-            message="Neo4j 이미 연결됨 (Desktop에서 직접 켠 DB — Link가 자동 stop 하지 않음)",
+            message=(
+                "Neo4j 이미 연결됨 (분석 전부터 켜 둔 DB — Link가 stop·Desktop 닫기 안 함. "
+                "탭만 닫아도 Desktop은 유지됨)"
+            ),
         )
 
     probe = probe_neo4j_installation(root)

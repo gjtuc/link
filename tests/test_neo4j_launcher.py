@@ -58,6 +58,30 @@ def test_managed_mark_close_desktop_flag():
     clear_managed()
 
 
+def test_stop_managed_closes_desktop_for_dbms_method(monkeypatch):
+    from deconstructor import neo4j_launcher as nl
+    from deconstructor.neo4j_launcher import clear_managed, mark_managed, stop_managed_neo4j
+
+    clear_managed()
+    closed: list[str] = []
+
+    def _fake_close(*, reason: str) -> bool:
+        closed.append(reason)
+        return True
+
+    def _fake_stop(_bin: Path) -> bool:
+        return True
+
+    monkeypatch.setattr(nl, "_close_neo4j_desktop_app", _fake_close)
+    monkeypatch.setattr(nl, "_stop_desktop_dbms", _fake_stop)
+    monkeypatch.setattr(nl, "neo4j_is_available", lambda: False)
+
+    mark_managed(method="desktop_dbms", dbms_bin=Path("."), label="stock", close_desktop_window=False)
+    stop_managed_neo4j(reason="test")
+    assert closed == ["test"]
+    clear_managed()
+
+
 def test_maybe_stop_skips_when_tabs_active():
     from deconstructor.neo4j_launcher import (
         clear_managed,

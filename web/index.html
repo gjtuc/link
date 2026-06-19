@@ -665,6 +665,9 @@
     const linkTabId = sessionStorage.getItem("linkTabId") || crypto.randomUUID();
     sessionStorage.setItem("linkTabId", linkTabId);
 
+    let heartbeatTimer = null;
+    let hiddenByeTimer = null;
+
     function sendHeartbeat(action) {
       const body = JSON.stringify({ tab_id: linkTabId, action });
       if (action === "bye" && navigator.sendBeacon) {
@@ -679,8 +682,42 @@
       }).catch(() => {});
     }
 
+    function startHeartbeatInterval() {
+      if (heartbeatTimer) return;
+      heartbeatTimer = setInterval(() => sendHeartbeat("ping"), 20000);
+    }
+
+    function stopHeartbeatInterval() {
+      if (!heartbeatTimer) return;
+      clearInterval(heartbeatTimer);
+      heartbeatTimer = null;
+    }
+
+    function scheduleHiddenBye() {
+      clearTimeout(hiddenByeTimer);
+      hiddenByeTimer = setTimeout(() => sendHeartbeat("bye"), 45000);
+    }
+
+    function clearHiddenBye() {
+      clearTimeout(hiddenByeTimer);
+      hiddenByeTimer = null;
+    }
+
     sendHeartbeat("ping");
-    setInterval(() => sendHeartbeat("ping"), 20000);
+    startHeartbeatInterval();
+
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) {
+        stopHeartbeatInterval();
+        scheduleHiddenBye();
+      } else {
+        clearHiddenBye();
+        sendHeartbeat("ping");
+        startHeartbeatInterval();
+      }
+    });
+
+    window.addEventListener("pagehide", () => sendHeartbeat("bye"));
     window.addEventListener("beforeunload", () => sendHeartbeat("bye"));
   </script>
 </body>

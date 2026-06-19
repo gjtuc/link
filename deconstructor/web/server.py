@@ -144,6 +144,7 @@ def _run_pipeline_batch(sources: list[ExtractedSource]) -> dict:
             "ok": True,
             "neo4j": use_db,
             "neo4j_sync": neo4j_sync,
+            "neo4j_persisted": use_db,
             "items_processed": len(sources),
             "sources": runs,
             "nodes": len(fetched.nodes),
@@ -371,7 +372,7 @@ def main(host: str = "127.0.0.1", port: int = 8765) -> None:
     url = f"http://{host}:{port}/"
     print(f"[LinkUI] Deconstructor web UI → {url}")
     print(f"[LinkUI] 지원: 텍스트·URL·이미지·PDF/DOCX — 여러 개 동시 입력")
-    print("[LinkUI] 브라우저 탭이 모두 닫히면 Link가 켠 Neo4j·Desktop 창 자동 정리")
+    print("[LinkUI] 브라우저 탭·창이 닫히거나 45초 이상 숨겨지면 Link가 켠 Neo4j·Desktop 자동 정리")
     print("[LinkUI] 종료: Ctrl+C")
     try:
         server.serve_forever()
