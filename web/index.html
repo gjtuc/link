@@ -24,20 +24,49 @@
     .tab.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 500; }
     .pane { display: none; flex-direction: column; padding: 14px 16px; gap: 8px; }
     .pane.active { display: flex; }
+    .text-drop-wrap {
+      position: relative; border-radius: 8px; border: 1px solid transparent;
+      transition: border-color .15s, background .15s;
+    }
+    .text-drop-wrap.dragover {
+      border-color: var(--accent); background: #e8f0fe;
+    }
+    .text-drop-wrap.dragover textarea { border-color: var(--accent); }
     textarea {
-      width: 100%; min-height: 160px; border: 1px solid var(--border); border-radius: 8px;
+      width: 100%; min-height: 200px; border: 1px solid var(--border); border-radius: 8px;
       padding: 12px; font-size: 14px; line-height: 1.5; resize: vertical; font-family: inherit;
+      display: block;
     }
     textarea:focus { outline: 2px solid rgba(26,115,232,.25); border-color: var(--accent); }
     .dropzone {
-      min-height: 140px; border: 2px dashed var(--border); border-radius: 12px;
+      min-height: 120px; border: 2px dashed var(--border); border-radius: 12px;
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       gap: 8px; color: var(--muted); cursor: pointer; text-align: center; padding: 16px;
     }
     .dropzone.dragover { border-color: var(--accent); background: #e8f0fe; }
     .dropzone input { display: none; }
-    .file-list { width: 100%; font-size: 12px; color: var(--accent); text-align: left; max-height: 100px; overflow: auto; }
-    .file-list div { padding: 2px 0; word-break: break-all; }
+    .file-queue {
+      width: 100%; margin-top: 4px; max-height: 180px; overflow: auto;
+      border: 1px solid var(--border); border-radius: 8px; background: #fafafa;
+    }
+    .file-queue:empty { display: none; }
+    .file-item {
+      display: flex; align-items: flex-start; gap: 8px; padding: 8px 10px;
+      font-size: 12px; border-bottom: 1px solid #eee;
+    }
+    .file-item:last-child { border-bottom: none; }
+    .file-name { flex: 1; word-break: break-all; color: #202124; line-height: 1.4; }
+    .file-kind { flex-shrink: 0; color: var(--muted); font-size: 11px; }
+    .file-remove {
+      flex-shrink: 0; border: none; background: none; color: var(--danger);
+      cursor: pointer; font-size: 16px; line-height: 1; padding: 0 4px;
+    }
+    .file-remove:hover { opacity: 0.75; }
+    .file-actions { display: flex; justify-content: flex-end; padding: 4px 0 0; }
+    .file-actions button {
+      border: none; background: none; color: var(--muted); font-size: 12px;
+      cursor: pointer; text-decoration: underline; padding: 4px 0;
+    }
     .batch-note {
       margin: 0 16px; padding: 10px 12px; background: #e8f0fe; border-radius: 8px;
       font-size: 12px; color: #174ea6; line-height: 1.45;
@@ -49,8 +78,41 @@
     }
     button.primary:hover:not(:disabled) { background: var(--accent-hover); }
     button.primary:disabled { opacity: .55; cursor: wait; }
+    button.secondary {
+      background: #fff; color: var(--danger); border: 1px solid #f5c6c2; border-radius: 24px;
+      padding: 10px 18px; font-size: 14px; cursor: pointer; display: none;
+    }
+    button.secondary.show { display: inline-block; }
     .hint { font-size: 12px; color: var(--muted); }
-    .right-head { padding: 14px 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; gap: 8px; }
+    .right-head { padding: 14px 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .right-head-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .btn-fullscreen {
+      background: #fff; color: var(--accent); border: 1px solid var(--accent);
+      border-radius: 20px; padding: 6px 14px; font-size: 13px; cursor: pointer;
+      font-weight: 500;
+    }
+    .btn-fullscreen:hover { background: #e8f0fe; }
+    .btn-fullscreen.hidden { display: none; }
+    .graph-fullscreen {
+      position: fixed; inset: 0; z-index: 500;
+      background: #0d0d14; display: flex; flex-direction: column;
+    }
+    .graph-fullscreen.hidden { display: none; }
+    .graph-fullscreen-bar {
+      flex-shrink: 0; display: flex; justify-content: space-between; align-items: center;
+      gap: 12px; padding: 6px 14px; background: #fff;
+      border-bottom: 1px solid var(--border);
+    }
+    .graph-fullscreen-bar h2 { margin: 0; font-size: 15px; font-weight: 500; }
+    .graph-title-en { font-size: 13px; font-weight: 400; color: var(--muted); }
+    .graph-fullscreen-body { flex: 1; min-height: 0; position: relative; }
+    .graph-fullscreen-body .graph-wrap { height: 100%; min-height: 0; }
+    .graph-fullscreen-body .graph-wrap iframe { min-height: 100% !important; height: 100% !important; }
+    .btn-exit-fullscreen {
+      background: var(--accent); color: #fff; border: none; border-radius: 20px;
+      padding: 8px 16px; font-size: 13px; cursor: pointer; font-weight: 500;
+    }
+    .btn-exit-fullscreen:hover { background: var(--accent-hover); }
     .stats { font-size: 12px; color: var(--muted); }
     .graph-wrap { flex: 1; position: relative; background: #111; min-height: 420px; }
     .graph-wrap iframe { width: 100%; height: 100%; border: none; min-height: 420px; }
@@ -63,59 +125,75 @@
     .status.ok { background: #e6f4ea; color: #137333; }
     .results { margin: 0 16px 12px; font-size: 12px; color: var(--muted); max-height: 120px; overflow: auto; }
     .results div { margin-bottom: 6px; padding-bottom: 6px; border-bottom: 1px solid #eee; }
+    .modal {
+      position: fixed; inset: 0; background: rgba(0,0,0,.45);
+      display: flex; align-items: center; justify-content: center; z-index: 100;
+      padding: 16px;
+    }
+    .modal.hidden { display: none; }
+    .modal-card {
+      background: #fff; border-radius: 12px; padding: 20px 22px; max-width: 480px; width: 100%;
+      box-shadow: 0 8px 28px rgba(0,0,0,.18);
+    }
+    .modal-card h3 { margin: 0 0 8px; font-size: 17px; font-weight: 500; }
+    .modal-url {
+      word-break: break-all; font-size: 13px; color: var(--accent);
+      background: #f1f3f4; padding: 8px 10px; border-radius: 6px; margin: 10px 0;
+    }
+    .modal-context {
+      font-size: 12px; color: var(--muted); line-height: 1.45;
+      border-left: 3px solid #dadce0; padding-left: 10px; margin: 0 0 14px;
+    }
+    .modal-actions { display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; }
+    .modal-actions button {
+      border-radius: 20px; padding: 8px 16px; font-size: 13px; cursor: pointer; border: 1px solid var(--border);
+      background: #fff;
+    }
+    .modal-actions button.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
   </style>
 </head>
 <body>
   <header>
     <div>
       <h1>Deconstructor</h1>
-      <p>텍스트 · 링크 · 이미지 · PDF/DOCX — <strong>여러 개 동시</strong> → 인과 그래프</p>
+      <p>텍스트·링크·파일 — <strong>여러 개 동시</strong> → 인과 그래프</p>
     </div>
-    <div class="hint">Neo4j Desktop <code>link</code> RUNNING · Gemini API</div>
+    <div class="hint" id="backend-status">상태 확인 중…</div>
   </header>
 
   <div class="layout">
     <section class="panel">
       <div class="tabs">
-        <button class="tab active" data-tab="text">텍스트</button>
-        <button class="tab" data-tab="link">링크</button>
-        <button class="tab" data-tab="image">이미지</button>
-        <button class="tab" data-tab="document">문서</button>
+        <button class="tab active" data-tab="input">입력</button>
+        <button class="tab" data-tab="files">파일 <span id="file-tab-badge" class="hint"></span></button>
       </div>
 
       <div class="batch-note">
-        <strong>동시 입력:</strong> 탭마다 넣은 내용이 <em>한 번에</em> 모두 분석됩니다.<br />
-        텍스트는 빈 줄로 여러 건 구분 · 링크는 한 줄에 하나 · 이미지/문서는 여러 파일 선택
+        <strong>팁:</strong> 입력 칸에 <em>파일을 드래그</em>하면 파일 탭으로 자동 이동합니다.<br />
+        링크만 넣으면 바로 분석 · Neo4j는 분석·그래프 볼 때만 (탭 닫으면 Link가 켠 DB만 자동 stop)
       </div>
 
-      <div id="pane-text" class="pane active">
-        <textarea id="input-text" placeholder="뉴스·사실 관계 (여러 건은 빈 줄로 구분)&#10;&#10;예)&#10;[단독] 10:00 grid power가 off됐다.&#10;10:02 factory A power supply가 interrupted됐다.&#10;&#10;두 번째 기사 텍스트..."></textarea>
+      <div id="pane-input" class="pane active">
+        <div class="text-drop-wrap" id="text-drop-wrap">
+          <textarea id="input-text" placeholder="뉴스·사실 관계, 또는 URL&#10;&#10;예)&#10;[단독] 10:00 grid power가 off됐다.&#10;10:02 factory A power supply가 interrupted됐다.&#10;&#10;https://example.com/news/...  ← 링크만 있으면 바로 분석&#10;&#10;파일은 여기에 드래그해도 됩니다"></textarea>
+        </div>
       </div>
 
-      <div id="pane-link" class="pane">
-        <textarea id="input-urls" placeholder="URL 한 줄에 하나&#10;&#10;https://example.com/news/...&#10;https://example.com/report.pdf"></textarea>
-      </div>
-
-      <div id="pane-image" class="pane">
-        <label class="dropzone" id="drop-image">
-          <input type="file" id="file-image" accept="image/*" multiple />
-          <strong>이미지 여러 장 — 드래그 또는 클릭</strong>
-          <span>PNG, JPG, WEBP (기사 캡처·스크린샷)</span>
-          <div class="file-list" id="list-image"></div>
+      <div id="pane-files" class="pane">
+        <label class="dropzone" id="drop-files">
+          <input type="file" id="file-input" multiple />
+          <strong>파일 추가 — 드래그 또는 클릭</strong>
+          <span>이미지·PDF·DOCX·TXT 등 (종류 구분 없음, 자동 판별)</span>
         </label>
-      </div>
-
-      <div id="pane-document" class="pane">
-        <label class="dropzone" id="drop-document">
-          <input type="file" id="file-document" accept=".txt,.md,.pdf,.docx,.csv" multiple />
-          <strong>문서 여러 개 — 드래그 또는 클릭</strong>
-          <span>TXT, MD, PDF, DOCX</span>
-          <div class="file-list" id="list-document"></div>
-        </label>
+        <div class="file-queue" id="file-queue"></div>
+        <div class="file-actions">
+          <button type="button" id="btn-clear-files">파일 전체 비우기</button>
+        </div>
       </div>
 
       <div class="actions">
         <button class="primary" id="btn-run">전체 분석 시작</button>
+        <button class="secondary" id="btn-cancel" type="button">분석 취소</button>
         <span class="hint" id="count-hint">입력 0건</span>
       </div>
       <div id="status" class="status"></div>
@@ -125,109 +203,396 @@
     <section class="panel">
       <div class="right-head">
         <span>인과 그래프</span>
-        <span class="stats" id="stats">—</span>
+        <div class="right-head-actions">
+          <button type="button" class="btn-fullscreen hidden" id="btn-graph-fs" title="그래프만 전체 화면">전체 화면</button>
+          <span class="stats" id="stats">—</span>
+        </div>
       </div>
       <p class="hint" style="padding:0 16px 8px;margin:0;font-size:11px;color:#5f6368;">
-        그래프 우측 상단 <strong>범례</strong> — 노드 색·크기·화살표 의미
+        그래프 우측 상단 <strong>범례</strong> — 노드 색·크기·화살표 의미 · 분석 후 <strong>전체 화면</strong> 가능
       </p>
-      <div class="graph-wrap">
-        <div class="placeholder" id="graph-placeholder">
-          왼쪽에 입력 후 「전체 분석 시작」<br />모든 탭의 내용이 순서대로 Neo4j에 쌓입니다
+      <div id="graph-wrap-home">
+        <div class="graph-wrap">
+          <div class="placeholder" id="graph-placeholder">
+            왼쪽에 입력 후 「전체 분석 시작」<br />입력·파일이 순서대로 Neo4j에 쌓입니다
+          </div>
+          <iframe id="graph-frame" title="Causal Graph"></iframe>
         </div>
-        <iframe id="graph-frame" title="Causal Graph"></iframe>
       </div>
     </section>
   </div>
 
+  <div id="graph-fullscreen" class="graph-fullscreen hidden" aria-hidden="true">
+    <div class="graph-fullscreen-bar">
+      <h2>인과 그래프 <span class="graph-title-en">(Deconstructor causal graph)</span> — 전체 화면</h2>
+      <div class="right-head-actions">
+        <span class="stats" id="fs-stats">—</span>
+        <button type="button" class="btn-exit-fullscreen" id="btn-exit-fs">전체 화면 종료 (Esc)</button>
+      </div>
+    </div>
+    <div class="graph-fullscreen-body" id="graph-fullscreen-body"></div>
+  </div>
+
+  <div id="link-modal" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="modal-card">
+      <h3>이 링크가 맞습니까?</h3>
+      <p class="hint" style="margin:0;">텍스트 안에 포함된 링크입니다. 웹 페이지 내용을 가져올까요?</p>
+      <div class="modal-url" id="link-modal-url"></div>
+      <p class="modal-context" id="link-modal-context"></p>
+      <div class="modal-actions">
+        <button type="button" id="link-modal-no">아니오, 텍스트 유지</button>
+        <button type="button" class="primary" id="link-modal-yes">예, 링크로 분석</button>
+      </div>
+    </div>
+  </div>
+
   <script>
+    const URL_LINE_RE = /^https?:\/\/\S+$/i;
+    const URL_IN_TEXT_RE = /https?:\/\/[^\s<>"')\]]+/gi;
+
     const tabs = document.querySelectorAll(".tab");
     const panes = document.querySelectorAll(".pane");
-    let imageFiles = [];
-    let documentFiles = [];
+    const inputText = document.getElementById("input-text");
+    const textDropWrap = document.getElementById("text-drop-wrap");
+    const fileTabBadge = document.getElementById("file-tab-badge");
+
+    /** @type {{ id: string, file: File }[]} */
+    let uploadFiles = [];
+    let analyzeAbort = null;
+    let autoAnalyzeTimer = null;
+
+    function switchTab(name) {
+      tabs.forEach((t) => t.classList.toggle("active", t.dataset.tab === name));
+      panes.forEach((p) => p.classList.toggle("active", p.id === `pane-${name}`));
+    }
 
     tabs.forEach((tab) => {
-      tab.addEventListener("click", () => {
-        tabs.forEach((t) => t.classList.toggle("active", t === tab));
-        panes.forEach((p) => p.classList.toggle("active", p.id === `pane-${tab.dataset.tab}`));
-      });
+      tab.addEventListener("click", () => switchTab(tab.dataset.tab));
     });
 
-    function renderFileList(listEl, files) {
-      listEl.innerHTML = files.length
-        ? files.map((f) => `<div>• ${f.name}</div>`).join("")
-        : "";
+    function guessKind(name) {
+      const ext = (name.split(".").pop() || "").toLowerCase();
+      if (["png", "jpg", "jpeg", "webp", "gif", "bmp"].includes(ext)) return "이미지";
+      if (["pdf", "docx", "txt", "md", "csv"].includes(ext)) return "문서";
+      return "자동";
+    }
+
+    function parseInput(raw) {
+      const blocks = (raw || "").trim()
+        ? raw.split(/\n\s*\n+/).map((b) => b.trim()).filter(Boolean)
+        : [];
+
+      const textBlocks = [];
+      const standaloneUrls = [];
+      const embeddedUrls = [];
+
+      for (const block of blocks) {
+        const lines = block.split("\n").map((l) => l.trim()).filter(Boolean);
+        const allLinesAreUrls = lines.length > 0 && lines.every((l) => URL_LINE_RE.test(l));
+
+        if (allLinesAreUrls) {
+          standaloneUrls.push(...lines);
+          continue;
+        }
+
+        const found = [...new Set((block.match(URL_IN_TEXT_RE) || []))];
+        if (found.length) {
+          for (const url of found) {
+            embeddedUrls.push({ url, block });
+          }
+        }
+        textBlocks.push(block);
+      }
+
+      return { textBlocks, standaloneUrls, embeddedUrls };
+    }
+
+    function isLinkOnlyInput(raw) {
+      const trimmed = (raw || "").trim();
+      if (!trimmed) return false;
+      const { textBlocks, standaloneUrls, embeddedUrls } = parseInput(trimmed);
+      return standaloneUrls.length > 0 && textBlocks.length === 0 && embeddedUrls.length === 0;
+    }
+
+    function renderFileQueue() {
+      const queue = document.getElementById("file-queue");
+      queue.innerHTML = uploadFiles.map((item) => `
+        <div class="file-item" data-id="${item.id}">
+          <span class="file-name">${item.file.name}</span>
+          <span class="file-kind">${guessKind(item.file.name)}</span>
+          <button type="button" class="file-remove" title="이 항목 제거" aria-label="제거">✕</button>
+        </div>
+      `).join("");
+
+      queue.querySelectorAll(".file-remove").forEach((btn) => {
+        btn.addEventListener("click", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          const id = btn.closest(".file-item").dataset.id;
+          uploadFiles = uploadFiles.filter((x) => x.id !== id);
+          renderFileQueue();
+          countInputs();
+        });
+      });
+
+      document.getElementById("btn-clear-files").style.display = uploadFiles.length ? "inline" : "none";
+      fileTabBadge.textContent = uploadFiles.length ? `(${uploadFiles.length})` : "";
+    }
+
+    function addFiles(fileList, { switchToFiles = false } = {}) {
+      let added = 0;
+      for (const f of fileList) {
+        const dup = uploadFiles.some((x) => x.file.name === f.name && x.file.size === f.size);
+        if (!dup) {
+          uploadFiles.push({ id: crypto.randomUUID(), file: f });
+          added += 1;
+        }
+      }
+      if (added) {
+        renderFileQueue();
+        countInputs();
+        if (switchToFiles) {
+          switchTab("files");
+          setStatus(`파일 ${added}개를 추가했습니다.`, "info");
+        }
+      }
+      return added;
     }
 
     function countInputs() {
-      const text = document.getElementById("input-text").value.trim();
-      const urls = document.getElementById("input-urls").value.trim();
-      let n = 0;
-      if (text) n += text.split(/\n\s*\n+/).filter(Boolean).length;
-      if (urls) n += urls.split("\n").filter((l) => l.trim()).length;
-      n += imageFiles.length + documentFiles.length;
+      const { textBlocks, standaloneUrls } = parseInput(inputText.value);
+      const n = textBlocks.length + standaloneUrls.length + uploadFiles.length;
       document.getElementById("count-hint").textContent = `입력 ${n}건`;
       return n;
     }
 
-    function setupMultiDropzone(zoneId, inputId, listId, store) {
-      const zone = document.getElementById(zoneId);
-      const input = document.getElementById(inputId);
-      const listEl = document.getElementById(listId);
-
-      const setFiles = (fileList) => {
-        store.length = 0;
-        for (const f of fileList) store.push(f);
-        renderFileList(listEl, store);
-        countInputs();
-      };
-
-      zone.addEventListener("click", (e) => { if (e.target.tagName !== "A") input.click(); });
-      zone.addEventListener("dragover", (e) => { e.preventDefault(); zone.classList.add("dragover"); });
-      zone.addEventListener("dragleave", () => zone.classList.remove("dragover"));
-      zone.addEventListener("drop", (e) => {
-        e.preventDefault();
-        zone.classList.remove("dragover");
-        if (e.dataTransfer.files.length) setFiles(e.dataTransfer.files);
+    function setupFileDrop(target, onDrop) {
+      target.addEventListener("dragover", (e) => {
+        if ([...e.dataTransfer.types].includes("Files")) {
+          e.preventDefault();
+          onDrop.dragover?.();
+        }
       });
-      input.addEventListener("change", () => setFiles(input.files));
+      target.addEventListener("dragleave", () => onDrop.dragleave?.());
+      target.addEventListener("drop", (e) => {
+        if (e.dataTransfer.files?.length) {
+          e.preventDefault();
+          onDrop.dragleave?.();
+          onDrop.drop(e.dataTransfer.files);
+        }
+      });
     }
 
-    setupMultiDropzone("drop-image", "file-image", "list-image", imageFiles);
-    setupMultiDropzone("drop-document", "file-document", "list-document", documentFiles);
-    document.getElementById("input-text").addEventListener("input", countInputs);
-    document.getElementById("input-urls").addEventListener("input", countInputs);
+    setupFileDrop(textDropWrap, {
+      dragover: () => textDropWrap.classList.add("dragover"),
+      dragleave: () => textDropWrap.classList.remove("dragover"),
+      drop: (files) => addFiles(files, { switchToFiles: true }),
+    });
+
+    setupFileDrop(inputText, {
+      dragover: () => textDropWrap.classList.add("dragover"),
+      dragleave: () => textDropWrap.classList.remove("dragover"),
+      drop: (files) => addFiles(files, { switchToFiles: true }),
+    });
+
+    const dropZone = document.getElementById("drop-files");
+    const fileInput = document.getElementById("file-input");
+
+    dropZone.addEventListener("click", (e) => {
+      if (e.target.closest(".file-remove")) return;
+      fileInput.click();
+    });
+    setupFileDrop(dropZone, {
+      dragover: () => dropZone.classList.add("dragover"),
+      dragleave: () => dropZone.classList.remove("dragover"),
+      drop: (files) => addFiles(files),
+    });
+    fileInput.addEventListener("change", () => {
+      if (fileInput.files.length) addFiles(fileInput.files);
+      fileInput.value = "";
+    });
+
+    document.getElementById("btn-clear-files").addEventListener("click", () => {
+      uploadFiles = [];
+      renderFileQueue();
+      countInputs();
+    });
+
+    inputText.addEventListener("input", () => {
+      countInputs();
+      clearTimeout(autoAnalyzeTimer);
+      if (isLinkOnlyInput(inputText.value) && uploadFiles.length === 0) {
+        autoAnalyzeTimer = setTimeout(() => {
+          if (isLinkOnlyInput(inputText.value) && uploadFiles.length === 0 && !btn.disabled) {
+            runAnalyze();
+          }
+        }, 600);
+      }
+    });
+
+    inputText.addEventListener("paste", () => {
+      setTimeout(() => {
+        if (isLinkOnlyInput(inputText.value) && uploadFiles.length === 0 && !btn.disabled) {
+          runAnalyze();
+        }
+      }, 0);
+    });
 
     const statusEl = document.getElementById("status");
     const resultsEl = document.getElementById("results");
     const statsEl = document.getElementById("stats");
     const btn = document.getElementById("btn-run");
+    const btnCancel = document.getElementById("btn-cancel");
     const frame = document.getElementById("graph-frame");
     const placeholder = document.getElementById("graph-placeholder");
+    const btnGraphFs = document.getElementById("btn-graph-fs");
+    const btnExitFs = document.getElementById("btn-exit-fs");
+    const graphWrap = document.querySelector(".graph-wrap");
+    const graphWrapHome = document.getElementById("graph-wrap-home");
+    const graphFullscreen = document.getElementById("graph-fullscreen");
+    const graphFullscreenBody = document.getElementById("graph-fullscreen-body");
+    const fsStats = document.getElementById("fs-stats");
+
+    function enterGraphFullscreen() {
+      if (placeholder && !placeholder.classList.contains("hidden")) return;
+      graphFullscreenBody.appendChild(graphWrap);
+      graphFullscreen.classList.remove("hidden");
+      graphFullscreen.setAttribute("aria-hidden", "false");
+      document.body.style.overflow = "hidden";
+      fsStats.textContent = statsEl.textContent;
+    }
+
+    function exitGraphFullscreen() {
+      if (!graphFullscreen.classList.contains("hidden")) {
+        graphWrapHome.appendChild(graphWrap);
+        graphFullscreen.classList.add("hidden");
+        graphFullscreen.setAttribute("aria-hidden", "true");
+        document.body.style.overflow = "";
+      }
+    }
+
+    btnGraphFs.addEventListener("click", enterGraphFullscreen);
+    btnExitFs.addEventListener("click", exitGraphFullscreen);
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") exitGraphFullscreen();
+    });
+
+    const linkModal = document.getElementById("link-modal");
+    const linkModalUrl = document.getElementById("link-modal-url");
+    const linkModalContext = document.getElementById("link-modal-context");
+    const linkModalYes = document.getElementById("link-modal-yes");
+    const linkModalNo = document.getElementById("link-modal-no");
 
     function setStatus(msg, kind) {
       statusEl.textContent = msg;
       statusEl.className = `status show ${kind}`;
     }
 
-    btn.addEventListener("click", async () => {
+    function setRunning(running) {
+      btn.disabled = running;
+      btnCancel.classList.toggle("show", running);
+    }
+
+    function confirmEmbeddedLink(item) {
+      return new Promise((resolve) => {
+        linkModalUrl.textContent = item.url;
+        const snippet = item.block.replace(item.url, "…").trim();
+        linkModalContext.textContent = snippet.length > 160 ? `${snippet.slice(0, 160)}…` : snippet;
+        linkModal.classList.remove("hidden");
+
+        const cleanup = (result) => {
+          linkModal.classList.add("hidden");
+          linkModalYes.onclick = null;
+          linkModalNo.onclick = null;
+          resolve(result);
+        };
+
+        linkModalYes.onclick = () => cleanup(true);
+        linkModalNo.onclick = () => cleanup(false);
+      });
+    }
+
+    async function buildPayload() {
+      const { textBlocks, standaloneUrls, embeddedUrls } = parseInput(inputText.value);
+
+      let finalTextBlocks = [...textBlocks];
+      const finalUrls = [...standaloneUrls];
+
+      const seen = new Set();
+      for (const item of embeddedUrls) {
+        if (seen.has(item.url)) continue;
+        seen.add(item.url);
+
+        const fetchAsUrl = await confirmEmbeddedLink(item);
+        if (fetchAsUrl) {
+          finalUrls.push(item.url);
+          finalTextBlocks = finalTextBlocks
+            .map((block) => (block === item.block ? block.split(item.url).join("").replace(/\s+/g, " ").trim() : block))
+            .filter(Boolean);
+        }
+      }
+
+      return {
+        text: finalTextBlocks.join("\n\n"),
+        urls: finalUrls.join("\n"),
+      };
+    }
+
+    btnCancel.addEventListener("click", () => {
+      if (analyzeAbort) {
+        analyzeAbort.abort();
+        analyzeAbort = null;
+      }
+      setRunning(false);
+      setStatus("분석을 취소했습니다. (서버에서 이미 처리 중인 건은 잠시 더 돌 수 있습니다)", "info");
+    });
+
+    async function runAnalyze() {
       const n = countInputs();
       if (n === 0) {
-        setStatus("텍스트·링크·이미지·문서 중 하나 이상 입력하세요.", "error");
+        setStatus("텍스트·링크·파일 중 하나 이상 입력하세요.", "error");
         return;
       }
 
-      btn.disabled = true;
-      setStatus(`분석 중… ${n}건 (건당 1~2분, 순서대로 Neo4j에 저장)`, "info");
+      const linkOnly = isLinkOnlyInput(inputText.value) && uploadFiles.length === 0;
+      let payload;
+
+      if (linkOnly) {
+        payload = {
+          text: "",
+          urls: parseInput(inputText.value).standaloneUrls.join("\n"),
+        };
+      } else {
+        payload = await buildPayload();
+        if (!payload.text.trim() && !payload.urls.trim() && uploadFiles.length === 0) {
+          setStatus("분석할 내용이 없습니다.", "error");
+          return;
+        }
+      }
+
+      analyzeAbort = new AbortController();
+      setRunning(true);
+      btnGraphFs.classList.add("hidden");
+      exitGraphFullscreen();
+      setStatus(
+        linkOnly
+          ? `링크 ${payload.urls.split("\n").filter(Boolean).length}건 바로 분석 중…`
+          : `분석 중… ${n}건 (건당 1~2분, 순서대로 Neo4j에 저장)`,
+        "info"
+      );
       resultsEl.innerHTML = "";
 
       try {
         const fd = new FormData();
-        fd.append("text", document.getElementById("input-text").value);
-        fd.append("urls", document.getElementById("input-urls").value);
-        imageFiles.forEach((f) => fd.append("images", f, f.name));
-        documentFiles.forEach((f) => fd.append("documents", f, f.name));
+        fd.append("text", payload.text);
+        fd.append("urls", payload.urls);
+        uploadFiles.forEach(({ file }) => fd.append("files", file, file.name));
 
-        const res = await fetch("/api/analyze", { method: "POST", body: fd });
+        const res = await fetch("/api/analyze", {
+          method: "POST",
+          body: fd,
+          signal: analyzeAbort.signal,
+        });
         const data = await res.json();
         if (!res.ok || !data.ok) throw new Error(data.error || "분석 실패");
 
@@ -240,15 +605,83 @@
           `${data.items_processed}건 처리 · 노드 ${data.nodes} · 엣지 ${data.edges} · 인과 ${data.verified_edges_total}`;
         placeholder.classList.add("hidden");
         frame.src = `/graph_output.html?t=${Date.now()}`;
-        setStatus(`완료 — ${data.items_processed}건 분석, 그래프 갱신`, "ok");
+        btnGraphFs.classList.remove("hidden");
+        const neo4jNote = data.neo4j
+          ? "Neo4j 저장 완료"
+          : "Neo4j 미연동 — 이번 세션 그래프만";
+        let syncNote = "";
+        if (data.neo4j_sync) {
+          const s = data.neo4j_sync;
+          if (s.attempted && s.available) {
+            syncNote = ` · 자동 기동(${s.method}) 후 DB 저장`;
+          } else if (s.attempted && !s.available) {
+            syncNote = ` · Neo4j 자동 기동 실패: ${s.message}`;
+          }
+        }
+        setStatus(`완료 — ${data.items_processed}건 분석, 그래프 갱신 (${neo4jNote}${syncNote})`, data.neo4j ? "ok" : "info");
+        updateBackendStatus(data.neo4j);
       } catch (err) {
+        if (err.name === "AbortError") return;
         setStatus(err.message || String(err), "error");
       } finally {
-        btn.disabled = false;
+        analyzeAbort = null;
+        setRunning(false);
       }
-    });
+    }
 
+    btn.addEventListener("click", () => runAnalyze());
+
+    renderFileQueue();
     countInputs();
+
+    fetch("/api/status")
+      .then((r) => r.json())
+      .then((data) => updateBackendStatus(data.neo4j, data.install))
+      .catch(() => {
+        document.getElementById("backend-status").textContent = "Gemini API";
+      });
+
+    function updateBackendStatus(connected, install) {
+      const el = document.getElementById("backend-status");
+      if (connected) {
+        el.textContent = "Neo4j 연결됨 · Gemini API";
+        el.style.color = "";
+        return;
+      }
+      if (install?.can_auto_start) {
+        const db = install.desktop_dbms_names?.length
+          ? ` · DB: ${install.desktop_dbms_names.join(", ")}`
+          : "";
+        el.textContent = install.desktop
+          ? `Neo4j Desktop 설치됨${db} — 분석 후 자동 기동 시도`
+          : `Docker 설치됨 — 분석 후 자동 기동 시도`;
+        el.style.color = "#e37400";
+      } else {
+        el.textContent = "Neo4j 미설치 — 분석·그래프만 (DB 없음)";
+        el.style.color = "#d93025";
+      }
+    }
+
+    const linkTabId = sessionStorage.getItem("linkTabId") || crypto.randomUUID();
+    sessionStorage.setItem("linkTabId", linkTabId);
+
+    function sendHeartbeat(action) {
+      const body = JSON.stringify({ tab_id: linkTabId, action });
+      if (action === "bye" && navigator.sendBeacon) {
+        navigator.sendBeacon("/api/heartbeat", new Blob([body], { type: "application/json" }));
+        return;
+      }
+      fetch("/api/heartbeat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body,
+        keepalive: action === "bye",
+      }).catch(() => {});
+    }
+
+    sendHeartbeat("ping");
+    setInterval(() => sendHeartbeat("ping"), 20000);
+    window.addEventListener("beforeunload", () => sendHeartbeat("bye"));
   </script>
 </body>
 </html>

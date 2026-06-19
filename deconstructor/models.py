@@ -85,6 +85,13 @@ class AtomicFact(BaseModel):
         default=DEFAULT_CHECK_STATUS,
         description="검증 상태: active | pending | promoted | dropped(고스트).",
     )
+    anchor_fact_id: str | None = Field(
+        default=None,
+        description=(
+            "Dreamer 가설이 ripples from 한 completed_fact ID (inferred 전용). "
+            "그래프: hover 시 원천→가설 점선. Neo4j: f.anchor_fact_id."
+        ),
+    )
     stress_level: int = Field(
         default=0,
         ge=0,

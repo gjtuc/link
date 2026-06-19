@@ -6,7 +6,7 @@ Step 4 토폴로지 (--enable-dreamer):
 
     deconstruct → verify ⇄ loop
                     ↓
-              dreamer → fact_checker → skeptic → weaver → END
+              dreamer (Flash 15~20 → Pro ≤5) → fact_checker → skeptic → weaver → END
 
 기본 (enable_dreamer=False):
 
@@ -36,6 +36,8 @@ MAX_RECURSION_DEPTH = 5
 def build_graph(
     *,
     dry_run: bool = False,
+    dreamer_dry_run: bool | None = None,
+    fact_checker_dry_run: bool | None = None,
     persist_db: bool = False,
     enable_dreamer: bool = False,
 ):
@@ -43,10 +45,15 @@ def build_graph(
     LangGraph StateGraph 컴파일.
 
     Args:
-        dry_run: stub deconstruct / dreamer / fact_checker / skeptic mechanism.
+        dry_run: stub deconstruct / skeptic mechanism (dreamer·fact_checker는 별도 인자).
+        dreamer_dry_run: None이면 dry_run과 동일.
+        fact_checker_dry_run: None이면 dry_run과 동일.
         persist_db: Neo4j weaver + ghost persist.
         enable_dreamer: verify 탈출 시 dreamer→fact_checker 경로.
     """
+    _dreamer_dry = dry_run if dreamer_dry_run is None else dreamer_dry_run
+    _fc_dry = dry_run if fact_checker_dry_run is None else fact_checker_dry_run
+
     workflow = StateGraph(State)
 
     deconstruct = deconstruct_node_stub if dry_run else deconstruct_node
@@ -56,10 +63,13 @@ def build_graph(
     workflow.add_node("weaver", partial(weaver_node, persist_db=persist_db))
 
     if enable_dreamer:
-        print("[STEP4-build] wiring dreamer → fact_checker → skeptic")
-        workflow.add_node("dreamer", partial(dreamer_node, dry_run=dry_run))
+        print(
+            "[STEP4-build] wiring dreamer → fact_checker → skeptic "
+            f"(dreamer_dry={_dreamer_dry}, fact_checker_dry={_fc_dry})"
+        )
+        workflow.add_node("dreamer", partial(dreamer_node, dry_run=_dreamer_dry))
         workflow.add_node(
-            "fact_checker", partial(fact_checker_node, dry_run=dry_run)
+            "fact_checker", partial(fact_checker_node, dry_run=_fc_dry)
         )
         route_map = {
             "deconstruct": "deconstruct",
@@ -91,12 +101,16 @@ def run_pipeline(
     *,
     max_recursion_depth: int | None = None,
     dry_run: bool = False,
+    dreamer_dry_run: bool | None = None,
+    fact_checker_dry_run: bool | None = None,
     persist_db: bool = False,
     enable_dreamer: bool = False,
 ) -> State:
     """헤드라인으로 전체 파이프라인 1회 실행."""
     graph = build_graph(
         dry_run=dry_run,
+        dreamer_dry_run=dreamer_dry_run,
+        fact_checker_dry_run=fact_checker_dry_run,
         persist_db=persist_db,
         enable_dreamer=enable_dreamer,
     )

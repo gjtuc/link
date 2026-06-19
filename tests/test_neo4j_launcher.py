@@ -1,0 +1,75 @@
+"""Neo4j launcher probe tests."""
+
+from pathlib import Path
+
+from deconstructor.neo4j_launcher import probe_neo4j_installation
+
+
+def test_probe_finds_compose_in_project_root():
+    root = Path(__file__).resolve().parents[1]
+    probe = probe_neo4j_installation(root)
+    assert probe.compose_file is True
+
+
+def test_ui_heartbeat_expires():
+    from deconstructor.neo4j_launcher import (
+        HEARTBEAT_STALE_SEC,
+        active_ui_tab_count,
+        record_ui_heartbeat,
+        remove_ui_tab,
+    )
+
+    record_ui_heartbeat("tab-a")
+    assert active_ui_tab_count() == 1
+    remove_ui_tab("tab-a")
+    assert active_ui_tab_count() == 0
+
+
+def test_managed_mark_and_clear():
+    from deconstructor.neo4j_launcher import clear_managed, is_managed_neo4j, mark_managed
+
+    mark_managed(method="docker", project_root=Path("."), label="test")
+    assert is_managed_neo4j()
+    clear_managed()
+    assert not is_managed_neo4j()
+
+
+def test_resolve_desktop_java_home_finds_cache_jre():
+    from deconstructor.neo4j_launcher import _resolve_desktop_java_home, find_desktop_dbms_bins
+
+    bins = find_desktop_dbms_bins()
+    if not bins:
+        return
+    java_home = _resolve_desktop_java_home(bins[0])
+    if java_home is not None:
+        assert (java_home / "bin" / "java.exe").is_file()
+
+
+def test_managed_mark_close_desktop_flag():
+    from deconstructor import neo4j_launcher as nl
+    from deconstructor.neo4j_launcher import clear_managed, is_managed_neo4j, mark_managed
+
+    clear_managed()
+    mark_managed(method="desktop_dbms", label="stock", close_desktop_window=True)
+    assert is_managed_neo4j()
+    with nl._managed_lock:
+        assert nl._managed is not None
+        assert nl._managed.close_desktop_window is True
+    clear_managed()
+
+
+def test_maybe_stop_skips_when_tabs_active():
+    from deconstructor.neo4j_launcher import (
+        clear_managed,
+        mark_managed,
+        maybe_stop_managed_if_ui_idle,
+        record_ui_heartbeat,
+        remove_ui_tab,
+    )
+
+    clear_managed()
+    mark_managed(method="docker", project_root=Path("."), label="t")
+    record_ui_heartbeat("tab-x")
+    assert maybe_stop_managed_if_ui_idle() is False
+    remove_ui_tab("tab-x")
+    clear_managed()

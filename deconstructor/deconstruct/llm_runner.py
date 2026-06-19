@@ -58,9 +58,13 @@ def invoke_fact_list(text: str, *, llm: Any | None = None) -> FactList:
 
     Pass ``llm`` in tests to inject a mock.
 
-    기본: `get_chat_model().with_structured_output(FactList)`.
+    기본: `get_chat_model(tier="flash")` + structured FactList (분해는 속도·비용용 Flash).
     테스트 시 `llm` 인자로 invoke 결과를 고정할 수 있다.
     """
-    # 테스트 mock 우선; 없으면 전역 chat model + Pydantic structured output
-    model = llm if llm is not None else get_chat_model().with_structured_output(FactList)
+    # 테스트 mock 우선; 없으면 Flash + Pydantic structured output
+    model = (
+        llm
+        if llm is not None
+        else get_chat_model(tier="flash").with_structured_output(FactList)
+    )
     return model.invoke(build_deconstruct_messages(text))

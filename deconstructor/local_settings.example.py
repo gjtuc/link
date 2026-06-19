@@ -15,10 +15,10 @@ config.py 가 import 시점에 local_settings 를 덮어씀.
 
 # --- LLM (Gemini — 권장, 상황별 이원화) ---
 GEMINI_API_KEY = ""
-# 빠른 작업: 이미지 OCR, 가벼운 추출
+# 빠른 작업: Deconstruct, 이미지 OCR, 가벼운 추출
 GEMINI_MODEL_FLASH = "gemini-3.5-flash"
 GEMINI_THINKING_LEVEL_FLASH = "medium"
-# 깊은 추론: Deconstruct, URL/PDF 요약, Dreamer, Fact-Checker
+# 깊은 추론: URL/PDF 요약, Dreamer, Fact-Checker, Skeptic 메커니즘
 GEMINI_MODEL_PRO = "gemini-3.1-pro-preview"
 GEMINI_THINKING_LEVEL_PRO = "high"
 

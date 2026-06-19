@@ -12,11 +12,25 @@ from dataclasses import dataclass
 
 logger = logging.getLogger(__name__)
 
-COLOR_CRITICAL = "#ff0033"
-COLOR_CRITICAL_BORDER = "#cc0029"
-CRITICAL_NODE_SIZE = 35
-DEFAULT_NODE_SIZE = 22
+COLOR_CRITICAL = "#e63946"
+COLOR_CRITICAL_BORDER = "#c1121f"
+CRITICAL_NODE_SIZE = 26  # legacy tests / API; viz는 연결 수 기반 크기 우선
+DEFAULT_NODE_SIZE = 18
+MAX_NODE_SIZE = 42
+DEGREE_SIZE_STEP = 4
 CRITICAL_FONT_COLOR = "white"
+
+
+def resolve_node_size_from_degree(*, in_degree: int = 0, out_degree: int = 0) -> int:
+    """
+    CAUSES 연결 수에 비례해 노드 크기 확대 (색 대신 직관적 hub 표시).
+
+    in/out 합이 0~1이면 기본 크기, 2개부터 단계적으로 커짐 (상한 MAX_NODE_SIZE).
+    """
+    total = in_degree + out_degree
+    if total <= 1:
+        return DEFAULT_NODE_SIZE
+    return min(MAX_NODE_SIZE, DEFAULT_NODE_SIZE + (total - 1) * DEGREE_SIZE_STEP)
 
 
 def _log(step: str, msg: str) -> None:
@@ -90,8 +104,8 @@ def build_critical_pyvis_kwargs(
         },
         "font": {
             "color": style.font_color,
-            "size": 16,
-            "face": "arial",
+            "size": 14,
+            "face": "Segoe UI",
             "bold": style.font_bold,
         },
     }

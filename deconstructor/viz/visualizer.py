@@ -17,16 +17,17 @@ Pipeline position / 파이프라인 위치
 Visual encoding (2026-06 UI 세션에서 확정)
 ------------------------------------------
 노드:
-  - extracted=파랑, verified=초록, inferred=노랑, dropped=흐린 노랑+✖
-  - ``is_critical=True`` → provenance 무시, 빨강·35px·그림자 (storm/viz_style)
-  - **빨간 테두리** (본문색 유지): CRITICAL 노드로 *직접* CAUSES 되는 비-critical 원인
-    (예: 파랑 Trump → 빨강 US and Iran 이면 Trump는 파랑+빨간 테두리)
+  - extracted=파랑, verified=초록, inferred pending=노랑, inferred promoted=노랑+초록 테두리, dropped=흐린 노랑+✖
+  - 크기 = CAUSES in+out 연결 수 (hub일수록 큼, storm ``resolve_node_size_from_degree``)
+  - ``anchor_fact_id`` on node → hover 시 **초록 점선** (Skeptic CAUSES 와 별도, ``anchor_hover_only``)
 
 엣지:
-  - 검증 CAUSES=분홍 실선, 가설=inferred/dropped 쪽=노랑 점선
-  - ``probability`` 라벨: Skeptic 수용 시 항상 1.0 이라 **기본 숫자 라벨 생략**
-    (scoring.py: 수용 = decisive 규칙 전원 PASS → passes/len(decisive)=1.0)
-  - hover 툴팁에는 ``latency``(원인→결과 ms) 만 표시
+  - 검증 CAUSES=연회색 실선 (Skeptic 통과)
+  - 가설 쪽=연한 회색 점선
+  - Dreamer anchor=**hidden** 초록 점선, ``hoverNode`` 시에만 표시 (legend.py JS)
+
+툴팁:
+  - plain text + ``\\n``, 한국어 **요약 / 자세히** (HTML ``<br>`` 사용 안 함)
 
 Interaction (legend.py 가 HTML에 주입)
 --------------------------------------
@@ -36,14 +37,14 @@ Interaction (legend.py 가 HTML에 주입)
 
 When to modify / 수정 시점
 --------------------------
-- CRITICAL 원인 강조: ``_critical_cause_ids`` / ``critical_cause`` 플래그
+- hub 크기: ``storm/viz_style.resolve_node_size_from_degree`` · ``_degree_maps``
 - 확률 gradation 도입 시: ``edge_kwargs["label"]`` 조건 (``abs(p-1.0) > 1e-6``) 조정
 - pyvis 템플릿 변경 시: legend.inject_graph_interaction 의 replace 문자열 동기화
 
 Key files / 관련 파일
 ---------------------
   provenance/viz_style.py  — 노드·엣지 provenance 색
-  storm/viz_style.py       — CRITICAL override, COLOR_CRITICAL
+  storm/viz_style.py       — 연결 수 기반 노드 크기
   viz/legend.py            — 범례 HTML + vis.js physics freeze 스크립트
   viz/neo4j_utils.py       — Step 2 fetch (CAUSES only, rejected 미포함)
 """
@@ -55,46 +56,62 @@ from pathlib import Path
 
 from pyvis.network import Network
 
-from deconstructor.provenance.viz_style import resolve_edge_style, resolve_node_style
+from deconstructor.provenance.types import is_ghost_dropped, is_promoted_inferred
+from deconstructor.provenance.viz_style import (
+    COLOR_VERIFIED,
+    resolve_edge_style,
+    resolve_node_style,
+)
 from deconstructor.storm.viz_style import (
-    COLOR_CRITICAL,
-    build_critical_pyvis_kwargs,
-    format_critical_tooltip_prefix,
-    resolve_critical_style,
+    DEFAULT_NODE_SIZE as STORM_DEFAULT_NODE_SIZE,
+    resolve_node_size_from_degree,
 )
 from deconstructor.viz.legend import inject_legend_into_html
 from deconstructor.viz.neo4j_utils import GraphEdge, GraphNode
 
 logger = logging.getLogger(__name__)
 
-# 일반 노드 pyvis size (storm CRITICAL_NODE_SIZE=35 와 대비)
-DEFAULT_NODE_SIZE = 22
+# 일반 노드 — Bloom 유사 비율; hub는 연결 수로 크기만 확대
+DEFAULT_NODE_SIZE = STORM_DEFAULT_NODE_SIZE
+NODE_FONT_SIZE = 13
+NODE_FONT_COLOR = "#3a3d42"
+GRAPH_BG_COLOR = "#1a1a2e"
+GRAPH_LABEL_COLOR = "#e8e8e8"
+EDGE_ARROW_SCALE = 0.55
+ANCHOR_EDGE_COLOR = COLOR_VERIFIED
+ANCHOR_EDGE_WIDTH = 2.0
 
-# CRITICAL 로 직접 인과되는 upstream 노드 테두리 — fill 은 provenance 유지
-CRITICAL_CAUSE_BORDER_WIDTH = 3
+
+def _degree_maps(edges: list[GraphEdge]) -> tuple[dict[str, int], dict[str, int]]:
+    """노드별 CAUSES in-degree / out-degree."""
+    in_degree: dict[str, int] = {}
+    out_degree: dict[str, int] = {}
+    for edge in edges:
+        out_degree[edge.source_id] = out_degree.get(edge.source_id, 0) + 1
+        in_degree[edge.target_id] = in_degree.get(edge.target_id, 0) + 1
+    return in_degree, out_degree
 
 
-def _critical_cause_ids(critical_ids: set[str], edges: list[GraphEdge]) -> set[str]:
-    """
-    CRITICAL(빨강) 노드로 *1-hop* CAUSES 되는 비-critical 원인 노드 id 집합.
+def _node_font_size_for(node_size: int) -> int:
+    bump = max(0, (node_size - DEFAULT_NODE_SIZE) // 4)
+    return min(15, NODE_FONT_SIZE + bump)
 
-    설계 의도:
-      사용자가 "빨강이 어디서 왔는지" 한눈에 보게 하려고, 결과(CRITICAL) 노드의
-      직접 부모만 빨간 테두리로 표시한다. 다-hop 전파(조부모까지)는 하지 않음 —
-      화살표 방향으로 추적하면 충분하다고 판단.
 
-    Args:
-        critical_ids: ``GraphNode.is_critical`` 인 id
-        edges: Neo4j CAUSES (Skeptic verified only)
+def _node_legend_class(node: GraphNode) -> str:
+    """범례 hover 필터용 provenance 분류."""
+    if is_ghost_dropped(node.source_type, node.check_status):
+        return "dropped"
+    if node.source_type == "verified":
+        return "verified"
+    if is_promoted_inferred(node.source_type, node.check_status):
+        return "promoted"
+    if node.source_type == "inferred":
+        return "inferred"
+    return "extracted"
 
-    Returns:
-        테두리를 COLOR_CRITICAL 로 칠할 source node id (critical 자신은 제외)
-    """
-    return {
-        edge.source_id
-        for edge in edges
-        if edge.target_id in critical_ids and edge.source_id not in critical_ids
-    }
+
+def _edge_legend_class(*, dashes: bool) -> str:
+    return "edge-dashed" if dashes else "edge-solid"
 
 
 def _log(step: str, msg: str) -> None:
@@ -109,76 +126,137 @@ def _log_storm_s4(step: str, msg: str) -> None:
     print(line)
 
 
-def _node_tooltip(node: GraphNode) -> str:
-    """pyvis ``title`` (hover HTML). CRITICAL 이면 경고 prefix 선행."""
-    lines: list[str] = []
-    if node.is_critical:
-        lines.append(format_critical_tooltip_prefix(node.stress_level))
-    lines.extend(
-        [
-            f"subject: {node.subject}",
-            f"state_change: {node.state_change}",
-            f"timestamp: {node.timestamp or 'n/a'}",
-            f"source_type: {node.source_type}",
-            f"check_status: {node.check_status}",
-            f"stress_level: {node.stress_level}",
-            f"is_critical: {node.is_critical}",
-        ]
-    )
-    if node.check_status == "dropped":
-        lines.append("status: REJECTED ghost hypothesis")
-    return "<br>".join(lines)
+def _provenance_summary_ko(node: GraphNode) -> str:
+    """범례와 맞는 한 줄 provenance 설명."""
+    if is_ghost_dropped(node.source_type, node.check_status):
+        return "흐린 노랑 · 기각된 가설"
+    if is_promoted_inferred(node.source_type, node.check_status):
+        return "노랑+초록 · Dreamer 가설 (Fact-Checker 통과)"
+    if node.source_type == "inferred":
+        return "노랑 · Dreamer 가설 (미검증)"
+    if node.source_type == "verified":
+        return "초록 · 검증된 사실"
+    return "파랑 · 원문에서 추출"
+
+
+def _add_anchor_hint_edges(
+    net: Network,
+    nodes: list[GraphNode],
+    node_by_id: dict[str, GraphNode],
+) -> int:
+    """
+    Dreamer anchor: 원천 → inferred 점선 (기본 hidden, hover 시 JS가 표시).
+
+    Skeptic CAUSES 와 별도 — Fact-Checker·Dreamer 출처만 표시.
+    """
+    count = 0
+    for node in nodes:
+        if node.source_type != "inferred":
+            continue
+        anchor_id = node.anchor_fact_id
+        if not anchor_id or anchor_id not in node_by_id:
+            continue
+        edge_id = f"anchor-{anchor_id}-{node.id}"
+        net.add_edge(
+            anchor_id,
+            node.id,
+            id=edge_id,
+            title="Dreamer anchor — 가설 노드에 마우스를 올리면 표시",
+            hidden=True,
+            anchor_hover_only=True,
+            dashes=True,
+            width=ANCHOR_EDGE_WIDTH,
+            color={"color": ANCHOR_EDGE_COLOR, "opacity": 0.9},
+            arrows={"to": {"enabled": True, "scaleFactor": 0.45}},
+            legend_class="anchor-dashed",
+            smooth={"type": "continuous"},
+        )
+        count += 1
+    if count:
+        _log("3b", f"added {count} hidden anchor hint edge(s) (show on inferred hover)")
+    return count
+
+
+def _node_tooltip(
+    node: GraphNode,
+    *,
+    in_degree: int = 0,
+    out_degree: int = 0,
+    node_by_id: dict[str, GraphNode] | None = None,
+) -> str:
+    """pyvis ``title`` — plain text + ``\\n`` (vis-tooltip ``pre-line``)."""
+    sections: list[str] = []
+
+    summary = [
+        f"요약: {_provenance_summary_ko(node)}",
+        node.subject,
+        node.state_change,
+    ]
+    if node.source_type == "inferred" and node.anchor_fact_id:
+        summary.append("※ 마우스를 올리면 원천(파랑) 방향 점선 화살표")
+    sections.append("\n".join(summary))
+
+    details: list[str] = ["자세히"]
+    if node.timestamp:
+        details.append(f"시각: {node.timestamp}")
+    total_conn = in_degree + out_degree
+    if total_conn:
+        details.append(
+            f"연결: 들어옴 {in_degree} · 나감 {out_degree} "
+            f"(많을수록 노드 큼)"
+        )
+    if node.reasoning and node.source_type == "inferred":
+        details.append(f"메커니즘: {node.reasoning}")
+    if node.stress_level or node.is_critical:
+        details.append(f"stress: {node.stress_level} · critical: {node.is_critical}")
+
+    sections.append("\n".join(details))
+    return "\n\n".join(sections)
 
 
 def _edge_tooltip(edge: GraphEdge) -> str:
-    """
-    엣지 hover. probability 는 수용 엣지에서 항상 1.0 이라 생략 (UI 노이즈 방지).
-
-    latency: skeptic scoring.compute_latency_ms — 양쪽 timestamp 있을 때만 ms.
-    """
-    latency = f"{edge.latency} ms" if edge.latency is not None else "n/a"
-    return f"latency: {latency}"
+    """엣지 hover — 검증 CAUSES + 시차."""
+    latency = f"{edge.latency} ms" if edge.latency is not None else "없음"
+    return f"회색 실선 · 검증된 인과 (CAUSES)\n시차(latency): {latency}"
 
 
 def _build_provenance_node_kwargs(
     node: GraphNode,
     label: str,
     *,
-    critical_cause: bool = False,
+    size: int,
 ) -> dict:
-    """
-    비-critical 노드용 pyvis kwargs.
-
-    ``critical_cause=True`` 이면 background 는 provenance 색 유지, border 만
-    ``COLOR_CRITICAL`` (#ff0033) + ``CRITICAL_CAUSE_BORDER_WIDTH``.
-
-    dropped ghost 는 provenance 가 이미 border (#ef476f) 를 줄 수 있음;
-    critical_cause 가 True 이면 storm 빨강 테두리가 우선 (CRITICAL 유입 경로 강조).
-    """
+    """비-critical 노드용 pyvis kwargs (provenance 색 + 연결 수 기반 크기)."""
     style = resolve_node_style(node.source_type, node.check_status)
+    font_size = _node_font_size_for(size)
     node_kwargs: dict = {
         "label": label,
         "title": _node_tooltip(node),
         "color": style.color,
-        "size": DEFAULT_NODE_SIZE,
+        "size": size,
+        "font": {
+            "size": font_size,
+            "color": NODE_FONT_COLOR,
+            "face": "Segoe UI",
+        },
     }
     if style.opacity < 1.0:
         node_kwargs["opacity"] = style.opacity
 
     border = style.border_color
-    border_width = 2
-    if critical_cause:
-        border = COLOR_CRITICAL
-        border_width = CRITICAL_CAUSE_BORDER_WIDTH
+    border_width = style.border_width
 
     if border:
         node_kwargs["borderWidth"] = border_width
+        highlight_border = border
+        if is_promoted_inferred(node.source_type, node.check_status):
+            highlight_border = COLOR_VERIFIED
         node_kwargs["color"] = {
             "background": style.color,
             "border": border,
             "highlight": {
                 "background": style.color,
-                "border": "#ffffff" if critical_cause else "#ef476f",
+                "border": highlight_border,
             },
         }
     return node_kwargs
@@ -194,67 +272,48 @@ def build_pyvis_network(
     GraphNode → pyvis Network (단위 테스트·CLI·웹 UI 공통).
 
     렌더 우선순위 (노드):
-      1. is_critical → storm 전체 override (빨강·큼)
-      2. critical_cause upstream → provenance + 빨간 테두리
-      3. 그 외 → provenance 색만
+      1. provenance 색 (extracted / inferred / promoted …)
+      2. 크기 = CAUSES in+out 연결 수 (hub일수록 큼)
     """
     _log("1", f"init Network directed=True title={title!r}")
     net = Network(
         height="800px",
         width="100%",
-        bgcolor="#1a1a2e",
-        font_color="#e8e8e8",
+        bgcolor=GRAPH_BG_COLOR,
+        font_color=GRAPH_LABEL_COLOR,
         directed=True,
-        heading=title,
+        heading="",
     )
 
+    in_degree, out_degree = _degree_maps(edges)
     node_by_id = {n.id: n for n in nodes}
-    critical_ids = {n.id for n in nodes if n.is_critical}
-    critical_cause_ids = _critical_cause_ids(critical_ids, edges)
-    if critical_cause_ids:
-        _log_storm_s4(
-            "5",
-            f"critical-cause red border on {len(critical_cause_ids)} upstream node(s)",
-        )
 
-    _log("2", f"adding {len(nodes)} nodes (provenance + storm critical override)")
+    _log("2", f"adding {len(nodes)} nodes (provenance + degree-based size)")
     for node in nodes:
         style = resolve_node_style(node.source_type, node.check_status)
         label = node.subject or node.id[:8]
         if style.label_prefix:
             label = f"{style.label_prefix}{label}"
 
-        if node.is_critical:
-            _log_storm_s4(
-                "4",
-                f"apply critical override node={node.subject!r} "
-                f"provenance={node.source_type} ignored",
-            )
-            critical_style = resolve_critical_style(stress_level=node.stress_level)
-            node_kwargs = build_critical_pyvis_kwargs(
-                label=label,
-                tooltip=_node_tooltip(node),
-                style=critical_style,
-            )
-        else:
-            node_kwargs = _build_provenance_node_kwargs(
-                node,
-                label,
-                critical_cause=node.id in critical_cause_ids,
-            )
-
+        deg_in = in_degree.get(node.id, 0)
+        deg_out = out_degree.get(node.id, 0)
+        size = resolve_node_size_from_degree(in_degree=deg_in, out_degree=deg_out)
+        node_kwargs = _build_provenance_node_kwargs(
+            node,
+            label,
+            size=size,
+        )
+        node_kwargs["title"] = _node_tooltip(
+            node,
+            in_degree=deg_in,
+            out_degree=deg_out,
+            node_by_id=node_by_id,
+        )
+        node_kwargs["legend_class"] = _node_legend_class(node)
+        node_kwargs["legend_hub"] = size > DEFAULT_NODE_SIZE
+        if node.anchor_fact_id:
+            node_kwargs["anchor_fact_id"] = node.anchor_fact_id
         net.add_node(node.id, **node_kwargs)
-
-    # critical 노드 font/shadow — build_critical_pyvis_kwargs 일부와 중복 보강
-    for node_dict in net.nodes:
-        if node_dict.get("id") in critical_ids:
-            node_dict["font"] = {
-                "color": "white",
-                "size": 16,
-                "face": "arial",
-                "bold": True,
-            }
-            node_dict["shadow"] = True
 
     _log("3", f"adding {len(edges)} edges with dashed/solid by provenance")
     for edge in edges:
@@ -262,11 +321,13 @@ def build_pyvis_network(
         tgt = node_by_id.get(edge.target_id)
         src_type = src.source_type if src else "extracted"
         tgt_type = tgt.source_type if tgt else "extracted"
+        src_status = src.check_status if src else "active"
         tgt_status = tgt.check_status if tgt else "active"
 
         estyle = resolve_edge_style(
             source_type=src_type,
             target_type=tgt_type,
+            source_check_status=src_status,
             target_check_status=tgt_status,
             probability=edge.probability,
         )
@@ -274,8 +335,9 @@ def build_pyvis_network(
         edge_kwargs: dict = {
             "title": _edge_tooltip(edge),
             "color": estyle.color,
-            "arrows": "to",
+            "arrows": {"to": {"enabled": True, "scaleFactor": EDGE_ARROW_SCALE}},
             "width": estyle.width,
+            "font": {"size": 11, "color": "#8a9199", "face": "Segoe UI", "align": "middle"},
         }
         # Skeptic 수용 = 전 규칙 PASS → probability 항상 1.0; 라벨은 의미 없음.
         # scoring/집계 정책 변경으로 p<1 수용이 가능해지면 자동으로 라벨 표시됨.
@@ -289,7 +351,10 @@ def build_pyvis_network(
                 "opacity": estyle.opacity,
             }
 
+        edge_kwargs["legend_class"] = _edge_legend_class(dashes=estyle.dashes)
         net.add_edge(edge.source_id, edge.target_id, **edge_kwargs)
+
+    _add_anchor_hint_edges(net, nodes, node_by_id)
 
     _log("4", "applying physics + hover interaction options")
     # physics/interaction 은 pyvis JSON; 클릭 freeze 는 legend.py 가 HTML 후처리
@@ -318,17 +383,15 @@ def build_pyvis_network(
     "selectConnectedEdges": false
   },
   "edges": {
-    "smooth": { "type": "dynamic" },
-    "arrows": { "to": { "enabled": true, "scaleFactor": 1.2 } }
+    "smooth": { "type": "continuous" },
+    "arrows": { "to": { "enabled": true, "scaleFactor": 0.55 } },
+    "color": { "color": "#b8c1cc", "highlight": "#8a9199" },
+    "width": 1,
+    "font": { "size": 11, "color": "#8a9199", "face": "Segoe UI" }
   },
   "nodes": {
-    "shadow": {
-      "enabled": true,
-      "color": "rgba(255,0,51,0.45)",
-      "size": 25,
-      "x": 2,
-      "y": 2
-    }
+    "font": { "size": 13, "color": "#3a3d42", "face": "Segoe UI" },
+    "shadow": false
   }
 }
 """

@@ -10,3 +10,4 @@ python-dotenv>=1.0.0
 pytest>=8.0.0
 pypdf>=4.0.0
 python-docx>=1.1.0
+legacy-cgi>=2.6.0; python_version>='3.13'

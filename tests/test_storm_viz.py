@@ -1,13 +1,16 @@
-"""Step 4 — Critical node Pyvis visualization tests."""
+"""Step 4 — Storm viz: critical style API + degree-based node sizing in graph."""
 
 from pathlib import Path
 
 from deconstructor.storm.viz_style import (
     COLOR_CRITICAL,
     CRITICAL_NODE_SIZE,
+    DEFAULT_NODE_SIZE,
+    MAX_NODE_SIZE,
     build_critical_pyvis_kwargs,
     format_critical_tooltip_prefix,
     resolve_critical_style,
+    resolve_node_size_from_degree,
 )
 from deconstructor.provenance.viz_style import COLOR_VERIFIED, resolve_node_style
 from deconstructor.viz.neo4j_utils import GraphEdge, GraphNode
@@ -21,7 +24,8 @@ def test_graph_node_storm_fields_defaults():
 
 
 def test_resolve_critical_style_overrides_provenance():
-    provenance = resolve_node_style("verified", "promoted")
+    """Legacy storm API — graph viz uses provenance color + degree size instead."""
+    provenance = resolve_node_style("verified", "active")
     critical = resolve_critical_style(stress_level=110)
 
     assert provenance.color == COLOR_VERIFIED
@@ -39,7 +43,16 @@ def test_format_critical_tooltip_prefix_contains_warning():
     assert COLOR_CRITICAL in prefix
 
 
-def test_render_html_critical_node_red_large_shadow(tmp_path: Path):
+def test_resolve_node_size_from_degree_scales_with_connections():
+    assert resolve_node_size_from_degree() == DEFAULT_NODE_SIZE
+    assert resolve_node_size_from_degree(in_degree=1) == DEFAULT_NODE_SIZE
+    assert resolve_node_size_from_degree(in_degree=2, out_degree=1) > DEFAULT_NODE_SIZE
+    assert (
+        resolve_node_size_from_degree(in_degree=20, out_degree=20) == MAX_NODE_SIZE
+    )
+
+
+def test_render_html_critical_node_keeps_provenance_grows_with_degree(tmp_path: Path):
     nodes = [
         GraphNode(
             "e1",
@@ -69,20 +82,18 @@ def test_render_html_critical_node_red_large_shadow(tmp_path: Path):
     path = render_to_html(nodes, edges, tmp_path / "storm.html")
     text = path.read_text(encoding="utf-8")
 
-    assert "ff0033" in text.lower()
-    assert str(CRITICAL_NODE_SIZE) in text
-    assert "shadow" in text.lower()
-    assert "CRITICAL WARNING" in text
-    assert "Stress Level: 70" in text
-    assert "white" in text.lower()
+    assert "e63946" not in text.lower()
+    assert str(DEFAULT_NODE_SIZE) in text
+    # pyvis title JSON escapes non-ASCII (연결 → \uc5f0\uacb0)
+    assert "\\uc5f0\\uacb0" in text
+    assert "stress: 70" in text
 
 
-def test_build_pyvis_network_critical_cause_gets_red_border():
+def test_build_pyvis_network_hub_larger_not_red():
     """
-    CRITICAL upstream 강조: 원인(extracted 파랑)은 fill 유지 + border=#ff0033.
+    연결 많은 hub는 크기만 커지고 provenance 색 유지 (빨강 override 없음).
 
-    시나리오: Trump(extracted) --CAUSES--> US and Iran(critical)
-    → e1.border == COLOR_CRITICAL, e1.background == extracted blue
+    e1→c1, e2→c1: c1 in-degree=2 → size > e1
     """
     nodes = [
         GraphNode(
@@ -90,6 +101,15 @@ def test_build_pyvis_network_critical_cause_gets_red_border():
             "Trump",
             "signed MOU",
             "2026-01-01T10:00:00",
+            "h",
+            "extracted",
+            "active",
+        ),
+        GraphNode(
+            "e2",
+            "EU",
+            "sanctions",
+            "2026-01-01T10:01:00",
             "h",
             "extracted",
             "active",
@@ -106,19 +126,26 @@ def test_build_pyvis_network_critical_cause_gets_red_border():
             is_critical=True,
         ),
     ]
-    edges = [GraphEdge("e1", "c1", 1.0, 60000)]
+    edges = [
+        GraphEdge("e1", "c1", 1.0, 60000),
+        GraphEdge("e2", "c1", 1.0, 120000),
+    ]
     net = build_pyvis_network(nodes, edges)
 
     cause = next(n for n in net.nodes if n["id"] == "e1")
-    critical = next(n for n in net.nodes if n["id"] == "c1")
+    hub = next(n for n in net.nodes if n["id"] == "c1")
 
-    assert cause["color"]["background"] == "#4cc9f0"
-    assert cause["color"]["border"] == COLOR_CRITICAL
-    assert cause["borderWidth"] == 3
-    assert critical["color"]["background"] == COLOR_CRITICAL
+    def _node_bg(color):
+        return color["background"] if isinstance(color, dict) else color
+
+    assert _node_bg(cause["color"]) == "#8ecae6"
+    if isinstance(cause["color"], dict):
+        assert cause["color"]["border"] != COLOR_CRITICAL
+    assert _node_bg(hub["color"]) == "#8ecae6"
+    assert hub["size"] > cause["size"]
 
 
-def test_build_pyvis_network_critical_overrides_verified_color():
+def test_build_pyvis_network_critical_keeps_provenance_color_not_red():
     node = GraphNode(
         "c1",
         "A공장",
@@ -126,18 +153,19 @@ def test_build_pyvis_network_critical_overrides_verified_color():
         "2026-01-01T10:05:00",
         "h",
         "verified",
-        "promoted",
+        "active",
         stress_level=110,
         is_critical=True,
     )
     net = build_pyvis_network([node], [])
     node_data = net.nodes[0]
 
-    assert node_data["size"] == CRITICAL_NODE_SIZE
-    assert node_data.get("shadow") is True
-    assert node_data["color"]["background"] == COLOR_CRITICAL
-    assert node_data["font"]["color"] == "white"
-    assert node_data["font"]["bold"] is True
+    assert node_data["size"] == DEFAULT_NODE_SIZE
+    assert node_data.get("shadow") is not True
+    color = node_data["color"]
+    bg = color["background"] if isinstance(color, dict) else color
+    assert bg == COLOR_VERIFIED
+    assert bg != COLOR_CRITICAL
 
 
 def test_build_critical_pyvis_kwargs_structure():
@@ -148,5 +176,5 @@ def test_build_critical_pyvis_kwargs_structure():
         style=style,
     )
     assert kwargs["shadow"] is True
-    assert kwargs["size"] == 35
+    assert kwargs["size"] == CRITICAL_NODE_SIZE
     assert kwargs["color"]["background"] == COLOR_CRITICAL

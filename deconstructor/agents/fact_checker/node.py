@@ -1,6 +1,23 @@
 """
 Step 3 — Fact-Checker LangGraph 노드 (Micro-step CHECK-S3-node)
 ================================================================
+
+Purpose / 목적
+--------------
+Dreamer ``inferred_facts``(≤5) 각각에 대해 웹 검색 + LLM Verifier로 promote/drop.
+
+Live 경로 (TAVILY_API_KEY 설정 시)
+----------------------------------
+  build_search_query → TavilySearchProvider → verify_hypothesis_with_llm
+  → promote_fact (check_status=promoted) | drop_fact (dropped_hypotheses)
+
+Dry-run (키 없음)
+-----------------
+  stub_verify_hypothesis — 키워드 휴리스틱, **실제 웹 검증 아님**
+
+Pipeline position
+-----------------
+  dreamer → **fact_checker** → skeptic → weaver
 """
 
 from __future__ import annotations
@@ -14,7 +31,7 @@ from deconstructor.agents.fact_checker.schemas import DroppedHypothesis
 from deconstructor.agents.fact_checker.search.factory import get_search_provider
 from deconstructor.agents.fact_checker.stub import stub_verify_hypothesis
 from deconstructor.agents.fact_checker.verifier import verify_hypothesis_with_llm
-from deconstructor.cli.print_util import safe_print
+from deconstructor.print_util import safe_print
 from deconstructor.models import AtomicFact
 
 if TYPE_CHECKING:

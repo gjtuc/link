@@ -54,3 +54,8 @@ def validate_check_status(value: str) -> CheckStatus:
 def is_ghost_dropped(source_type: str, check_status: str) -> bool:
     """A안: 검증 탈락 고스트 노드 (노란 점선 + ✖ + opacity)."""
     return source_type == "inferred" and check_status == "dropped"
+
+
+def is_promoted_inferred(source_type: str, check_status: str) -> bool:
+    """Dreamer 가설이 Fact-Checker를 통과 — 노란 채움 + 초록 테두리."""
+    return source_type == "inferred" and check_status == "promoted"

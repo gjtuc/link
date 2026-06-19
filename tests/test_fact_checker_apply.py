@@ -7,7 +7,7 @@ from deconstructor.agents.fact_checker.schemas import VerificationVerdict
 from deconstructor.models import AtomicFact
 
 
-def test_promote_sets_verified_active():
+def test_promote_sets_inferred_promoted():
     fact = AtomicFact(
         subject="factory line",
         state_change="operation -> halted",
@@ -16,8 +16,8 @@ def test_promote_sets_verified_active():
         check_status="pending",
     )
     promoted = promote_fact(fact, VerificationVerdict(accepted=True, reason="stub ok"))
-    assert promoted.source_type == "verified"
-    assert promoted.check_status == "active"
+    assert promoted.source_type == "inferred"
+    assert promoted.check_status == "promoted"
 
 
 def test_drop_sets_ghost_inferred_dropped():

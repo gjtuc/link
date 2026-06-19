@@ -45,6 +45,7 @@ def test_apply_forces_inferred_pending():
         assert fact.source_type == "inferred"
         assert fact.check_status == "pending"
         assert fact.is_atomic is True
+        assert fact.anchor_fact_id == source.id
 
 
 def test_dreamer_node_stub_populates_inferred_facts(capsys):

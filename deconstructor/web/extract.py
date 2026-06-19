@@ -284,7 +284,16 @@ def extract_batch(
             text = from_image(data, mime, label=fname)
             out.append(ExtractedSource("image", fname, text))
         elif hint == "document" or hint == "auto":
-            text = from_document(data, fname, mime)
+            try:
+                text = from_document(data, fname, mime)
+            except ValueError:
+                if hint == "auto":
+                    text = _read_plain(data, fname)
+                    text = _maybe_summarize(text.strip())
+                    if not text:
+                        raise ValueError(f"파일에서 텍스트를 추출하지 못했습니다: {fname}") from None
+                else:
+                    raise
             out.append(ExtractedSource("document", fname, text))
         else:
             raise ValueError(f"알 수 없는 파일 종류: {fname}")

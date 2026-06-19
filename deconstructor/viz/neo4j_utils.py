@@ -36,7 +36,13 @@ MAX_GRAPH_NODES = 300
 
 @dataclass(frozen=True)
 class GraphNode:
-    """Neo4j :Fact 노드 1개 — pyvis 입력용 (provenance 포함)."""
+    """
+    Neo4j :Fact 노드 1개 — pyvis 입력용 (provenance 포함).
+
+    anchor_fact_id / reasoning
+        Dreamer inferred 전용. anchor 는 hover 점선·툴팁 안내의 원천 id.
+        reasoning 은 mechanism 문장 (Fact-Checker·Verifier 경로).
+    """
 
     id: str
     subject: str
@@ -47,6 +53,8 @@ class GraphNode:
     check_status: str = DEFAULT_CHECK_STATUS
     stress_level: int = DEFAULT_STRESS_LEVEL
     is_critical: bool = DEFAULT_IS_CRITICAL
+    anchor_fact_id: str | None = None
+    reasoning: str | None = None
 
 
 @dataclass(frozen=True)
@@ -80,6 +88,23 @@ def _log(step: str, msg: str) -> None:
     line = f"[VIZ-S2-{step}] {msg}"
     logger.info(line)
     print(line)
+
+
+def neo4j_is_available() -> bool:
+    """Bolt 연결 가능 여부 (웹 UI fallback 판단용)."""
+    if not config.NEO4J_PASSWORD:
+        return False
+    driver = GraphDatabase.driver(
+        config.NEO4J_URI,
+        auth=(config.NEO4J_USER, config.NEO4J_PASSWORD),
+    )
+    try:
+        driver.verify_connectivity()
+        return True
+    except Exception:
+        return False
+    finally:
+        driver.close()
 
 
 def fetch_causal_graph(
@@ -129,7 +154,9 @@ def fetch_causal_graph(
                        coalesce(f.source_type, $default_source) AS source_type,
                        coalesce(f.check_status, $default_check) AS check_status,
                        coalesce(f.stress_level, $default_stress) AS stress_level,
-                       coalesce(f.is_critical, $default_critical) AS is_critical
+                       coalesce(f.is_critical, $default_critical) AS is_critical,
+                       f.anchor_fact_id AS anchor_fact_id,
+                       f.reasoning AS reasoning
                 ORDER BY f.timestamp, f.subject
                 LIMIT $limit
                 """,
@@ -151,6 +178,8 @@ def fetch_causal_graph(
                     check_status=row["check_status"] or DEFAULT_CHECK_STATUS,
                     stress_level=int(row["stress_level"] or DEFAULT_STRESS_LEVEL),
                     is_critical=bool(row["is_critical"]),
+                    anchor_fact_id=row.get("anchor_fact_id"),
+                    reasoning=row.get("reasoning") or None,
                 )
                 for row in node_rows
             ]

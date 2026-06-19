@@ -14,8 +14,9 @@ Builds **Gemini** or **OpenAI** LangChain chat models based on
 
 ::
 
-    deconstruct/llm_runner → get_chat_model()
-    skeptic (live)       → get_chat_model()
+    deconstruct/llm_runner → get_chat_model(tier="flash")
+    dreamer (live)       → flash breadth + pro compress
+    skeptic (live)       → get_chat_model(tier="pro")
 
 API 키 미설정 시 `RuntimeError` — CLI live 모드 시작 전 `.env` / `local_settings.py` 확인.
 
@@ -41,8 +42,8 @@ def get_chat_model(*, tier: GeminiTier = "pro") -> BaseChatModel:
     """
     LLM 인스턴스 반환.
 
-    tier=pro   — Deconstruct·Skeptic·긴 문서 요약 (Gemini 3.1 Pro, thinking high)
-    tier=flash — 이미지 OCR·가벼운 추출 (Gemini 3.5 Flash)
+    tier=flash  — Deconstruct·Dreamer breadth·이미지 OCR (Gemini Flash)
+    tier=pro    — Dreamer compress·Fact-Checker·Skeptic·긴 문서 요약 (Gemini Pro)
     """
     provider = config.resolve_llm_provider()
     if provider == "gemini":

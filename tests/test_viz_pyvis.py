@@ -19,6 +19,6 @@ def test_render_to_html_creates_file(tmp_path):
     assert path.exists()
     text = path.read_text(encoding="utf-8")
     assert "grid" in text
-    assert "state_change" in text or "power -> off" in text
+    assert "power" in text and "off" in text
     assert "vis.Network" in text or "pyvis" in text.lower()
     assert "physics" in text.lower()

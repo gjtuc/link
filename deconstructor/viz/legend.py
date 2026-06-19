@@ -9,7 +9,7 @@ pyvis 가 생성한 ``graph_output.html`` 은 기본적으로 vis-network 만 �
 
   1. ``inject_graph_interaction`` — ``network = new vis.Network(...)`` 직후
      physics freeze / drag pin 스크립트 삽입
-  2. ``build_legend_html`` — 우측 상단 한국어 범례(노드색·CRITICAL·화살표·조작법)
+  2. ``build_legend_html`` — 우측 상단 한국어 범례(노드색·크기·화살표·조작법)
 
 Pipeline position / 파이프라인 위치
 ---------------------------------
@@ -27,6 +27,13 @@ Interaction script (attachGraphInteraction)
   - click / dragStart on node → ``physics.enabled=false``, edge smooth → continuous
   - dragEnd → ``fixed:{x,y:true}`` 로 노드 위치 고정 (마우스 따라가기)
   - doubleClick on empty canvas → physics 재개, 모든 노드 fixed 해제
+  - **hoverNode / blurNode** — ``anchor_hover_only`` 점선 표시 (Dreamer 원천→가설)
+  - 범례 기호 hover → ``__dcAttachLegendHighlight`` (해당 색·엣지만 강조)
+
+Post-inject CSS (inject_graph_embed_style)
+------------------------------------------
+  - pyvis 중복 ``<h1>`` 숨김 (제목은 Link UI 전체화면 바)
+  - ``#mynetwork`` 높이 100% · ``div.vis-tooltip`` ``pre-line`` (한국어 툴팁)
 
 Legend content sync
 -------------------
@@ -52,7 +59,7 @@ from deconstructor.provenance.viz_style import (
     COLOR_INFERRED,
     COLOR_VERIFIED,
 )
-from deconstructor.storm.viz_style import COLOR_CRITICAL, CRITICAL_NODE_SIZE, DEFAULT_NODE_SIZE
+from deconstructor.storm.viz_style import DEFAULT_NODE_SIZE, MAX_NODE_SIZE
 
 
 def build_legend_html() -> str:
@@ -63,45 +70,89 @@ def build_legend_html() -> str:
     ``#deconstructor-legend`` id 로 재주입 시 기존 패널 제거 가능.
     """
     return f"""
-<div id="deconstructor-legend" lang="ko">
+<div id="deconstructor-legend-wrap">
+  <button type="button" id="legend-side-toggle" aria-expanded="true"
+    aria-label="범례 접기" title="범례 접기">
+    <span class="legend-side-icon" aria-hidden="true"></span>
+  </button>
+  <div id="deconstructor-legend" lang="ko">
   <button type="button" id="legend-toggle" aria-expanded="true">범례 ▾</button>
   <div id="legend-body">
     <h3>노드 색 · 크기</h3>
     <ul class="legend-nodes">
-      <li><span class="swatch" style="background:{COLOR_EXTRACTED}"></span>
+      <li class="legend-filter-item" data-filter="extracted">
+        <span class="swatch" style="background:{COLOR_EXTRACTED}"></span>
         <strong>파랑</strong> — 추출(extracted): LLM이 원문에서 뽑은 사실</li>
-      <li><span class="swatch" style="background:{COLOR_VERIFIED}"></span>
-        <strong>초록</strong> — 검증(verified): Fact-Checker 통과·승격</li>
-      <li><span class="swatch" style="background:{COLOR_INFERRED}"></span>
-        <strong>노랑</strong> — 추론(inferred): Dreamer 가설·미검증</li>
-      <li><span class="swatch faded" style="background:{COLOR_INFERRED}"></span>
-        <strong>✖ 노랑(흐림)</strong> — 기각(dropped): Skeptic/Fact-Checker 거절</li>
-      <li><span class="swatch large" style="background:{COLOR_CRITICAL}"></span>
-        <strong>빨강·큼</strong> — CRITICAL: Perfect Storm (인과 누적 stress 또는 원인 2개+)</li>
-      <li><span class="swatch" style="background:{COLOR_EXTRACTED}; box-shadow: 0 0 0 2px {COLOR_CRITICAL}"></span>
-        <strong>빨간 테두리</strong> — CRITICAL 노드로 직접 인과되는 원인 (색은 provenance 유지)</li>
+      <li class="legend-filter-item" data-filter="verified">
+        <span class="swatch" style="background:{COLOR_VERIFIED}"></span>
+        <strong>초록</strong> — 검증(verified): 외부·원문 기반 확정 사실</li>
+      <li class="legend-filter-item" data-filter="inferred">
+        <span class="swatch" style="background:{COLOR_INFERRED}"></span>
+        <strong>노랑</strong> — 추론(inferred·pending): Dreamer(추론가) 가설·미검증</li>
+      <li class="legend-filter-item" data-filter="promoted">
+        <span class="swatch" style="background:{COLOR_INFERRED}; box-shadow: 0 0 0 3px {COLOR_VERIFIED}"></span>
+        <strong>노랑+초록 테두리</strong> — 추론가 가설이 Fact-Checker 통과 (promoted)</li>
+      <li class="legend-filter-item" data-filter="dropped">
+        <span class="swatch faded" style="background:{COLOR_INFERRED}"></span>
+        <strong>✖ 노랑(흐림)</strong> — 기각(dropped): Fact-Checker/Skeptic 거절</li>
+      <li class="legend-filter-item legend-size-row" data-filter="hub">
+        <span class="swatch" style="background:{COLOR_EXTRACTED}"></span>
+        <span class="swatch large" style="background:{COLOR_EXTRACTED}"></span>
+        <strong>크기</strong> — CAUSES 연결이 많을수록 노드가 커짐 (색은 provenance 유지)</li>
     </ul>
-    <p class="legend-note">일반 노드 ≈ {DEFAULT_NODE_SIZE}px · CRITICAL ≈ {CRITICAL_NODE_SIZE}px</p>
+    <p class="legend-note">기본 ≈ {DEFAULT_NODE_SIZE}px · 연결 hub 최대 ≈ {MAX_NODE_SIZE}px</p>
 
     <h3>화살표 (인과 방향)</h3>
     <ul class="legend-edges">
-      <li><span class="edge-line solid" style="background:{COLOR_EDGE_CAUSAL}"></span>
-        <strong>분홍 실선</strong> — 검증된 인과 (CAUSES): <em>원인 → 결과</em></li>
-      <li><span class="edge-line dashed"></span>
-        <strong>노랑 점선</strong> — 가설·추론 연결 (미확정)</li>
+      <li class="legend-filter-item" data-filter="edge-solid">
+        <span class="edge-line solid" style="background:{COLOR_EDGE_CAUSAL}"></span>
+        <strong>회색 실선</strong> — 검증된 인과 (CAUSES): <em>원인 → 결과</em></li>
+      <li class="legend-filter-item" data-filter="edge-dashed">
+        <span class="edge-line dashed"></span>
+        <strong>연한 회색 점선</strong> — 가설·미검증 추론 연결 (pending/dropped)</li>
     </ul>
+    <p class="legend-note">범례 기호에 마우스를 올리면 해당 노드·화살표만 강조됩니다</p>
+    <p class="legend-note">promoted(초록 테두리) 노드로 이어지는 인과는 <strong>회색 실선</strong></p>
     <p class="legend-note">화살표 hover → 원인·결과 시차(latency)</p>
-    <p class="legend-note">노드 hover → subject, stress_level, timestamp 등</p>
+    <p class="legend-note">노랑·promoted hover → 원천(파랑) 쪽 <strong>초록 점선</strong> (Dreamer anchor, 평소 숨김)</p>
     <p class="legend-note"><strong>조작:</strong> 노드 클릭 → 움직임 정지 · 드래그로 이동 · 빈 곳 더블클릭 → 다시 움직임</p>
+  </div>
   </div>
 </div>
 <style>
-#deconstructor-legend {{
+#deconstructor-legend-wrap {{
   position: fixed; top: 12px; right: 12px; z-index: 9999;
-  max-width: 340px; font-family: "Segoe UI", "Apple SD Gothic Neo", sans-serif;
+  display: flex; flex-direction: row; align-items: flex-start;
+  max-width: 364px;
+}}
+#legend-side-toggle {{
+  flex-shrink: 0; width: 20px; height: 20px; margin-top: 10px; padding: 0;
+  border: 1px solid #555; border-right: none;
+  border-radius: 6px 0 0 6px;
+  background: rgba(15, 15, 30, 0.94); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  color: #e8e8e8;
+}}
+#legend-side-toggle:hover {{ background: rgba(35, 35, 55, 0.98); }}
+#legend-side-toggle:focus-visible {{
+  outline: 2px solid #8ecae6; outline-offset: 1px;
+}}
+.legend-side-icon {{
+  display: block; width: 0; height: 0;
+  border-top: 4px solid transparent;
+  border-bottom: 4px solid transparent;
+  border-left: 5px solid #e8e8e8;
+  transition: transform 0.15s ease;
+}}
+#deconstructor-legend-wrap.legend-wrap-collapsed .legend-side-icon {{
+  transform: rotate(180deg);
+}}
+#deconstructor-legend {{
+  flex: 1; min-width: 0; max-width: 340px;
+  font-family: "Segoe UI", "Apple SD Gothic Neo", sans-serif;
   font-size: 12px; line-height: 1.45; color: #e8e8e8;
   background: rgba(15, 15, 30, 0.92); border: 1px solid #444;
-  border-radius: 10px; box-shadow: 0 4px 20px rgba(0,0,0,.45);
+  border-radius: 0 10px 10px 10px; box-shadow: 0 4px 20px rgba(0,0,0,.45);
 }}
 #deconstructor-legend h3 {{
   margin: 0 0 6px; font-size: 12px; font-weight: 600; color: #fff;
@@ -113,34 +164,156 @@ def build_legend_html() -> str:
 }}
 #legend-body {{ padding: 0 12px 12px; }}
 #deconstructor-legend ul {{ margin: 0 0 10px; padding: 0; list-style: none; }}
-#deconstructor-legend li {{ display: flex; align-items: flex-start; gap: 8px; margin-bottom: 6px; }}
+#deconstructor-legend li {{
+  display: flex; align-items: center; gap: 10px; margin-bottom: 4px;
+  padding: 6px 8px; border-radius: 8px; cursor: default;
+  transition: background 0.12s ease;
+}}
+.legend-filter-item:hover, .legend-filter-item.legend-active {{
+  background: rgba(255,255,255,0.1);
+}}
 .swatch {{
-  flex-shrink: 0; width: 14px; height: 14px; border-radius: 50%; margin-top: 2px;
-  border: 1px solid rgba(255,255,255,.3);
+  flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%; margin-top: 0;
+  border: 1px solid rgba(255,255,255,.35);
+  pointer-events: none;
 }}
 .swatch.faded {{ opacity: 0.4; }}
-.swatch.large {{ width: 20px; height: 20px; }}
+.swatch.large {{ width: 32px; height: 32px; }}
+.legend-size-row .swatch + .swatch {{ margin-left: -4px; }}
 .edge-line {{
-  flex-shrink: 0; width: 28px; height: 3px; margin-top: 6px; border-radius: 2px;
+  flex-shrink: 0; width: 44px; height: 5px; margin-top: 0; border-radius: 2px;
+  pointer-events: none;
 }}
 .edge-line.dashed {{
-  background: repeating-linear-gradient(90deg, {COLOR_EDGE_HYPOTHESIS} 0 6px, transparent 6px 10px);
-  height: 2px;
+  background: repeating-linear-gradient(90deg, {COLOR_EDGE_HYPOTHESIS} 0 8px, transparent 8px 13px);
+  height: 4px;
 }}
 .legend-note {{ margin: 4px 0 0; color: #9aa0a6; font-size: 11px; }}
 .legend-note code {{ background: #2a2a3e; padding: 1px 4px; border-radius: 3px; }}
-#deconstructor-legend.collapsed #legend-body {{ display: none; }}
+#deconstructor-legend-wrap.legend-wrap-collapsed #legend-body {{ display: none; }}
+#deconstructor-legend-wrap.legend-wrap-collapsed #deconstructor-legend {{
+  border-radius: 0 10px 10px 0;
+}}
+#deconstructor-legend-wrap.legend-wrap-collapsed #legend-side-toggle {{
+  border-right: 1px solid #555;
+  border-radius: 6px 0 0 6px;
+}}
 </style>
 <script>
 (function() {{
-  var btn = document.getElementById("legend-toggle");
-  var box = document.getElementById("deconstructor-legend");
-  if (btn && box) {{
-    btn.addEventListener("click", function() {{
-      var collapsed = box.classList.toggle("collapsed");
-      btn.textContent = collapsed ? "범례 ▸" : "범례 ▾";
-      btn.setAttribute("aria-expanded", String(!collapsed));
+  var DIM = {LEGEND_DIM_OPACITY};
+  var DIM_LABEL = "{LEGEND_DIM_LABEL_RGBA}";
+
+  function cloneData(items) {{
+    return JSON.parse(JSON.stringify(items));
+  }}
+
+  function dimEdgeColor(edge) {{
+    if (!edge.color) return {{ color: "rgba(184,193,204," + DIM + ")" }};
+    if (typeof edge.color === "string") {{
+      return {{ color: edge.color, opacity: DIM }};
+    }}
+    return {{
+      color: edge.color.color || edge.color,
+      opacity: DIM,
+      highlight: edge.color.highlight,
+      hover: edge.color.hover
+    }};
+  }}
+
+  function nodeMatches(node, filter) {{
+    if (filter === "hub") return node.legend_hub === true;
+    if (filter === "edge-solid" || filter === "edge-dashed") return false;
+    return node.legend_class === filter;
+  }}
+
+  function edgeMatches(edge, filter) {{
+    if (filter === "edge-solid" || filter === "edge-dashed") {{
+      return edge.legend_class === filter;
+    }}
+    return false;
+  }}
+
+  window.__dcAttachLegendHighlight = function(net) {{
+    if (!net || net.__dcLegendAttached) return;
+    net.__dcLegendAttached = true;
+
+    var baselineNodes = cloneData(net.body.data.nodes.get());
+    var baselineEdges = cloneData(net.body.data.edges.get());
+    var items = document.querySelectorAll("#deconstructor-legend .legend-filter-item");
+    if (!items.length) return;
+
+    function clearFilter() {{
+      net.body.data.nodes.update(cloneData(baselineNodes));
+      net.body.data.edges.update(cloneData(baselineEdges));
+      items.forEach(function(li) {{ li.classList.remove("legend-active"); }});
+    }}
+
+    function applyFilter(filter) {{
+      var isEdgeFilter = filter === "edge-solid" || filter === "edge-dashed";
+      var nodeUpdates = baselineNodes.map(function(n) {{
+        var keep = !isEdgeFilter && nodeMatches(n, filter);
+        var u = {{ id: n.id, opacity: keep ? (n.opacity !== undefined ? n.opacity : 1) : DIM }};
+        if (n.font) {{
+          u.font = Object.assign({{}}, n.font);
+          u.font.color = keep ? n.font.color : DIM_LABEL;
+        }}
+        return u;
+      }});
+      var edgeUpdates = baselineEdges.map(function(e) {{
+        var keep = isEdgeFilter ? edgeMatches(e, filter) : false;
+        if (keep) {{
+          return {{ id: e.id, color: e.color, dashes: e.dashes }};
+        }}
+        return {{ id: e.id, color: dimEdgeColor(e), dashes: e.dashes }};
+      }});
+      net.body.data.nodes.update(nodeUpdates);
+      net.body.data.edges.update(edgeUpdates);
+    }}
+
+    items.forEach(function(li) {{
+      var filter = li.getAttribute("data-filter");
+      if (!filter) return;
+      li.addEventListener("mouseenter", function() {{
+        li.classList.add("legend-active");
+        applyFilter(filter);
+      }});
+      li.addEventListener("mouseleave", clearFilter);
     }});
+  }};
+
+  if (window.__dcGraphNetwork) {{
+    window.__dcAttachLegendHighlight(window.__dcGraphNetwork);
+  }}
+
+  var btn = document.getElementById("legend-toggle");
+  var sideBtn = document.getElementById("legend-side-toggle");
+  var wrap = document.getElementById("deconstructor-legend-wrap");
+  var box = document.getElementById("deconstructor-legend");
+
+  function setLegendCollapsed(collapsed) {{
+    if (!wrap || !box || !btn) return;
+    wrap.classList.toggle("legend-wrap-collapsed", collapsed);
+    box.classList.toggle("collapsed", collapsed);
+    btn.textContent = collapsed ? "범례 ▸" : "범례 ▾";
+    btn.setAttribute("aria-expanded", String(!collapsed));
+    if (sideBtn) {{
+      sideBtn.setAttribute("aria-expanded", String(!collapsed));
+      sideBtn.setAttribute("aria-label", collapsed ? "범례 펼치기" : "범례 접기");
+      sideBtn.setAttribute("title", collapsed ? "범례 펼치기" : "범례 접기");
+    }}
+  }}
+
+  function toggleLegend() {{
+    if (!box) return;
+    setLegendCollapsed(!box.classList.contains("collapsed"));
+  }}
+
+  if (btn && box) {{
+    btn.addEventListener("click", toggleLegend);
+  }}
+  if (sideBtn) {{
+    sideBtn.addEventListener("click", toggleLegend);
   }}
 }})();
 </script>
@@ -148,7 +321,52 @@ def build_legend_html() -> str:
 
 
 # inject_graph_interaction 이 삽입한 IIFE 이름 — 재주입 시 제거용 마커
+GRAPH_EMBED_STYLE_MARKER = "deconstructor-graph-embed"
 GRAPH_INTERACTION_MARKER = "attachGraphInteraction"
+LEGEND_HIGHLIGHT_MARKER = "attachLegendHighlight"
+
+# 범례 hover 시 비일치 요소 opacity (0–1)
+LEGEND_DIM_OPACITY = 0.13
+LEGEND_DIM_LABEL_RGBA = "rgba(232,232,232,0.14)"
+
+
+def inject_graph_embed_style(html_text: str) -> str:
+    """
+    pyvis embed CSS — 제목 숨김, 그래프·툴팁 레이아웃.
+
+    Idempotent: ``#deconstructor-graph-embed`` 블록 제거 후 재주입.
+    """
+    html_text = re.sub(
+        r'<style id="deconstructor-graph-embed">.*?</style>\s*',
+        "",
+        html_text,
+        count=1,
+        flags=re.DOTALL,
+    )
+    embed = """
+<style id="deconstructor-graph-embed">
+html, body { margin: 0 !important; padding: 0 !important; height: 100% !important; }
+body > center, body center:has(h1) { display: none !important; }
+#mynetwork {
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 420px !important;
+  border: none !important;
+  float: none !important;
+}
+div.vis-tooltip {
+  white-space: pre-line !important;
+  max-width: 380px !important;
+  font-family: "Segoe UI", "Apple SD Gothic Neo", sans-serif !important;
+  font-size: 12px !important;
+  line-height: 1.45 !important;
+  padding: 8px 10px !important;
+}
+</style>
+"""
+    if "</head>" in html_text:
+        return html_text.replace("</head>", embed + "\n</head>", 1)
+    return embed + html_text
 
 
 def inject_graph_interaction(html_text: str) -> str:
@@ -225,6 +443,48 @@ def inject_graph_interaction(html_text: str) -> str:
                         && (!params.edges || !params.edges.length);
                       if (empty) unfreezePhysics();
                     });
+
+                    var ANCHOR_EDGE_COLOR = "#90be6d";
+                    function hideAnchorHintEdges() {
+                      var edges = net.body.data.edges.get({
+                        filter: function(e) { return e.anchor_hover_only === true; }
+                      });
+                      if (!edges.length) return;
+                      net.body.data.edges.update(edges.map(function(e) {
+                        return { id: e.id, hidden: true };
+                      }));
+                    }
+                    function showAnchorHintForNode(nodeId) {
+                      var node = net.body.data.nodes.get(nodeId);
+                      if (!node || !node.anchor_fact_id) return;
+                      var edges = net.body.data.edges.get({
+                        filter: function(e) {
+                          return e.anchor_hover_only === true
+                            && e.from === node.anchor_fact_id
+                            && e.to === nodeId;
+                        }
+                      });
+                      if (!edges.length) return;
+                      hideAnchorHintEdges();
+                      net.body.data.edges.update(edges.map(function(e) {
+                        return {
+                          id: e.id,
+                          hidden: false,
+                          color: { color: ANCHOR_EDGE_COLOR, opacity: 0.92 },
+                          width: 2.5
+                        };
+                      }));
+                    }
+                    net.on("hoverNode", function(params) {
+                      hideAnchorHintEdges();
+                      if (params.node) showAnchorHintForNode(params.node);
+                    });
+                    net.on("blurNode", hideAnchorHintEdges);
+
+                    window.__dcGraphNetwork = net;
+                    if (typeof window.__dcAttachLegendHighlight === "function") {
+                      window.__dcAttachLegendHighlight(net);
+                    }
                   })(network);
 """
     return html_text.replace(
@@ -247,15 +507,24 @@ def inject_legend_into_html(html_path: Path) -> None:
         html_path: 보통 ``ROOT/graph_output.html``
     """
     text = html_path.read_text(encoding="utf-8")
+    text = inject_graph_embed_style(text)
     text = inject_graph_interaction(text)
     if "deconstructor-legend" in text:
         text = re.sub(
-            r'<div id="deconstructor-legend".*?</script>\s*',
+            r'<div id="deconstructor-legend-wrap".*?</script>\s*',
             "",
             text,
             count=1,
             flags=re.DOTALL,
         )
+        if "deconstructor-legend-wrap" not in text:
+            text = re.sub(
+                r'<div id="deconstructor-legend".*?</script>\s*',
+                "",
+                text,
+                count=1,
+                flags=re.DOTALL,
+            )
     legend = build_legend_html()
     if "</body>" in text:
         text = text.replace("</body>", legend + "\n</body>", 1)

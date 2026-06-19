@@ -22,8 +22,14 @@ def weaver_node(state: "State", *, persist_db: bool) -> dict:
         state.get("promoted_facts") or []
     )
     facts = facts_for_verified_edges(all_facts, edges)
+    endpoint_ids = {f.id for f in facts}
     ghost_facts = [
         d.ghost_fact for d in (state.get("dropped_hypotheses") or [])
+    ]
+    orphan_promoted = [
+        f
+        for f in (state.get("promoted_facts") or [])
+        if f.id not in endpoint_ids
     ]
     partial_run = state.get("partial_run", False)
 
@@ -37,13 +43,15 @@ def weaver_node(state: "State", *, persist_db: bool) -> dict:
                 partial_run=partial_run,
             )
             ghosts_written = 0
-            if ghost_facts:
+            extra_facts = list(ghost_facts) + list(orphan_promoted)
+            if extra_facts:
                 print(
-                    f"[STEP4-weaver] persist_ghost_facts count={len(ghost_facts)}"
+                    f"[STEP4-weaver] persist_ghost_facts count={len(extra_facts)} "
+                    f"(ghosts={len(ghost_facts)}, promoted_orphans={len(orphan_promoted)})"
                 )
                 ghosts_written = store.persist_ghost_facts(
                     trigger_event=state["raw_text"],
-                    facts=ghost_facts,
+                    facts=extra_facts,
                 )
             if ghosts_written:
                 result = result.model_copy(
@@ -63,10 +71,10 @@ def weaver_node(state: "State", *, persist_db: bool) -> dict:
             edges=edges,
             partial_run=partial_run,
         )
-        if ghost_facts:
+        if ghost_facts or orphan_promoted:
             print(
-                f"[STEP4-weaver] console mode: {len(ghost_facts)} ghost(s) "
-                f"(not persisted without --db)"
+                f"[STEP4-weaver] console mode: {len(ghost_facts)} ghost(s), "
+                f"{len(orphan_promoted)} promoted orphan(s) (not persisted without --db)"
             )
         critical_subjects = run_watcher_in_memory(facts, edges)
         if critical_subjects:

@@ -57,8 +57,8 @@ def test_fact_checker_stub_promote_two_drop_one(capsys):
     assert len(dropped) == 1
 
     for p in promoted:
-        assert p.source_type == "verified"
-        assert p.check_status == "active"
+        assert p.source_type == "inferred"
+        assert p.check_status == "promoted"
 
     ghost = dropped[0].ghost_fact
     assert ghost.source_type == "inferred"

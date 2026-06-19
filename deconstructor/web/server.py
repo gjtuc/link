@@ -1,5 +1,18 @@
 """
 로컬 웹 UI — Google 번역 스타일 입력 + graph_output.html 미리보기
+================================================================
+
+엔드포인트
+----------
+  GET  /           — ``web/index.html`` (PDF·URL·텍스트 입력, 그래프 iframe)
+  POST /api/analyze — 배치 추출 → ``run_pipeline`` → HTML 그래프 갱신
+  GET  /graph_output.html — pyvis 산출물 (범례·hover JS 주입됨)
+
+런타임 연동
+-----------
+  - ``neo4j_launcher`` — 분석 전 bolt 가용 시 자동 기동, 세션 heartbeat
+  - ``fact_checker_dry_run`` — ``config.has_tavily`` 없으면 stub 검증
+  - Neo4j 불가 시 ``state_graph.graph_from_pipeline_state`` 로 세션 그래프만 표시
 """
 
 from __future__ import annotations
@@ -34,19 +47,52 @@ _last_result: dict | None = None
 
 def _run_pipeline_batch(sources: list[ExtractedSource]) -> dict:
     global _last_result
+    from deconstructor import config
     from deconstructor.graph_builder import run_pipeline
+    from deconstructor.neo4j_launcher import (
+        ensure_neo4j_running,
+        persist_state_to_neo4j,
+        probe_neo4j_installation,
+    )
     from deconstructor.report import format_dry_run_report
-    from deconstructor.viz.neo4j_utils import fetch_causal_graph
+    from deconstructor.viz.neo4j_utils import fetch_causal_graph, neo4j_is_available
+    from deconstructor.viz.state_graph import graph_from_pipeline_state, merge_graph_results
     from deconstructor.viz.visualizer import render_to_html
 
+    use_db = neo4j_is_available()
+    neo4j_sync: dict | None = None
+    if not use_db:
+        print("[LinkUI] Neo4j offline — console mode (graph from this session only)")
+
+    has_tavily = bool(config.TAVILY_API_KEY)
+    if not has_tavily:
+        print(
+            "[LinkUI] TAVILY_API_KEY 없음 — Dreamer는 live, Fact-Checker는 stub "
+            "(노랑·고스트는 나오지만 웹 검증은 제한됨)"
+        )
+    else:
+        print("[LinkUI] Dreamer + Fact-Checker live (Tavily 검색)")
+
     runs: list[dict] = []
+    session_graphs: list = []
+    pipeline_states: list = []
     with _run_lock:
         for idx, src in enumerate(sources, start=1):
             print(f"[LinkUI] 분석 {idx}/{len(sources)} — {src.kind}: {src.label}")
-            state = run_pipeline(src.text, persist_db=True)
+            state = run_pipeline(
+                src.text,
+                persist_db=use_db,
+                enable_dreamer=True,
+                fact_checker_dry_run=not has_tavily,
+            )
+            pipeline_states.append(state)
             report = format_dry_run_report(state)
             verified = state.get("verified_edges") or []
             completed = state.get("completed_facts") or []
+            promoted = state.get("promoted_facts") or []
+            dropped = state.get("dropped_hypotheses") or []
+            if not use_db:
+                session_graphs.append(graph_from_pipeline_state(state))
             runs.append(
                 {
                     "index": idx,
@@ -55,16 +101,49 @@ def _run_pipeline_batch(sources: list[ExtractedSource]) -> dict:
                     "chars": len(src.text),
                     "verified_edges": len(verified),
                     "atomic_facts": len(completed),
+                    "dreamer_promoted": len(promoted),
+                    "dreamer_dropped": len(dropped),
                     "preview": src.text[:240] + ("…" if len(src.text) > 240 else ""),
                     "report_excerpt": "\n".join(report.splitlines()[:12]),
                 }
             )
 
-        fetched = fetch_causal_graph(max_nodes=300)
-        render_to_html(fetched.nodes, fetched.edges, GRAPH_HTML, title="Deconstructor Causal Graph")
+        if not use_db:
+            probe = probe_neo4j_installation(ROOT)
+            if probe.any_installed:
+                print("[LinkUI] 분석 완료 — Neo4j 자동 기동 시도…")
+                ensure = ensure_neo4j_running(ROOT, wait_timeout_sec=90)
+                neo4j_sync = {
+                    "attempted": True,
+                    "available": ensure.available,
+                    "method": ensure.method,
+                    "message": ensure.message,
+                    "waited_sec": round(ensure.waited_sec, 1),
+                }
+                if ensure.available:
+                    for i, state in enumerate(pipeline_states, start=1):
+                        print(f"[LinkUI] Neo4j 백필 {i}/{len(pipeline_states)}")
+                        persist_state_to_neo4j(state)
+                    use_db = True
+            else:
+                neo4j_sync = {
+                    "attempted": False,
+                    "available": False,
+                    "method": "none",
+                    "message": "Neo4j/Docker 미설치 — DB 저장 생략",
+                }
+
+        if use_db:
+            fetched = fetch_causal_graph(max_nodes=300)
+        else:
+            fetched = merge_graph_results(session_graphs)
+
+        render_to_html(fetched.nodes, fetched.edges, GRAPH_HTML)
 
         _last_result = {
             "ok": True,
+            "neo4j": use_db,
+            "neo4j_sync": neo4j_sync,
             "items_processed": len(sources),
             "sources": runs,
             "nodes": len(fetched.nodes),
@@ -176,6 +255,36 @@ class LinkUIHandler(BaseHTTPRequestHandler):
             self._send_json(_last_result or {"ok": False, "message": "아직 실행 기록 없음"})
             return
 
+        if path == "/api/status":
+            from deconstructor.neo4j_launcher import (
+                _dbms_display_name,
+                active_ui_tab_count,
+                is_managed_neo4j,
+                probe_neo4j_installation,
+            )
+            from deconstructor.viz.neo4j_utils import neo4j_is_available
+
+            probe = probe_neo4j_installation(ROOT)
+            self._send_json(
+                {
+                    "neo4j": neo4j_is_available(),
+                    "neo4j_managed": is_managed_neo4j(),
+                    "ui_tabs": active_ui_tab_count(),
+                    "install": {
+                        "docker": probe.docker_cli,
+                        "compose": probe.compose_file,
+                        "desktop": probe.desktop_exe is not None,
+                        "desktop_exe": str(probe.desktop_exe) if probe.desktop_exe else None,
+                        "desktop_dbms_count": len(probe.desktop_dbms),
+                        "desktop_dbms_names": [
+                            _dbms_display_name(b) for b in probe.desktop_dbms
+                        ],
+                        "can_auto_start": probe.any_installed,
+                    },
+                }
+            )
+            return
+
         if path.startswith("/static/"):
             rel = path.removeprefix("/static/")
             target = (WEB_DIR / rel).resolve()
@@ -190,6 +299,36 @@ class LinkUIHandler(BaseHTTPRequestHandler):
 
     def do_POST(self) -> None:
         parsed = urlparse(self.path)
+
+        if parsed.path == "/api/heartbeat":
+            from deconstructor.neo4j_launcher import (
+                is_managed_neo4j,
+                maybe_stop_managed_if_ui_idle,
+                record_ui_heartbeat,
+                remove_ui_tab,
+            )
+
+            try:
+                payload = json.loads(self._read_body().decode("utf-8") or "{}")
+            except json.JSONDecodeError:
+                payload = {}
+            tab_id = str(payload.get("tab_id", "")).strip()
+            action = str(payload.get("action", "ping")).strip().lower()
+            if action == "bye":
+                remove_ui_tab(tab_id)
+                stopped = maybe_stop_managed_if_ui_idle(reason="last_tab_bye")
+            else:
+                record_ui_heartbeat(tab_id)
+                stopped = False
+            self._send_json(
+                {
+                    "ok": True,
+                    "neo4j_managed": is_managed_neo4j(),
+                    "neo4j_stopped": stopped,
+                }
+            )
+            return
+
         if parsed.path != "/api/analyze":
             self.send_error(HTTPStatus.NOT_FOUND)
             return
@@ -224,16 +363,22 @@ class LinkUIHandler(BaseHTTPRequestHandler):
 
 
 def main(host: str = "127.0.0.1", port: int = 8765) -> None:
+    from deconstructor.neo4j_launcher import start_ui_watchdog, stop_managed_neo4j
+
     os.chdir(ROOT)
+    start_ui_watchdog()
     server = ThreadingHTTPServer((host, port), LinkUIHandler)
     url = f"http://{host}:{port}/"
     print(f"[LinkUI] Deconstructor web UI → {url}")
     print(f"[LinkUI] 지원: 텍스트·URL·이미지·PDF/DOCX — 여러 개 동시 입력")
+    print("[LinkUI] 브라우저 탭이 모두 닫히면 Link가 켠 Neo4j·Desktop 창 자동 정리")
     print("[LinkUI] 종료: Ctrl+C")
     try:
         server.serve_forever()
     except KeyboardInterrupt:
         print("\n[LinkUI] stopped")
+    finally:
+        stop_managed_neo4j(reason="ui_server_exit")
 
 
 if __name__ == "__main__":

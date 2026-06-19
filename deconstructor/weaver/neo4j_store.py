@@ -88,6 +88,8 @@ class Neo4jWeaver:
                         f.trigger_event = $trigger_event,
                         f.source_type = $source_type,
                         f.check_status = $check_status,
+                        f.reasoning = $reasoning,
+                        f.anchor_fact_id = $anchor_fact_id,
                         f.stress_level = coalesce(f.stress_level, $stress_level),
                         f.is_critical = coalesce(f.is_critical, $is_critical)
                     """,
@@ -98,6 +100,8 @@ class Neo4jWeaver:
                     trigger_event=trigger_event,
                     source_type=source_type,
                     check_status=check_status,
+                    reasoning=fact.reasoning or "",
+                    anchor_fact_id=fact.anchor_fact_id,
                     stress_level=fact.stress_level or DEFAULT_STRESS_LEVEL,
                     is_critical=fact.is_critical if fact.is_critical else DEFAULT_IS_CRITICAL,
                 )
@@ -165,6 +169,8 @@ class Neo4jWeaver:
                         f.trigger_event = $trigger_event,
                         f.source_type = $source_type,
                         f.check_status = $check_status,
+                        f.reasoning = $reasoning,
+                        f.anchor_fact_id = $anchor_fact_id,
                         f.stress_level = coalesce(f.stress_level, $stress_level),
                         f.is_critical = coalesce(f.is_critical, $is_critical)
                     """,
@@ -175,6 +181,8 @@ class Neo4jWeaver:
                     trigger_event=trigger_event,
                     source_type=fact.source_type,
                     check_status=fact.check_status,
+                    reasoning=fact.reasoning or "",
+                    anchor_fact_id=fact.anchor_fact_id,
                     stress_level=fact.stress_level or DEFAULT_STRESS_LEVEL,
                     is_critical=fact.is_critical if fact.is_critical else DEFAULT_IS_CRITICAL,
                 )
