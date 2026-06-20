@@ -38,5 +38,10 @@ def require_tavily_api_key() -> str:
 
 def get_search_provider() -> SearchProvider:
     """Live Fact-Checker용 Tavily provider."""
+    if not config.tavily_enabled():
+        raise RuntimeError(
+            "Tavily is disabled (TAVILY_DISABLED). "
+            "Use fact_checker dry_run/stub mode or clear TAVILY_DISABLED."
+        )
     key = require_tavily_api_key()
     return TavilySearchProvider(api_key=key)

@@ -78,6 +78,38 @@ MAX_DECOMPOSITION_ITERATIONS = int(os.getenv("MAX_DECOMPOSITION_ITERATIONS", "5"
 
 # --- Tavily (Fact-Checker live search) ---
 TAVILY_API_KEY = os.getenv("TAVILY_API_KEY", "")
+# True면 API 키가 있어도 Tavily 호출 안 함 (테스트·과금 방지)
+TAVILY_DISABLED = os.getenv("TAVILY_DISABLED", "").lower() in ("1", "true", "yes")
+# Tavily off 시 문서 corpus로 Dreamer 가설 검증 (Sprint 5 G-FC-CORPUS)
+CORPUS_FC_ENABLED = os.getenv("CORPUS_FC_ENABLED", "true").lower() not in ("0", "false", "no")
+
+
+def tavily_enabled() -> bool:
+    """Fact-Checker live 웹 검색(Tavily) 사용 여부."""
+    return bool(TAVILY_API_KEY) and not TAVILY_DISABLED
+
+
+def corpus_fc_enabled() -> bool:
+    """문서 내부 corpus Fact-Checker 사용 여부 (Tavily off 시)."""
+    return CORPUS_FC_ENABLED
+
+
+def resolve_fact_checker_mode() -> str:
+    """
+    Fact-Checker runtime mode (Sprint 5 SP5-CFG-02).
+
+    Returns ``live`` | ``corpus`` | ``stub``.
+    """
+    if tavily_enabled():
+        return "live"
+    if corpus_fc_enabled():
+        return "corpus"
+    return "stub"
+
+
+def fact_checker_status_mode() -> str:
+    """Link UI ``/api/status`` — ``fact_checker`` (AC-FC-01/02/05)."""
+    return resolve_fact_checker_mode()
 
 
 def _apply_local_settings() -> None:
@@ -89,7 +121,8 @@ def _apply_local_settings() -> None:
     global OPENAI_API_KEY, OPENAI_MODEL, GEMINI_API_KEY, GEMINI_MODEL
     global GEMINI_MODEL_FLASH, GEMINI_MODEL_PRO
     global GEMINI_THINKING_LEVEL_FLASH, GEMINI_THINKING_LEVEL_PRO
-    global LLM_PROVIDER, NEO4J_URI, NEO4J_USER, NEO4J_PASSWORD, TAVILY_API_KEY
+    global LLM_PROVIDER, NEO4J_URI, NEO4J_USER, NEO4J_PASSWORD, TAVILY_API_KEY, TAVILY_DISABLED
+    global CORPUS_FC_ENABLED
 
     try:
         from deconstructor import local_settings as local
@@ -110,9 +143,15 @@ def _apply_local_settings() -> None:
         "NEO4J_USER",
         "NEO4J_PASSWORD",
         "TAVILY_API_KEY",
+        "TAVILY_DISABLED",
+        "CORPUS_FC_ENABLED",
     ):
-        value = getattr(local, name, None)
-        if value:
+        if not hasattr(local, name):
+            continue
+        value = getattr(local, name)
+        if name in ("TAVILY_DISABLED", "CORPUS_FC_ENABLED"):
+            globals()[name] = bool(value)
+        elif value:
             globals()[name] = value
 
 

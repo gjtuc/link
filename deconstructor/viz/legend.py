@@ -585,8 +585,20 @@ def inject_graph_interaction(html_text: str) -> str:
                     net.once("stabilizationIterationsDone", fitGraphView);
                     setTimeout(fitGraphView, 400);
                     window.addEventListener("message", function(ev) {
-                      if (!ev.data || ev.data.type !== "deconstructor-resize") return;
-                      fitGraphView();
+                      if (!ev.data || !ev.data.type) return;
+                      if (ev.data.type === "deconstructor-resize") {
+                        fitGraphView();
+                        return;
+                      }
+                      if (ev.data.type === "deconstructor-highlight-node" && ev.data.nodeId) {
+                        try {
+                          net.selectNodes([ev.data.nodeId]);
+                          net.focus(ev.data.nodeId, {
+                            scale: 1.2,
+                            animation: { duration: 400, easingFunction: "easeInOutQuad" }
+                          });
+                        } catch (e) {}
+                      }
                     });
 
                     (function attachHumanHypothesisUI(network) {

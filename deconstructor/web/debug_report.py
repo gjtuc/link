@@ -1,6 +1,23 @@
 """
 마지막 배치 파이프라인 — 디버그 스냅샷 (파란·노랑 누락 조사)
 ============================================================
+
+STAGE 0-3 (Acceptance) — 관측 proxy
+------------------------------------
+  - AC-DBG-01: ``build_pipeline_debug`` — completed, orphan, fact_checker_mode
+  - AC-DEC-02 proxy: ``counts.completed_facts`` per run
+  - AC-SKP-03/04 proxy (partial): orphan_extracted, endpoint_facts (until skeleton index)
+
+Sprint 1 (G-ING-META)
+---------------------
+  - AC-ING-05: ``_fact_brief`` source_file/chunk_id; ``source_document_meta`` per run
+
+Sprint 3 (G-DEC-DENS/RECUR)
+---------------------------
+  - AC-DEC-02 proxy: ``deconstruct_batch.median_completed_facts``
+  - AC-DEC-03: ``deconstruct_batch.runs_with_depth_gt_1``
+
+  See ``docs/design/STAGE-0-3-acceptance-criteria.md``
 """
 
 from __future__ import annotations
@@ -12,8 +29,18 @@ from deconstructor.viz.neo4j_utils import GraphFetchResult, neo4j_is_available
 from deconstructor.weaver.resolve import facts_for_verified_edges, orphan_atomic_completed_facts
 
 
+def _median_int(values: list[int]) -> float:
+    if not values:
+        return 0.0
+    ordered = sorted(values)
+    mid = len(ordered) // 2
+    if len(ordered) % 2:
+        return float(ordered[mid])
+    return (ordered[mid - 1] + ordered[mid]) / 2.0
+
+
 def _fact_brief(fact: AtomicFact) -> dict[str, str]:
-    return {
+    out = {
         "id": fact.id[:16],
         "subject": (fact.subject or "")[:100],
         "state_change": (fact.state_change or "")[:60],
@@ -21,6 +48,13 @@ def _fact_brief(fact: AtomicFact) -> dict[str, str]:
         "check_status": fact.check_status or "?",
         "is_atomic": str(bool(fact.is_atomic)),
     }
+    if fact.source_file:
+        out["source_file"] = fact.source_file[:120]
+    if fact.page_range:
+        out["page_range"] = fact.page_range[:40]
+    if fact.chunk_id:
+        out["chunk_id"] = fact.chunk_id[:120]
+    return out
 
 
 def _count_by_legend(nodes: list) -> dict[str, int]:
@@ -75,6 +109,13 @@ def summarize_single_state(state: dict[str, Any]) -> dict[str, Any]:
     return {
         "analysis_run_id": state.get("analysis_run_id"),
         "raw_text_preview": (state.get("raw_text") or "")[:200],
+        "source_document_meta": dict(state.get("source_document_meta") or {}),
+        "deconstruct": {
+            "recursion_depth": int(state.get("recursion_depth") or 0),
+            "max_recursion_depth": int(state.get("max_recursion_depth") or 0),
+            "partial_run": bool(state.get("partial_run")),
+            "partial_run_reason": str(state.get("partial_run_reason") or ""),
+        },
         "counts": {
             "completed_facts": len(completed),
             "promoted_facts": len(promoted),
@@ -213,10 +254,34 @@ def build_pipeline_debug(
     runs = [summarize_single_state(s) for s in pipeline_states]
     graph_counts = _count_by_legend(fetched.nodes)
     neo4j = query_neo4j_run_breakdown(batch_run_id)
+    completed_per_run = [r["counts"]["completed_facts"] for r in runs]
+    depths = [r["deconstruct"]["recursion_depth"] for r in runs]
+    partial_runs = [
+        {
+            "run_index": i + 1,
+            "reason": r["deconstruct"]["partial_run_reason"],
+            "source_file": (r.get("source_document_meta") or {}).get("source_file", ""),
+        }
+        for i, r in enumerate(runs)
+        if r["deconstruct"].get("partial_run")
+    ]
+    median_completed = _median_int(completed_per_run)
 
     return {
         "batch_run_id": batch_run_id,
         "fact_checker_mode": fact_checker_mode,
+        "deconstruct_batch": {
+            "runs": len(runs),
+            "completed_facts_per_run": completed_per_run,
+            "median_completed_facts": median_completed,
+            "recursion_depths": depths,
+            "runs_with_depth_gt_1": sum(1 for d in depths if d > 1),
+            "partial_run_runs": partial_runs,
+            "partial_run_count": len(partial_runs),
+            "max_recursion_depth": max(
+                (r["deconstruct"]["max_recursion_depth"] for r in runs), default=0
+            ),
+        },
         "pipeline_runs": runs,
         "graph_rendered": {
             "nodes": len(fetched.nodes),
@@ -245,6 +310,12 @@ def _merge_diagnosis(
     hints: list[str] = []
     for r in runs:
         hints.extend(r.get("diagnosis") or [])
+        if r["deconstruct"].get("partial_run"):
+            hints.append(
+                "partial_run=True — "
+                f"{r['deconstruct'].get('partial_run_reason', '')}: "
+                "비원자 crumb 잔존 (깊이 상한). 메인 UI watch 패널 확인."
+            )
 
     blue_graph = graph_counts.get("extracted_blue", 0)
     blue_neo4j = sum(

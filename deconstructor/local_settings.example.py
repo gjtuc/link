@@ -31,6 +31,8 @@ LLM_PROVIDER = "gemini"
 
 # --- Tavily (Fact-Checker --enable-dreamer live search) ---
 TAVILY_API_KEY = ""
+# 테스트·로컬에서 과금 방지: True면 키가 있어도 stub Fact-Checker
+TAVILY_DISABLED = False
 
 # --- Neo4j (main.py --db, viz 자동 오픈) ---
 NEO4J_URI = "bolt://localhost:7687"

@@ -111,6 +111,18 @@ class AtomicFact(BaseModel):
         default=False,
         description="[STORM-S1-1] Perfect Storm 임계 돌파 시 Watcher가 True로 격상.",
     )
+    source_file: str = Field(
+        default="",
+        description="Sprint 1 (C-2): ingest 파일명 또는 소스 label.",
+    )
+    page_range: str = Field(
+        default="",
+        description="Sprint 1 (C-2): PDF 페이지 범위 (예: p.1-3).",
+    )
+    chunk_id: str = Field(
+        default="",
+        description="Sprint 1 (C-2): ingest 청크 id (예: paper.pdf#chunk-2/5).",
+    )
 
     @field_validator("source_type")
     @classmethod

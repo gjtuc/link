@@ -46,9 +46,11 @@ class EdgeVisualStyle:
 
 
 def _log(msg: str) -> None:
+    from deconstructor.print_util import safe_print
+
     line = f"[PROV-S1-6] {msg}"
     logger.info(line)
-    print(line)
+    safe_print(line)
 
 
 def resolve_node_style(source_type: str, check_status: str) -> NodeVisualStyle:

@@ -93,6 +93,12 @@ def _node_tooltip(node: GraphNode) -> str:
     details: list[str] = ["자세히"]
     if node.timestamp:
         details.append(f"시각: {node.timestamp}")
+    if node.chunk_id:
+        details.append(f"청크: {node.chunk_id}")
+    elif node.source_file:
+        details.append(f"출처: {node.source_file}")
+    if node.page_range:
+        details.append(f"페이지: {node.page_range}")
     if node.reasoning and node.source_type == "inferred":
         details.append(f"메커니즘: {node.reasoning}")
     if getattr(node, "author", None) == "human":
@@ -106,6 +112,11 @@ def _node_tooltip(node: GraphNode) -> str:
 
 
 def _edge_tooltip(edge: GraphEdge) -> str:
+    if getattr(edge, "edge_kind", "CAUSES") == "BRIDGE":
+        return (
+            "보라 점선 · 교차 문서 연결 (BRIDGE)\n"
+            "동일 subject · 서로 다른 source_file — Skeptic CAUSES 아님 (미검증)"
+        )
     latency = f"{edge.latency} ms" if edge.latency is not None else "없음"
     return f"회색 실선 · 검증된 인과 (CAUSES)\n시차(latency): {latency}"
 
@@ -207,6 +218,19 @@ def build_pyvis_network(
 
     _log("3", f"adding {len(edges)} edges")
     for edge in edges:
+        if getattr(edge, "edge_kind", "CAUSES") == "BRIDGE":
+            edge_kwargs: dict = {
+                "title": _edge_tooltip(edge),
+                "color": {"color": "#9c27b0", "opacity": 0.85},
+                "dashes": True,
+                "width": 1.5,
+                "arrows": {"to": {"enabled": True, "scaleFactor": 0.4}},
+                "font": {"size": EDGE_FONT_SIZE, "color": "#7b1fa2", "face": "Segoe UI"},
+                "smooth": False,
+                "legend_class": "edge-bridge",
+            }
+            net.add_edge(edge.source_id, edge.target_id, **edge_kwargs)
+            continue
         src = node_by_id.get(edge.source_id)
         tgt = node_by_id.get(edge.target_id)
         estyle = resolve_edge_style(

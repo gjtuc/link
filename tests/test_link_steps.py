@@ -1,6 +1,23 @@
 """LinkStepTracker 단위 테스트."""
 
+import io
+import sys
+
 from deconstructor.web.link_steps import LinkStepTracker
+
+
+def test_tracker_start_em_dash_on_cp949_stdout():
+    """Windows cp949 콘솔에서 em dash(—) 로그가 분석을 중단하지 않음."""
+    buf = io.TextIOWrapper(io.BytesIO(), encoding="cp949", errors="strict")
+    old_stdout = sys.stdout
+    sys.stdout = buf
+    try:
+        t = LinkStepTracker()
+        t.start("S0-PARSE-CTYPE", "Content-Type 확인", "multipart/form-data")
+        t.ok("S0-PARSE-CTYPE")
+    finally:
+        sys.stdout = old_stdout
+    assert t.steps[0].status == "ok"
 
 
 def test_tracker_ok_and_fail():

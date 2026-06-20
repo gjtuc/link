@@ -85,7 +85,12 @@
           ])
         );
       }
-      html += "<p>run_id: <code>" + esc(d.batch_run_id) + "</code> · Fact-Checker: " + esc(d.fact_checker_mode) + "</p>";
+      html += "<p>run_id: <code>" + esc(d.batch_run_id) + "</code> · Fact-Checker: " + esc(d.fact_checker_mode);
+      const pr = d.deconstruct_batch?.partial_run_count || 0;
+      if (pr > 0) {
+        html += " · <strong style='color:#ffd166'>partial_run " + pr + "건</strong>";
+      }
+      html += "</p>";
       html += "<p>graph_filter: " + esc(JSON.stringify(gf)) + "</p>";
       html += "<div class='counts'>";
       html += "<span class='pill blue'>그래프 파랑 " + (lc.extracted_blue||0) + "</span>";
@@ -96,10 +101,14 @@
       html += "</div></div>";
 
       const hints = d.top_diagnosis || [];
-      if (hints.length) {
-        html += "<div class='card'><h2>진단</h2>";
+      const watchHints = (data.last_analyze?.watch?.warnings) || [];
+      if (watchHints.length || hints.length) {
+        html += "<div class='card'><h2>진단 · Watch</h2>";
+        for (const w of watchHints) {
+          html += "<div class='hint warn'><strong>" + esc(w.code) + "</strong> — " + esc(w.message) + "</div>";
+        }
         for (const h of hints) {
-          html += "<div class='hint" + (h.indexOf("버그") >= 0 ? " warn" : "") + "'>" + esc(h) + "</div>";
+          html += "<div class='hint" + (h.indexOf("partial_run") >= 0 || h.indexOf("버그") >= 0 ? " warn" : "") + "'>" + esc(h) + "</div>";
         }
         html += "</div>";
       }
@@ -125,7 +134,12 @@
       for (const run of d.pipeline_runs || []) {
         html += "<div class='card'><h2>파이프라인 run · " + esc(run.raw_text_preview) + "</h2>";
         html += "<p>completed=" + run.counts.completed_facts + " promoted=" + run.counts.promoted_facts +
-          " dropped=" + run.counts.dropped_ghosts + " edges=" + run.counts.verified_edges + "</p>";
+          " dropped=" + run.counts.dropped_ghosts + " edges=" + run.counts.verified_edges;
+        if (run.deconstruct?.partial_run) {
+          html += " · <strong style='color:#ffd166'>partial_run</strong> (" +
+            esc(run.deconstruct.partial_run_reason) + ")";
+        }
+        html += "</p>";
         html += "<p><strong>Weaver 저장 예정:</strong> endpoint=" + run.weaver_would_persist.endpoint_facts +
           " orphan_extracted(파랑)=" + run.weaver_would_persist.orphan_extracted +
           " orphan_promoted=" + run.weaver_would_persist.orphan_promoted +

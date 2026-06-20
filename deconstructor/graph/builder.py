@@ -2,6 +2,24 @@
 LangGraph 컴파일 및 파이프라인 실행 진입점 (Canonical Graph Builder)
 =====================================================================
 
+STAGE 0-1 (제품 계약) — 코어 DAG (변경 금지 방향)
+-------------------------------------------------
+  완성품 → **Deconstruct(해체)** → Verify(粒度) → Dreamer(빈 因) →
+  Fact-Checker(상함 검사) → Skeptic(因→과 법칙) → Weaver → END
+
+  - ζ-2 부스러기: Deconstruct + Verify
+  - ζ-3 상함/태움: Fact-Checker drop + Skeptic reject
+  - ζ-4 괜찮은 부위: extracted + verified edges
+  - ζ-5 빈 연결: Dreamer → Fact-Checker
+  - 0-1에서 **고치지 않는** 레이어; Ingest(1)·Presentation(9)·Orchestration(2) 가 계약.
+
+STAGE 0-5 (Roadmap) — skeleton index (future)
+-----------------------------------------------
+  - Sprint 3 ✅: prompts + compound heuristic — ``SPRINT-3-deconstruct-depth-spec.md``
+  - Sprint 4: SP4-IDX-* — G-SKP-INDEX (AC-SKP-03,04)
+  - D-06: 코어 DAG 토폴로지 불변
+  - See ``docs/design/STAGE-0-5-implementation-roadmap.md`` Appendix E
+
 Step 4 토폴로지 (--enable-dreamer):
 
     deconstruct → verify ⇄ loop
@@ -19,6 +37,7 @@ from functools import partial
 
 from langgraph.graph import END, StateGraph
 
+from deconstructor import config
 from deconstructor.agents.dreamer.node import dreamer_node
 from deconstructor.agents.fact_checker.node import fact_checker_node
 from deconstructor.deconstruct.node import deconstruct_node
@@ -38,6 +57,7 @@ def build_graph(
     dry_run: bool = False,
     dreamer_dry_run: bool | None = None,
     fact_checker_dry_run: bool | None = None,
+    fact_checker_mode: str | None = None,
     persist_db: bool = False,
     enable_dreamer: bool = False,
 ):
@@ -47,12 +67,21 @@ def build_graph(
     Args:
         dry_run: stub deconstruct / skeptic mechanism (dreamer·fact_checker는 별도 인자).
         dreamer_dry_run: None이면 dry_run과 동일.
-        fact_checker_dry_run: None이면 dry_run과 동일.
+        fact_checker_dry_run: Legacy bool; True→stub. Prefer ``fact_checker_mode``.
+        fact_checker_mode: ``live`` | ``corpus`` | ``stub`` (Sprint 5).
         persist_db: Neo4j weaver + ghost persist.
         enable_dreamer: verify 탈출 시 dreamer→fact_checker 경로.
     """
     _dreamer_dry = dry_run if dreamer_dry_run is None else dreamer_dry_run
-    _fc_dry = dry_run if fact_checker_dry_run is None else fact_checker_dry_run
+    if fact_checker_mode is None:
+        if fact_checker_dry_run is True:
+            _fc_mode = "stub"
+        elif fact_checker_dry_run is False:
+            _fc_mode = "live" if config.tavily_enabled() else config.resolve_fact_checker_mode()
+        else:
+            _fc_mode = config.resolve_fact_checker_mode()
+    else:
+        _fc_mode = fact_checker_mode
 
     workflow = StateGraph(State)
 
@@ -65,11 +94,11 @@ def build_graph(
     if enable_dreamer:
         print(
             "[STEP4-build] wiring dreamer → fact_checker → skeptic "
-            f"(dreamer_dry={_dreamer_dry}, fact_checker_dry={_fc_dry})"
+            f"(dreamer_dry={_dreamer_dry}, fact_checker_mode={_fc_mode})"
         )
         workflow.add_node("dreamer", partial(dreamer_node, dry_run=_dreamer_dry))
         workflow.add_node(
-            "fact_checker", partial(fact_checker_node, dry_run=_fc_dry)
+            "fact_checker", partial(fact_checker_node, mode=_fc_mode)
         )
         route_map = {
             "deconstruct": "deconstruct",

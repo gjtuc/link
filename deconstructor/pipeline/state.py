@@ -79,4 +79,6 @@ class State(TypedDict):
     fact_checker_log: list[str]
     enable_dreamer: bool
     analysis_run_id: str
+    source_document_meta: dict[str, str | int]
+    corpus_fact_pool: list[AtomicFact]
     weaver_result: WeaverResult | None

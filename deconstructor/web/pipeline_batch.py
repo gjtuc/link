@@ -1,5 +1,29 @@
 """
 Link UI — 배치 분석 오케스트레이션 (세분화 단계 추적)
+
+STAGE 0-1 (제품 계약) — Orchestration (현재: silo, 2단계에서 corpus화)
+-----------------------------------------------------------------------
+  - 한 번 「전체 분석」= 완성품(소스) N건 → 파이프라인 N회 → 그래프 병합.
+  - **0-1 목표**: 각 소스에서 因·과 지도·뼈대 강약을 **숨기지 않고** 표시 (δ).
+  - **0-1 NON-GOAL**: 파일 간 「뜻밖의 연결」 (2단계). 현재 ``merge_graph_results`` 는
+    노드 id 합치기만 (NG-2: 노드 많음 ≠ 성공).
+  - **0-2 시나리오**: S0-A PDF 1편, S0-B 텍스트 초안, S0-C 다중 파일(P1 gap), S0-D URL.
+    See ``docs/design/STAGE-0-2-user-scenarios.md``.
+  - 상세: ``docs/design/STAGE-0-1-product-definition.md`` (α-4, ζ, C-3)
+
+STAGE 0-5 (Roadmap) — Orchestration
+-----------------------------------
+  - Sprint 1 ✅: SP1-META-* — ``source_document_meta`` per source (AC-ING-05)
+  - Sprint 2: SP2-BRG-* — ``corpus_bridge.attach_bridge_edges`` (AC-ORC-02)
+  - See ``docs/design/SPRINT-2-orchestration-spec.md``
+  - Sprint 2: SP2-BRG-*, SP2-POL-* — G-ORC-BRIDGE (D-05: policy first)
+  - Sprint 4 ✅: SP4-IDX-*, SP4-UI-* — skeleton index + Health/Outline UI (AC-SKP-03~05, UI-04,05)
+  - Sprint 5 ✅: SP5-* — corpus Fact-Checker (AC-FC-02 full, G-FC-CORPUS)
+  - Sprint 6 ✅: SP6-* — post-pipeline recompose ε-2~4 (AC-REC-02)
+  - Sprint 7 ✅: SP7-* — watch/guards (AC-DEC-04, ING-07, SKP-05)
+  - See ``docs/design/SPRINT-4-skeleton-ui-spec.md`` … ``SPRINT-7-watch-spec.md``
+
+진행 규칙: ``docs/design/PROCESS.md``
 """
 
 from __future__ import annotations
@@ -107,6 +131,16 @@ def _run_pipeline_batch_inner(sources: list[ExtractedSource], tracker: LinkStepT
         raise ValueError("분석할 소스가 없습니다")
     tracker.ok("S1-INPUT")
 
+    from deconstructor.guards import check_f0_a2_blocking
+
+    tracker.start("S1-GUARD", "Ingest guard (F0-A2)")
+    guard = check_f0_a2_blocking(sources)
+    if guard.blocking:
+        fail_payload = tracker.fail(ValueError(guard.message), step="S1-GUARD")
+        fail_payload["watch"] = guard.to_watch_dict()
+        return fail_payload
+    tracker.ok("S1-GUARD")
+
     batch_run_id = str(uuid.uuid4())
     batch_trigger_events = [src.text for src in sources]
     set_last_graph_filter(
@@ -118,8 +152,9 @@ def _run_pipeline_batch_inner(sources: list[ExtractedSource], tracker: LinkStepT
     use_db = neo4j_is_available()
     tracker.ok("S3-NEO4J-BOLT", "연결됨" if use_db else "오프라인")
 
-    has_tavily = bool(config.TAVILY_API_KEY)
-    tracker.start("S3-CONFIG-TAVILY", "Fact-Checker", "live" if has_tavily else "stub")
+    has_tavily = config.tavily_enabled()
+    fc_mode = config.resolve_fact_checker_mode()
+    tracker.start("S3-CONFIG-TAVILY", "Fact-Checker", fc_mode)
     tracker.ok("S3-CONFIG-TAVILY")
 
     tracker.start("S3-CONFIG-GEMINI", "LLM (Deconstruct·Dreamer)")
@@ -129,6 +164,10 @@ def _run_pipeline_batch_inner(sources: list[ExtractedSource], tracker: LinkStepT
     runs: list[dict] = []
     session_graphs: list = []
     pipeline_states: list = []
+
+    corpus_pool_accum: list = []
+    batch_fc_promoted = 0
+    batch_fc_dropped = 0
 
     for idx, src in enumerate(sources, start=1):
         tracker.start(
@@ -145,13 +184,21 @@ def _run_pipeline_batch_inner(sources: list[ExtractedSource], tracker: LinkStepT
                 src.text,
                 persist_db=use_db,
                 enable_dreamer=True,
-                fact_checker_dry_run=not has_tavily,
+                fact_checker_mode=fc_mode,
+                fact_checker_dry_run=(fc_mode == "stub"),
                 analysis_run_id=batch_run_id,
+                source_document_meta=src.document_meta_dict(),
+                corpus_fact_pool=list(corpus_pool_accum),
             )
         except Exception as exc:
             raise RuntimeError(f"파이프라인 실패 ({src.label}): {exc}") from exc
 
         pipeline_states.append(state)
+        promoted = state.get("promoted_facts") or []
+        dropped = state.get("dropped_hypotheses") or []
+        batch_fc_promoted += len(promoted)
+        batch_fc_dropped += len(dropped)
+        corpus_pool_accum.extend(state.get("completed_facts") or [])
 
         tracker.start(f"S4-{idx}-REPORT", "리포트 요약")
         report = format_dry_run_report(state)
@@ -159,8 +206,6 @@ def _run_pipeline_batch_inner(sources: list[ExtractedSource], tracker: LinkStepT
 
         verified = state.get("verified_edges") or []
         completed = state.get("completed_facts") or []
-        promoted = state.get("promoted_facts") or []
-        dropped = state.get("dropped_hypotheses") or []
 
         if not use_db:
             tracker.start(f"S4-{idx}-SESSION-GRAPH", "세션 그래프 변환")
@@ -204,15 +249,51 @@ def _run_pipeline_batch_inner(sources: list[ExtractedSource], tracker: LinkStepT
         fetched = merge_graph_results(session_graphs)
         tracker.ok("S6-GRAPH-MERGE", f"nodes={len(fetched.nodes)}")
 
+    bridge_edges: list = []
+    orchestration: dict | None = None
+    if len(sources) >= 2 and pipeline_states:
+        from deconstructor.web.corpus_bridge import attach_bridge_edges, build_orchestration_meta
+
+        fetched, bridge_edges = attach_bridge_edges(fetched, pipeline_states)
+        orchestration = build_orchestration_meta(pipeline_states, len(bridge_edges))
+        if bridge_edges:
+            tracker.start("S6-GRAPH-BRIDGE", "교차 문서 bridge", f"{len(bridge_edges)}건")
+            tracker.ok("S6-GRAPH-BRIDGE")
+
     _render_graph_tracked(tracker, fetched.nodes, fetched.edges)
 
+    from deconstructor.guards import build_watch_report
+    from deconstructor.recompose import recompose_index
+    from deconstructor.skeleton import skeleton_index
     from deconstructor.web.debug_report import build_pipeline_debug
+
+    skeleton = skeleton_index(list(fetched.nodes), list(fetched.edges))
+    fc_block = {
+        "mode": fc_mode,
+        "corpus_pool_size": len(corpus_pool_accum),
+        "batch_promoted": batch_fc_promoted,
+        "batch_dropped": batch_fc_dropped,
+        "tavily_disabled": not has_tavily,
+    }
+    recompose = recompose_index(
+        list(fetched.nodes),
+        list(fetched.edges),
+        skeleton,
+        fact_checker=fc_block,
+        items_processed=len(sources),
+    )
 
     pipeline_debug = build_pipeline_debug(
         pipeline_states,
         fetched=fetched,
         batch_run_id=batch_run_id,
-        fact_checker_mode="stub" if not has_tavily else "live",
+        fact_checker_mode=fc_mode,
+    )
+
+    watch = build_watch_report(
+        pipeline_states=pipeline_states,
+        skeleton=skeleton,
+        node_count=len(fetched.nodes),
     )
 
     return {
@@ -233,5 +314,10 @@ def _run_pipeline_batch_inner(sources: list[ExtractedSource], tracker: LinkStepT
         },
         "verified_edges_total": sum(r["verified_edges"] for r in runs),
         "atomic_facts_total": sum(r["atomic_facts"] for r in runs),
+        "orchestration": orchestration,
         "pipeline_debug": pipeline_debug,
+        "skeleton": skeleton,
+        "recompose": recompose,
+        "fact_checker": fc_block,
+        "watch": watch,
     }
