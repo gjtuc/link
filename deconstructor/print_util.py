@@ -20,6 +20,8 @@ def bootstrap_stdio_utf8() -> None:
 
 def safe_print(text: str) -> None:
     encoding = getattr(sys.stdout, "encoding", None) or "utf-8"
+    if encoding.lower().replace("_", "-") in ("cp949", "euc-kr", "ascii"):
+        text = text.encode(encoding, errors="replace").decode(encoding)
     try:
         print(text)
     except UnicodeEncodeError:

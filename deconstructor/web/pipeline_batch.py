@@ -12,7 +12,7 @@ STAGE 0-1 (제품 계약) — Orchestration (현재: silo, 2단계에서 corpus�
   - 상세: ``docs/design/STAGE-0-1-product-definition.md`` (α-4, ζ, C-3)
 
 STAGE 0-5 (Roadmap) — Orchestration
------------------------------------
+------------------------------------
   - Sprint 1 ✅: SP1-META-* — ``source_document_meta`` per source (AC-ING-05)
   - Sprint 2: SP2-BRG-* — ``corpus_bridge.attach_bridge_edges`` (AC-ORC-02)
   - See ``docs/design/SPRINT-2-orchestration-spec.md``
@@ -22,6 +22,12 @@ STAGE 0-5 (Roadmap) — Orchestration
   - Sprint 6 ✅: SP6-* — post-pipeline recompose ε-2~4 (AC-REC-02)
   - Sprint 7 ✅: SP7-* — watch/guards (AC-DEC-04, ING-07, SKP-05)
   - See ``docs/design/SPRINT-4-skeleton-ui-spec.md`` … ``SPRINT-7-watch-spec.md``
+
+INGEST Foundation (Phase R → A)
+-------------------------------
+  - **Phase R (읽기 확인):** ``verify_read`` — LLM 0회, step ``S1-READ``
+  - **Phase A (분석 확인):** Deconstruct+ — ``read_verify.ok`` 후만 실행
+  - See ``docs/design/INGEST-FOUNDATION-spec.md``
 
 진행 규칙: ``docs/design/PROCESS.md``
 """
@@ -131,15 +137,25 @@ def _run_pipeline_batch_inner(sources: list[ExtractedSource], tracker: LinkStepT
         raise ValueError("분석할 소스가 없습니다")
     tracker.ok("S1-INPUT")
 
-    from deconstructor.guards import check_f0_a2_blocking
+    from deconstructor.web.ingest_verify import verify_read
 
-    tracker.start("S1-GUARD", "Ingest guard (F0-A2)")
-    guard = check_f0_a2_blocking(sources)
-    if guard.blocking:
-        fail_payload = tracker.fail(ValueError(guard.message), step="S1-GUARD")
-        fail_payload["watch"] = guard.to_watch_dict()
+    tracker.start("S1-READ", "읽기 확인 (Phase R, μ-R-*)")
+    read_report = verify_read(sources)
+    if read_report.blocking or not read_report.ok:
+        fail_payload = tracker.fail(
+            ValueError(read_report.message or "읽기 확인 실패 — 분석(Phase A) 중단"),
+            step="S1-READ",
+        )
+        fail_payload["read_verify"] = read_report.to_dict()
+        if read_report.blocking:
+            from deconstructor.guards import check_f0_a2_blocking
+
+            fail_payload["watch"] = check_f0_a2_blocking(sources).to_watch_dict()
         return fail_payload
-    tracker.ok("S1-GUARD")
+    passed = read_report.to_dict()["passed"]
+    total = read_report.to_dict()["total"]
+    tracker.ok("S1-READ", f"{passed}/{total} checks")
+    read_verify_payload = read_report.to_dict()
 
     batch_run_id = str(uuid.uuid4())
     batch_trigger_events = [src.text for src in sources]
@@ -320,4 +336,5 @@ def _run_pipeline_batch_inner(sources: list[ExtractedSource], tracker: LinkStepT
         "recompose": recompose,
         "fact_checker": fc_block,
         "watch": watch,
+        "read_verify": read_verify_payload,
     }

@@ -32,8 +32,12 @@
 
 ## 판정
 
-**μ-B-ING PASS** — B-2-1, B-2-2 ingest AC 충족.  
-**μ-B-PIPE PENDING** — quota 복구 후 `python scripts/s0b_e2e_run.py` 재실행.
+| Phase | Branch | 결과 |
+|-------|--------|------|
+| **R** | 0 | ✅ `verify_read` + `--read-only` |
+| **A** | 1 | ⏸ Gemini quota — full run pending |
+
+**Branch-0:** PASS. **Branch-1:** quota 복구 후 `python scripts/s0b_e2e_run.py` (no flag).
 
 ---
 

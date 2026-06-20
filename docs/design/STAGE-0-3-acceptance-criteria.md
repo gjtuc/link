@@ -42,7 +42,7 @@
 | **AC-ING-04** | MUST | A | 청크 라벨에 페이지 또는 `청크 k/n` | `ExtractedSource.label` | ✅ |
 | **AC-ING-05** | SHOULD | A,C | fact에 `source_file, page_range, chunk_id` (C-2) | AtomicFact meta | ✅ Sprint 1 |
 | **AC-ING-06** | MAY | D | HTML URL → summarize 허용, chars <2k typical | url_sources_from_fetch | ✅ |
-| **AC-ING-07** | MUST | A | **F0-A2** 위반: document PDF chars <500 & pages>3 → FAIL | S1-GUARD | ✅ Sprint 7 |
+| **AC-ING-07** | MUST | A | **F0-A2** 위반: document PDF chars <500 & pages>3 → FAIL | S1-READ (μ-R-GUARD-01) | ✅ Sprint 7 |
 
 **AC-ING-01 측정 예 (당신 PDF):** 63,693 / 63,714 ≈ 0.999 ✅
 

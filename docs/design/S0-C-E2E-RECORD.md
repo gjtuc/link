@@ -28,8 +28,12 @@
 
 ## 판정
 
-**μ-C-ING PASS** (ingest-only).  
-**μ-C-ORC PENDING** — quota 복구 후 full run.
+| Phase | Branch | 결과 |
+|-------|--------|------|
+| **R** | 0 | ✅ μ-R-BAT-01, ingest 2 files |
+| **A** | 1 | ⏸ quota |
+
+**Branch-1:** `python scripts/s0c_e2e_run.py` (full).
 
 ```bash
 python scripts/generate_s0bc_fixtures.py

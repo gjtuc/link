@@ -1,8 +1,8 @@
 # STAGE 0-CLOSURE — 0단계 마무리 (μ 재쪼개기)
 
-> **입력:** [STAGE-0-2-user-scenarios.md](STAGE-0-2-user-scenarios.md) S0-A~F, [STAGE-0-5-implementation-roadmap.md](STAGE-0-5-implementation-roadmap.md) Sprint 0~7 ✅  
-> **목적:** Sprint 구현 후 **시나리오 E2E** 로 0-3 AC를 실환경에서 재확인  
-> **규칙:** [PROCESS.md](PROCESS.md) — 각 시나리오도 **μ → 구현/스크립트 → 기록** 반복
+> **기초 순서:** [INGEST-FOUNDATION-spec.md](INGEST-FOUNDATION-spec.md) — **Phase R → Phase A**  
+> **분기 로드맵:** [STAGE-0-CLOSURE-ROADMAP.md](STAGE-0-CLOSURE-ROADMAP.md) (**확정**)  
+> **입력:** [STAGE-0-2-user-scenarios.md](STAGE-0-2-user-scenarios.md) S0-A~F
 
 ---
 
@@ -10,9 +10,9 @@
 
 | ID | 시나리오 | 우선 | μ prefix | 스크립트 | 기록 |
 |----|----------|------|----------|----------|------|
-| **CL-0-A** | S0-A PDF 1편 | P0 | μ-A-* | `s0a_e2e_run.py` | [S0-A-E2E-RECORD.md](S0-A-E2E-RECORD.md) ✅ |
-| **CL-0-B** | S0-B 텍스트 초안 | P0 | μ-B-* | `s0b_e2e_run.py` | S0-B-E2E-RECORD.md |
-| **CL-0-C** | S0-C 다중 파일 | P1 | μ-C-* | `s0c_e2e_run.py` | S0-C-E2E-RECORD.md |
+| **CL-0-A** | S0-A PDF 1편 | P0 | μ-R + μ-A | `s0a_e2e_run.py` | [S0-A-E2E-RECORD.md](S0-A-E2E-RECORD.md) R✅ A✅ |
+| **CL-0-B** | S0-B 텍스트 초안 | P0 | μ-R + μ-A | `s0b_e2e_run.py` | [S0-B-E2E-RECORD.md](S0-B-E2E-RECORD.md) R✅ A⏸ |
+| **CL-0-C** | S0-C 다중 파일 | P1 | μ-R + μ-A | `s0c_e2e_run.py` | [S0-C-E2E-RECORD.md](S0-C-E2E-RECORD.md) R✅ A⏸ |
 | CL-0-D | S0-D URL | P2 | μ-D-* | (Later) | — |
 | CL-0-E | S0-E human 가설 | P1 | μ-E-* | (Later) | — |
 | CL-0-F | S0-F debug | P2 | μ-F-* | pytest + manual | — |
@@ -38,20 +38,25 @@
 
 # μ-B — S0-B (보고서 텍스트)
 
-## B-1. 1차 → μ 재쪼개기
+## B-0. Phase 분리
+
+| Phase | μ prefix | Branch | 상태 |
+|-------|----------|--------|------|
+| **R** | μ-R-* (INGEST-FOUNDATION) | 0 | ✅ `--read-only` |
+| **A** | μ-A-B-* below | 1 | ⏸ quota |
+
+## B-1. Phase A → μ 재쪼개기 (Branch-1)
 
 | μ-ID | STAGE-0-2 | 검증 방법 | NON-GOAL |
 |------|-----------|-----------|----------|
-| **μ-B-ING-01** | B-2-1 | short fixture → `len(sources)==1` | LLM |
-| **μ-B-ING-02** | B-2-1 | short chars ≥ 200, no summarize | 요약 모드 |
-| **μ-B-ING-03** | B-2-2 | long fixture → `len(sources)>=2` | LLM |
-| **μ-B-ING-04** | B-2-2 | long total chars ≈ 원문 (≥8k) | PDF |
-| **μ-B-PIPE-01** | B-2-3 | short only pipeline `ok==true` | long×LLM |
-| **μ-B-PIPE-02** | B-2-3 | Skeptic edges computed | — |
-| **μ-B-SKP-01** | B-2-4 | `gap_count` present (F0-B2: high gap OK) | node count |
-| **μ-B-SKP-02** | B-2-4 | `weak_count` or weak list present | — |
-| **μ-B-REC-01** | B-2-4 | recompose block exists | full rewrite |
-| **μ-B-FC-01** | δ/C-4 | FC mode not hidden | live Tavily |
+| **μ-A-B-PIPE-01** | B-2-3 | short pipeline `ok==true` | long×LLM |
+| **μ-A-B-PIPE-02** | B-2-3 | Skeptic edges computed | — |
+| **μ-A-B-SKP-01** | B-2-4 | `gap_count` present (F0-B2 OK) | node count |
+| **μ-A-B-SKP-02** | B-2-4 | `weak_count` present | — |
+| **μ-A-B-REC-01** | B-2-4 | recompose block | full rewrite |
+| **μ-A-B-FC-01** | δ/C-4 | FC mode visible | live Tavily |
+
+Phase R ingest (μ-B-ING-*) → **μ-R-CHK/META** 로 검증 (`verify_read`, Branch-0).
 
 ## B-2. 픽스처 (μ-FIX-B)
 
@@ -71,17 +76,24 @@
 
 # μ-C — S0-C (다중 파일)
 
-## C-1. μ 재쪼개기
+## C-0. Phase 분리
+
+| Phase | μ prefix | Branch | 상태 |
+|-------|----------|--------|------|
+| **R** | μ-R-BAT-*, μ-R-META-* | 0 | ✅ |
+| **A** | μ-A-C-* below | 1 | ⏸ quota |
+
+## C-1. Phase A → μ 재쪼개기 (Branch-1)
 
 | μ-ID | STAGE-0-2 | 검증 | NON-GOAL |
 |------|-----------|------|----------|
-| **μ-C-ING-01** | C-2-1 | ≥2 `source_file` | 단일 PDF |
-| **μ-C-ING-02** | C-2-1 | ≥2 sources after chunk | — |
-| **μ-C-ORC-01** | C-2-2 | `orchestration.merge_mode==batch_corpus` | global DB |
-| **μ-C-ORC-02** | C-2-3 | `bridge_count` is int (0 허용) | LLM cross-doc |
-| **μ-C-ORC-03** | C-2-3 | subject-match MVP (Ni catalyst) | Skeptic CAUSES |
-| **μ-C-UI-01** | C-2-4 | `cross_doc_label` contains 「교차」 | source filter |
-| **μ-C-PIPE-01** | — | full batch `ok==true` | — |
+| **μ-A-C-ORC-01** | C-2-2 | `merge_mode==batch_corpus` | global DB |
+| **μ-A-C-ORC-02** | C-2-3 | `bridge_count` int (0 OK) | LLM cross-doc |
+| **μ-A-C-ORC-03** | C-2-3 | Ni catalyst subject bridge | Skeptic CAUSES |
+| **μ-A-C-UI-01** | C-2-4 | `cross_doc_label` 「교차」 | source filter |
+| **μ-A-C-PIPE-01** | — | `ok==true` | — |
+
+Phase R multi-file (μ-C-ING-*) → **μ-R-BAT-01** (`verify_read`, Branch-0).
 
 ## C-2. 픽스처 (μ-FIX-C)
 
@@ -99,16 +111,18 @@
 
 # CLOSURE DoD
 
-1. μ-* 표 — 본 문서 + 시나리오별 RECORD.md  
-2. `scripts/s0{a,b,c}_e2e_run.py` — exit 0  
-3. STAGE-0-2 § A-5/B-5/C-5 **현재 구현** 갱신  
-4. PR 본문에 Sprint μ 매핑 + E2E 결과 링크
+1. **Branch-0** `phase_r_regression.py` — exit 0 (지속)  
+2. **Branch-1** S0-B/C Phase A full + RECORD ✅  
+3. μ-* 표 + STAGE-0-2 § B-5/C-5 갱신  
+4. [STAGE-0-CLOSURE-ROADMAP.md](STAGE-0-CLOSURE-ROADMAP.md) Branch 상태 ✅
 
 ---
 
-# 다음 (0단계 이후)
+# 다음 (분기 잠금)
 
-| 단계 | 내용 |
-|------|------|
-| CL-0-D~F | S0-D/E/F μ 스펙 확장 |
-| **STAGE 1** | 0-1 계약 유지, 1~10 구현 단계 본격 (밀도·cross-run corpus) |
+| Branch | 조건 | 내용 |
+|--------|------|------|
+| **1** | quota | S0-B/C Phase A → 클로저 닫기 |
+| **2a** | B/C 후 분석 이슈 | μ-A 깊이 |
+| **2b** | 클로저 + R stable | STAGE 1 |
+| **3** | 실 PDF/DOCX R fail | μ-R edge |

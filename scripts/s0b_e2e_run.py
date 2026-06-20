@@ -1,9 +1,5 @@
 #!/usr/bin/env python3
-"""
-S0-B manual E2E — 보고서 초안 텍스트 (STAGE-0-2 B-2-*).
-
-See docs/design/STAGE-0-CLOSURE-spec.md (μ-B-*)
-"""
+"""S0-B E2E — Phase R (read) then Phase A (analyze). See INGEST-FOUNDATION-spec.md."""
 
 from __future__ import annotations
 
@@ -21,86 +17,65 @@ SHORT = ROOT / "tests" / "fixtures" / "s0b_draft_short.txt"
 LONG = ROOT / "tests" / "fixtures" / "s0b_draft_long.txt"
 
 
-def _sources(path: Path, label: str) -> list:
-    text = from_text(path.read_text(encoding="utf-8"))
-    return expand_document_sources(label, text, kind="text", source_file=path.name)
-
-
 def main() -> int:
-    ingest_only = "--ingest-only" in sys.argv
+    read_only = "--read-only" in sys.argv or "--ingest-only" in sys.argv
 
     if not SHORT.is_file() or not LONG.is_file():
         safe_print("Missing fixtures - run: python scripts/generate_s0bc_fixtures.py")
         return 1
 
-    short_src = _sources(SHORT, "텍스트 #1 (short)")
-    long_src = _sources(LONG, "텍스트 #2 (long)")
+    short_text = SHORT.read_text(encoding="utf-8")
+    long_text = LONG.read_text(encoding="utf-8")
+    short_src = expand_document_sources("short", from_text(short_text), kind="text", source_file=SHORT.name)
+    long_src = expand_document_sources("long", from_text(long_text), kind="text", source_file=LONG.name)
+    sources = short_src + long_src
+    raw_map = {SHORT.name: short_text, LONG.name: long_text}
 
-    b21 = len(short_src) == 1 and len(short_src[0].text) >= 200
-    b22 = len(long_src) >= 2
-    b22_chars = sum(len(s.text) for s in long_src)
-    b22_no_summarize = b22_chars >= 8000
-
-    safe_print(
-        f"[S0-B] ingest-only short_chunks={len(short_src)} long_chunks={len(long_src)} "
-        f"long_chars={b22_chars}"
+    result, _, read_report = run_batch(
+        sources,
+        scenario="S0-B",
+        raw_by_file=raw_map,
+        read_only=read_only,
     )
 
-    if not b21 or not b22 or not b22_no_summarize:
-        checklist = {
-            "B-2-1_short_single_chunk": b21,
-            "B-2-2_long_multi_chunk": b22,
-            "B-2-2_no_summarize": b22_no_summarize,
-        }
-        print_checklist("S0-B", checklist)
-        safe_print("[S0-B] FAIL: ingest AC")
-        return 3
+    if not read_report.ok:
+        print_checklist("S0-B", {"Phase-R": read_report.to_dict()})
+        safe_print("[S0-B] FAIL Phase-R")
+        return 2
 
-    if ingest_only:
-        checklist = {
-            "B-2-1_short_single_chunk": b21,
-            "B-2-2_long_multi_chunk": b22,
-            "B-2-2_long_chars": b22_chars,
-            "pipeline_skipped": True,
-            "reason": "ingest-only mode (mu-B-ING complete)",
-        }
-        print_checklist("S0-B", checklist)
-        safe_print(f"[S0-B] PASS (ingest-only) - short=1 long={len(long_src)} chars={b22_chars}")
+    if read_only:
+        print_checklist(
+            "S0-B",
+            {
+                "Phase-R_ok": True,
+                "short_chunks": len(short_src),
+                "long_chunks": len(long_src),
+                "Phase-A_skipped": True,
+            },
+        )
+        safe_print(f"[S0-B] PASS Phase-R - short=1 long={len(long_src)}")
         return 0
 
-    # Pipeline on weak short draft only (μ-B-PIPE)
-    result, _ = run_batch(short_src)
+    assert result is not None
     sk = result.get("skeleton") or {}
     fc = result.get("fact_checker") or {}
-    rc = result.get("recompose") or {}
-
-    gap = sk.get("gap_count")
-    weak = sk.get("weak_count")
-    b24 = gap is not None and sk.get("strong_chain_count") is not None
-
     checklist = {
-        "B-2-1_short_single_chunk": b21,
-        "B-2-2_long_multi_chunk": b22,
-        "B-2-2_long_chars": b22_chars,
+        "Phase-R_ok": True,
         "B-2-3_pipeline_ok": result.get("ok") is True,
-        "B-2-3_edges": result.get("edges"),
-        "B-2-4_skeleton_gap": gap,
-        "B-2-4_skeleton_weak": weak,
-        "B-2-4_skeleton_metrics": b24,
-        "B-2-4_recompose": bool(rc.get("report_markdown")),
+        "B-2-4_skeleton_gap": sk.get("gap_count"),
+        "B-2-4_skeleton_weak": sk.get("weak_count"),
         "B-2-4_fc_mode": fc.get("mode"),
     }
-
-    if not b24:
+    if sk.get("gap_count") is None:
         print_checklist("S0-B", checklist)
-        safe_print("[S0-B] FAIL: skeleton metrics missing")
+        safe_print("[S0-B] FAIL Phase-A skeleton")
         return 4
 
     return fail_or_pass(
         "S0-B",
         result,
         checklist,
-        pass_detail=f"gap={gap} weak={weak} fc={fc.get('mode')}",
+        pass_detail=f"gap={sk.get('gap_count')} weak={sk.get('weak_count')}",
     )
 
 

@@ -22,6 +22,11 @@ STAGE 0-3 (Acceptance)
   - AC-NEG-01/02: tests/test_stage0_acceptance.py
   - See ``docs/design/STAGE-0-3-acceptance-criteria.md``
 
+INGEST Foundation (Phase R)
+---------------------------
+  - **읽기 확인:** ``verify_read`` — ``deconstructor/web/ingest_verify.py``
+  - **ingest touch gate:** ``python scripts/phase_r_regression.py`` (``tests/ingest_manifest.py``)
+
 STAGE 0-5 (Roadmap) — Sprint 1 ✅
 ----------------------------------
   - SP1-META-*: ``ExtractedSource`` / ``AtomicFact`` / ``source_document_meta``
