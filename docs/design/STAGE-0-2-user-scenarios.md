@@ -66,10 +66,11 @@
 | Step | 상태 |
 |------|------|
 | A-2-1 | ✅ document ingest + 청크 |
-| A-2-2 | ⚠️ 청크당 fact 수 적음 (3단계·non-atomic 미완) |
+| A-2-2 | ⚠️ 청크당 fact 수 개선 여지 (Sprint 3 힌트) |
 | A-2-3 | ✅ pyvis + provenance |
-| A-2-4 | ✅ `/api/status` stub |
-| A-2-5 | ❌ Skeleton Health 패널 없음 (9단계) |
+| A-2-4 | ✅ corpus/stub UI (`/api/status`) |
+| A-2-5 | ✅ Skeleton Health + recompose (Sprint 4~6) |
+| E2E | ✅ [S0-A-E2E-RECORD.md](S0-A-E2E-RECORD.md) |
 
 ---
 
@@ -106,8 +107,9 @@
 | Step | 상태 |
 |------|------|
 | B-2-1~2 | ✅ extract_batch 긴 텍스트 청크 |
-| B-2-3 | ✅ Skeptic |
-| B-2-4 | ❌ Outline/Gap UI |
+| B-2-3 | ✅ Skeptic (LLM quota 시 E2E pending) |
+| B-2-4 | ✅ Outline/Gap UI (Sprint 4) |
+| E2E | ⚠️ μ-B-ING ✅ / μ-B-PIPE pending — [S0-B-E2E-RECORD.md](S0-B-E2E-RECORD.md) |
 
 ---
 
@@ -142,7 +144,9 @@
 
 ### C-5. 0-2에서의 상태
 
-**Sprint 2 MVP ✅** — subject-match bridge + 「교차 N/0건」 UI. Skeptic cross-doc·출처 필터(C-2-5)는 Later.
+**Sprint 2 MVP ✅** — subject-match bridge + 「교차 N/0건」 UI.  
+**E2E:** μ-C-ING ✅ / μ-C-ORC pending (LLM quota) — [S0-C-E2E-RECORD.md](S0-C-E2E-RECORD.md)  
+Skeptic cross-doc·출처 필터(C-2-5)는 Later.
 
 ---
 
