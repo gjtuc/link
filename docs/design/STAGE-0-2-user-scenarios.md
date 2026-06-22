@@ -107,9 +107,9 @@
 | Step | 상태 |
 |------|------|
 | B-2-1~2 | ✅ extract_batch 긴 텍스트 청크 |
-| B-2-3 | ✅ Skeptic (LLM quota 시 E2E pending) |
+| B-2-3 | ✅ Skeptic full E2E |
 | B-2-4 | ✅ Outline/Gap UI (Sprint 4) |
-| E2E | ⚠️ μ-B-ING ✅ / μ-B-PIPE pending — [S0-B-E2E-RECORD.md](S0-B-E2E-RECORD.md) |
+| E2E | ✅ μ-B-ING + μ-B-PIPE + SKP — [S0-B-E2E-RECORD.md](S0-B-E2E-RECORD.md) R✅ A✅ |
 
 ---
 
@@ -145,7 +145,7 @@
 ### C-5. 0-2에서의 상태
 
 **Sprint 2 MVP ✅** — subject-match bridge + 「교차 N/0건」 UI.  
-**E2E:** μ-C-ING ✅ / μ-C-ORC pending (LLM quota) — [S0-C-E2E-RECORD.md](S0-C-E2E-RECORD.md)  
+**E2E:** μ-C-ING + μ-C-ORC + UI ✅ — [S0-C-E2E-RECORD.md](S0-C-E2E-RECORD.md) R✅ A✅ (2026-06-22)  
 Skeptic cross-doc·출처 필터(C-2-5)는 Later.
 
 ---

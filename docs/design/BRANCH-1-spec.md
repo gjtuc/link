@@ -1,7 +1,7 @@
 # Branch-1 — quota 복구 후 Phase A (0단계 클로저)
 
-> **상태:** **잠금 해제 조건 = Branch-0 PASS + Gemini quota**  
-> **다음 분기만:** 본 Branch. Branch-2a/2b/3 **착수 금지** (로드맵 잠금).  
+> **상태:** **완료** (2026-06-22 — `branch1_full_e2e.py` exit 0)  
+> **다음 분기만:** Branch-2a/2b/3 **착수 금지** (로드맵 잠금).  
 > **선행:** [STAGE-0-CLOSURE-ROADMAP.md](STAGE-0-CLOSURE-ROADMAP.md) Branch-0  
 > **입력:** [STAGE-0-CLOSURE-spec.md](STAGE-0-CLOSURE-spec.md) μ-A-B/C
 
@@ -65,10 +65,10 @@ python scripts/branch1_full_e2e.py
 
 ## DoD
 
-- [ ] `s0b_e2e_run.py` exit 0 (no `--read-only`)
-- [ ] `s0c_e2e_run.py` exit 0
-- [ ] S0-B-E2E-RECORD.md, S0-C-E2E-RECORD.md Phase A ✅
-- [ ] CLOSURE-ROADMAP Branch-1 ✅
+- [x] `s0b_e2e_run.py` exit 0 (no `--read-only`)
+- [x] `s0c_e2e_run.py` exit 0
+- [x] S0-B-E2E-RECORD.md, S0-C-E2E-RECORD.md Phase A ✅
+- [x] CLOSURE-ROADMAP Branch-1 ✅
 
 ---
 

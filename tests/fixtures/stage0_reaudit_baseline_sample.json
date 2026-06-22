@@ -1,0 +1,39 @@
+{
+  "timestamp": "2026-06-22T14:13:34",
+  "branch_state": {
+    "branch_0": "active",
+    "branch_1_complete": true,
+    "branch_2_unlocked": false,
+    "_comment": "branch_1_complete=true only after scripts/branch1_full_e2e.py exit 0. branch_2_unlocked stays false until explicitly unlocked post-closure."
+  },
+  "phase_r_regression_exit": 0,
+  "pytest": {
+    "test_branch_gates": {
+      "exit_code": 0,
+      "passed": 15,
+      "failed": 0,
+      "tail": "...............                                                          [100%]\n15 passed in 5.44s"
+    },
+    "test_ingest_foundation": {
+      "exit_code": 0,
+      "passed": 10,
+      "failed": 0,
+      "tail": "..........                                                               [100%]\n10 passed in 0.19s"
+    },
+    "test_stage0_acceptance": {
+      "exit_code": 0,
+      "passed": 5,
+      "failed": 0,
+      "tail": ".....                                                                    [100%]\n5 passed in 0.22s"
+    }
+  },
+  "record_phase_a": {
+    "CL-0-B": "✅ PASS",
+    "CL-0-C": "✅ PASS"
+  },
+  "closure_spec_rows": {
+    "CL-0-B": "| **CL-0-B** | S0-B 텍스트 초안 | P0 | μ-R + μ-A | `s0b_e2e_run.py` | [S0-B-E2E-RECORD.md](S0-B-E2E-RECORD.md) R✅ A✅ |",
+    "CL-0-C": "| **CL-0-C** | S0-C 다중 파일 | P1 | μ-R + μ-A | `s0c_e2e_run.py` | [S0-C-E2E-RECORD.md](S0-C-E2E-RECORD.md) R✅ A✅ |"
+  },
+  "mismatches": []
+}

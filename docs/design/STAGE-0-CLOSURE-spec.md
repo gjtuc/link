@@ -11,8 +11,8 @@
 | ID | 시나리오 | 우선 | μ prefix | 스크립트 | 기록 |
 |----|----------|------|----------|----------|------|
 | **CL-0-A** | S0-A PDF 1편 | P0 | μ-R + μ-A | `s0a_e2e_run.py` | [S0-A-E2E-RECORD.md](S0-A-E2E-RECORD.md) R✅ A✅ |
-| **CL-0-B** | S0-B 텍스트 초안 | P0 | μ-R + μ-A | `s0b_e2e_run.py` | [S0-B-E2E-RECORD.md](S0-B-E2E-RECORD.md) R✅ A⏸ |
-| **CL-0-C** | S0-C 다중 파일 | P1 | μ-R + μ-A | `s0c_e2e_run.py` | [S0-C-E2E-RECORD.md](S0-C-E2E-RECORD.md) R✅ A⏸ |
+| **CL-0-B** | S0-B 텍스트 초안 | P0 | μ-R + μ-A | `s0b_e2e_run.py` | [S0-B-E2E-RECORD.md](S0-B-E2E-RECORD.md) R✅ A✅ |
+| **CL-0-C** | S0-C 다중 파일 | P1 | μ-R + μ-A | `s0c_e2e_run.py` | [S0-C-E2E-RECORD.md](S0-C-E2E-RECORD.md) R✅ A✅ |
 | CL-0-D | S0-D URL | P2 | μ-D-* | (Later) | — |
 | CL-0-E | S0-E human 가설 | P1 | μ-E-* | (Later) | — |
 | CL-0-F | S0-F debug | P2 | μ-F-* | pytest + manual | — |
@@ -43,7 +43,7 @@
 | Phase | μ prefix | Branch | 상태 |
 |-------|----------|--------|------|
 | **R** | μ-R-* (INGEST-FOUNDATION) | 0 | ✅ `--read-only` |
-| **A** | μ-A-B-* below | 1 | ⏸ quota |
+| **A** | μ-A-B-* below | 1 | ✅ 2026-06-22 |
 
 ## B-1. Phase A → μ 재쪼개기 (Branch-1)
 
@@ -81,7 +81,7 @@ Phase R ingest (μ-B-ING-*) → **μ-R-CHK/META** 로 검증 (`verify_read`, Bra
 | Phase | μ prefix | Branch | 상태 |
 |-------|----------|--------|------|
 | **R** | μ-R-BAT-*, μ-R-META-* | 0 | ✅ |
-| **A** | μ-A-C-* below | 1 | ⏸ quota |
+| **A** | μ-A-C-* below | 1 | ✅ 2026-06-22 |
 
 ## C-1. Phase A → μ 재쪼개기 (Branch-1)
 

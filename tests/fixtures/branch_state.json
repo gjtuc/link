@@ -1,6 +1,6 @@
 {
   "branch_0": "active",
-  "branch_1_complete": false,
+  "branch_1_complete": true,
   "branch_2_unlocked": false,
   "_comment": "branch_1_complete=true only after scripts/branch1_full_e2e.py exit 0. branch_2_unlocked stays false until explicitly unlocked post-closure."
 }

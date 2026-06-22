@@ -61,9 +61,18 @@ def test_gate_branch2_specs_forbidden_while_locked():
     assert found == [], f"locked branch specs exist: {found}"
 
 
-def test_gate_branch1_not_complete_yet():
-    """Next work is branch1_full_e2e; state must not be true until that passes."""
-    assert _branch_state()["branch_1_complete"] is False
+def test_gate_branch1_state_consistent_with_lock():
+    """branch_2 stays locked; branch_1 reflects E2E outcome."""
+    s = _branch_state()
+    assert s["branch_2_unlocked"] is False
+    assert isinstance(s["branch_1_complete"], bool)
+
+
+def test_gate_branch1_complete_post_e2e():
+    """After branch1_full_e2e exit 0: branch_1_complete=true, branch_2 still locked."""
+    s = _branch_state()
+    assert s["branch_1_complete"] is True
+    assert s["branch_2_unlocked"] is False
 
 
 def test_gate_ingest_manifest_files_exist():

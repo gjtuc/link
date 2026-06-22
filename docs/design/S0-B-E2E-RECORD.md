@@ -10,7 +10,7 @@
 
 | 항목 | 값 |
 |------|-----|
-| 날짜 | 2026-06-20 |
+| 날짜 | 2026-06-22 |
 | 픽스처 | `s0b_draft_short.txt` (517c), `s0b_draft_long.txt` (11289c) |
 
 ---
@@ -23,10 +23,12 @@
 | μ-B-ING-02 | ✅ | short ≥200 chars, no summarize |
 | μ-B-ING-03 | ✅ | long → 2+ chunks |
 | μ-B-ING-04 | ✅ | long total 12088 chars retained |
-| μ-B-PIPE-01 | ⏸ | Gemini 429 quota (dreamer step) |
-| μ-B-PIPE-02 | ⏸ | pipeline blocked |
-| μ-B-SKP-01~02 | ⏸ | skeleton pending full run |
-| μ-B-REC-01 | ⏸ | recompose pending |
+| μ-B-PIPE-01 | ✅ | `pipeline_ok=true` |
+| μ-B-PIPE-02 | ✅ | pipeline completed (short full run) |
+| μ-B-SKP-01 | ✅ | `gap_count=20` |
+| μ-B-SKP-02 | ✅ | `weak_count=3` |
+| μ-B-REC-01 | ✅ | recompose report present |
+| μ-A-B-FC-01 | ✅ | `fact_checker.mode=corpus` |
 
 ---
 
@@ -35,9 +37,9 @@
 | Phase | Branch | 결과 |
 |-------|--------|------|
 | **R** | 0 | ✅ `verify_read` + `--read-only` |
-| **A** | 1 | ⏸ Gemini quota — full run pending |
+| **A** | 1 | ✅ PASS |
 
-**Branch-0:** PASS. **Branch-1:** quota 복구 후 `python scripts/s0b_e2e_run.py` (no flag).
+**Branch-0:** PASS. **Branch-1:** PASS (2026-06-22, `branch1_full_e2e.py`).
 
 ---
 

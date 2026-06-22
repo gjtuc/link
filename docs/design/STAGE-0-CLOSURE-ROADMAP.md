@@ -3,16 +3,16 @@
 > **계약 원칙:** ingest 계약을 **조금만** 어겨도(요약·출처 누락·F0-A2) 분석 결과가 **그럴듯하게** 깨진다.  
 > **그래서:** LLM(Phase A) 전 **읽기(Phase R) 게이트** + **분기마다 pytest 증명**.  
 > **μ 재쪼개기:** 1차 → μ-ID → pytest/스크립트 → ω → 다음 분기 **하나만** 잠금 해제.  
-> **지금 활성:** Branch-0, Branch-1(quota 후) **만**. 2a/2b/3 **잠금 · 착수 금지**.
+> **지금 활성:** Branch-0 **MUST**. Branch-1 **완료** (2026-06-22). 2a/2b/3 **잠금 · 착수 금지**.
 
 ---
 
 ## 활성 분기 (지금)
 
 ```
-Branch-0  Phase R  pytest + phase_r_regression     ← 지금 MUST
+Branch-0  Phase R  pytest + phase_r_regression     ← 지속 MUST
     │
-    └─ quota ──► Branch-1  S0-B/C Phase A E2E     ← 다음 유일
+    └─ DONE ──► Branch-1  S0-B/C Phase A E2E ✅     ← 2026-06-22
 ```
 
 ## 잠금 분기 (생각·착수 금지)
@@ -46,7 +46,7 @@ Branch-0  Phase R  pytest + phase_r_regression     ← 지금 MUST
 
 ---
 
-## Branch-1 — quota 후 (유일한 다음)
+## Branch-1 — 완료 ✅ (2026-06-22)
 
 **스펙:** [BRANCH-1-spec.md](BRANCH-1-spec.md)
 
@@ -54,11 +54,11 @@ Branch-0  Phase R  pytest + phase_r_regression     ← 지금 MUST
 |------|------------------|----------------|
 | T-B1-00 | `test_branch1_prerequisite_s0b/c_phase_r` | — |
 | T-B1-01 | `test_branch1_spec_mu_ids_documented` | — |
-| T-B1-10 | — | `s0b_e2e_run.py` |
-| T-B1-11 | — | `s0c_e2e_run.py` |
+| T-B1-10 | — | `s0b_e2e_run.py` ✅ |
+| T-B1-11 | — | `s0c_e2e_run.py` ✅ |
 | T-B1-20 | `pytest tests/test_sprint*.py …` | 회귀 |
 
-**DoD:** S0-B/C Phase A exit 0 + RECORD → **0단계 클로저 닫힘**
+**DoD:** S0-B/C Phase A exit 0 + RECORD ✅ — **0단계 클로저 Branch-1 닫힘**
 
 ---
 
