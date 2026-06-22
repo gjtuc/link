@@ -1,4 +1,4 @@
-"""μ-Q2-04 — pre-upload capability warning UI (offline string assert)."""
+"""μ-Q2-04 / μ-Q3-01 — capabilities UI (offline string assert)."""
 
 from __future__ import annotations
 
@@ -18,6 +18,16 @@ def test_index_html_capability_warning_wired():
     assert "미검증" in html
     assert "미지원" in html
     assert "확인됨" in html
+
+
+def test_index_html_cap_probe_hint_q3():
+    html = INDEX_HTML.read_text(encoding="utf-8")
+    assert 'id="cap-probe-hint"' in html
+    assert "아직 안 해본 테스트" in html
+    assert "updateCapProbeHint" in html
+    assert "summary.untested" in html
+    assert "loadCapabilities" in html
+    assert "openCapWarnFromHint" in html
 
 
 def test_capability_status_labels():

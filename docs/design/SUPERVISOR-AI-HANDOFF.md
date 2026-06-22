@@ -135,7 +135,7 @@ L-A  (Phase A 건드렸으면) E2E·RECORD·회귀 스냅샷
 
 | 종류 | 위치 | 수명 |
 |------|------|------|
-| **임시 작업 큐** (나중용 주문문·미착수 설계) | [`POST-BRANCH-1-WORK-QUEUE.md`](POST-BRANCH-1-WORK-QUEUE.md) | **항목 전부 완료 후 파일 삭제** + commit |
+| **임시 작업 큐** | ~~POST-BRANCH-1-WORK-QUEUE.md~~ | **삭제됨** (Q1–Q3 마감) |
 | **E2E·능력 probe 결과** (구현 후) | `logs/capability_runs/*.json` (예정) | 영구 보관 가능 |
 | **분기 상태** | `tests/fixtures/branch_state.json` | Branch 완료 시만 갱신 (스크립트) |
 | **E2E 기록** | `docs/design/S0-*-E2E-RECORD.md` | 실행마다 갱신 |
@@ -149,9 +149,8 @@ git pull
 그다음 읽기 순서:
 
 1. 본 문서 (`SUPERVISOR-AI-HANDOFF.md`)
-2. [`POST-BRANCH-1-WORK-QUEUE.md`](POST-BRANCH-1-WORK-QUEUE.md) — **임시**, 완료되면 삭제 대상
-3. [`tests/fixtures/branch_state.json`](../../tests/fixtures/branch_state.json)
-4. [`BRANCH-1-spec.md`](BRANCH-1-spec.md)
+2. [`tests/fixtures/branch_state.json`](../../tests/fixtures/branch_state.json)
+3. [`BRANCH-1-spec.md`](BRANCH-1-spec.md)
 
 ### 작업 큐 수명 주기
 
@@ -199,9 +198,8 @@ Deconstruct → Verify → Dreamer → Fact-Checker → Skeptic → Weaver → V
 
 ### 지금 활성 (작업자)
 
-- **μ-POST-Q2-0** — `stage0_reaudit_baseline.py` Q2 필드 확장 (ω-0 재스냅샷)
-- **다음:** Q3 catalog probe 또는 큐 마감
-- ingest 수정 시: `python scripts/phase_r_regression.py`
+- **POST-BRANCH-1 큐 마감 완료** (Q1–Q3)
+- 사후 수정 시: `stage0_reaudit_baseline.py` → `phase_r_regression.py` (§1.2)
 - **금지:** `branch_2_unlocked` 수동 true, Branch-2/3/STAGE-1 선행
 
 ---
@@ -217,7 +215,7 @@ Deconstruct → Verify → Dreamer → Fact-Checker → Skeptic → Weaver → V
 
 ## 6. 이번 감독 채팅에서 정해진 설계 (아직 미구현)
 
-상세·작업자 주문문 초안은 [`POST-BRANCH-1-WORK-QUEUE.md`](POST-BRANCH-1-WORK-QUEUE.md). 요약:
+상세·작업자 주문문 초안은 Q1–Q3 spec (큐 삭제됨). 요약:
 
 ### A. 2-pass Dreamer (사용자 확정)
 
@@ -246,8 +244,8 @@ Deconstruct → Verify → Dreamer → Fact-Checker → Skeptic → Weaver → V
 
 | | |
 |---|---|
-| **완료** | Branch-1, STAGE 0 재검토, Q1, V5, μ-Q1-E2E, μ-REG-B1+ω, μ-HANDOFF-ω, **Q2** (`c472879`) |
-| **작업자 지금 할 일** | **μ-POST-Q2-0** (ω-0 baseline) → **Q3** 또는 `POST-BRANCH-1-WORK-QUEUE` 마감 |
+| **완료** | Branch-1, STAGE 0, Q1, Q2, μ-POST-Q2-0, **Q3 경량** — POST-BRANCH-1 큐 **마감** |
+| **작업자 지금 할 일** | (큐 없음) — 사후 수정 시 §1.2 ω-0 baseline 선행 |
 | **금지** | Branch-2/3/STAGE-1, `branch_2_unlocked` 수동 true, μ-ω 생략 |
 
 ### 작업자 명령 치트시트
@@ -281,12 +279,12 @@ Deconstruct → Verify → Dreamer → Fact-Checker → Skeptic → Weaver → V
 # Link 감독·통역 AI
 나는 비개발자 사용자. 코딩은 작업자 채팅. 당신 = 감독 + 통역 + 복붙 주문문.
 
-시작 전: git pull → docs/design/SUPERVISOR-AI-HANDOFF.md + POST-BRANCH-1-WORK-QUEUE.md 읽기.
+시작 전: git pull → docs/design/SUPERVISOR-AI-HANDOFF.md 읽기.
 
-현재: Branch-0 ✅, Branch-1 ✅, Q2 ✅ (`c472879`). 다음 Q3 또는 큐 마감.
+현재: Branch-0 ✅, Branch-1 ✅, **Q1–Q3 큐 마감** (`POST-BRANCH-1-WORK-QUEUE` 삭제됨).
 사후 수정 시 §1.2 — `stage0_reaudit_baseline.py` → `phase_r_regression` 순.
 
-임시 큐는 작업 완료 후 삭제. 매 답변: 풀어설명 + 작업자 복붙블록 + 지금 할 일(있/없).
+매 답변: 풀어설명 + 작업자 복붙블록 + 지금 할 일(있/없).
 ```
 
 ---

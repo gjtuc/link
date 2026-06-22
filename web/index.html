@@ -300,6 +300,13 @@
       max-height: 220px; overflow-y: auto;
     }
     .cap-warn-list li { margin-bottom: 8px; }
+    .cap-probe-hint {
+      margin: 0 0 10px; padding: 8px 12px; font-size: 12px; color: #b06000;
+      background: #fef7e0; border-radius: 8px; border: 1px solid #f9e076;
+      cursor: pointer; user-select: none;
+    }
+    .cap-probe-hint:hover { background: #fff8e1; }
+    .cap-probe-hint.hidden { display: none; }
   </style>
 </head>
 <body>
@@ -322,6 +329,7 @@
         <strong>팁:</strong> 입력 칸에 <em>파일을 드래그</em>하면 파일 탭으로 자동 이동합니다.<br />
         링크만 넣으면 바로 분석 · Neo4j는 분석·그래프 볼 때만 (탭 닫으면 Link가 켠 DB만 자동 stop)
       </div>
+      <p class="cap-probe-hint hidden" id="cap-probe-hint" role="button" tabindex="0" title="미검증·미지원 항목 보기"></p>
 
       <div id="pane-input" class="pane active">
         <div class="text-drop-wrap" id="text-drop-wrap">
@@ -934,17 +942,53 @@
       setStatus("분석을 취소했습니다. (서버에서 이미 처리 중인 건은 잠시 더 돌 수 있습니다)", "info");
     });
 
-    /** Q2 μ-Q2-04 — capabilities pre-run warning */
+    /** Q2 μ-Q2-04 / Q3 μ-Q3-01 — capabilities pre-run warning + probe hint */
     const capWarnModal = document.getElementById("cap-warn-modal");
     const capWarnList = document.getElementById("cap-warn-list");
     const capWarnProceed = document.getElementById("cap-warn-proceed");
     const capWarnLater = document.getElementById("cap-warn-later");
+    const capProbeHint = document.getElementById("cap-probe-hint");
+    let cachedCapabilities = null;
 
     function formatCapabilityStatus(status) {
       if (status === "verified") return "✅ 확인됨";
       if (status === "untested") return "⚠️ 미검증";
       if (status === "unsupported") return "❌ 미지원";
       return status;
+    }
+
+    function getCapabilityWarnings(data) {
+      return (data?.capabilities || []).filter(
+        (c) => c.status === "untested" || c.status === "unsupported"
+      );
+    }
+
+    async function loadCapabilities() {
+      if (cachedCapabilities) return cachedCapabilities;
+      const res = await fetch("/api/capabilities", { cache: "no-store" });
+      if (!res.ok) return null;
+      cachedCapabilities = await res.json();
+      return cachedCapabilities;
+    }
+
+    function updateCapProbeHint(data) {
+      if (!capProbeHint || !data?.summary) return;
+      const untested = Number(data.summary.untested) || 0;
+      const unsupported = Number(data.summary.unsupported) || 0;
+      if (untested === 0 && unsupported === 0) {
+        capProbeHint.classList.add("hidden");
+        capProbeHint.textContent = "";
+        return;
+      }
+      let text = "";
+      if (untested > 0) {
+        text = `아직 안 해본 테스트 ${untested}가지`;
+      }
+      if (unsupported > 0) {
+        text += (text ? " · " : "") + `미지원 ${unsupported}가지`;
+      }
+      capProbeHint.textContent = text;
+      capProbeHint.classList.remove("hidden");
     }
 
     function showCapWarnModal(warnings) {
@@ -974,14 +1018,30 @@
       });
     }
 
+    async function openCapWarnFromHint() {
+      const data = await loadCapabilities();
+      if (!data) return;
+      const warnings = getCapabilityWarnings(data);
+      if (!warnings.length) return;
+      await showCapWarnModal(warnings);
+    }
+
+    if (capProbeHint) {
+      capProbeHint.addEventListener("click", () => { openCapWarnFromHint(); });
+      capProbeHint.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          openCapWarnFromHint();
+        }
+      });
+    }
+
     async function ensureCapabilityAck() {
       try {
-        const res = await fetch("/api/capabilities", { cache: "no-store" });
-        if (!res.ok) return true;
-        const data = await res.json();
-        const warnings = (data.capabilities || []).filter(
-          (c) => c.status === "untested" || c.status === "unsupported"
-        );
+        const data = await loadCapabilities();
+        if (!data) return true;
+        updateCapProbeHint(data);
+        const warnings = getCapabilityWarnings(data);
         if (!warnings.length) return true;
         return await showCapWarnModal(warnings);
       } catch {
@@ -1173,6 +1233,10 @@
         document.getElementById("backend-status").style.color = "#d93025";
         await showNetworkError("[L0-NETWORK] Link 서버 무응답 (ERR_EMPTY_RESPONSE)");
       });
+
+    loadCapabilities()
+      .then((data) => { if (data) updateCapProbeHint(data); })
+      .catch(() => {});
 
     /** Sprint 0 SP0-FC-01 — cache /api/status for FC label (AC-FC-02, C-4) */
     let cachedBackendStatus = { fact_checker: "stub", tavily_disabled: true };

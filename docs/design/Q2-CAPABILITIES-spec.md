@@ -76,3 +76,5 @@ python scripts/log_capability_run.py --id cap-s0b-draft --script s0b_e2e_run.py 
 pytest tests/test_capabilities_build.py tests/test_capabilities_api.py tests/test_capabilities_ui.py tests/test_capabilities_log.py -q
 python scripts/phase_r_regression.py
 ```
+
+**Q3 경량 마감:** [Q3-LOAD-TEST-LIGHT-spec.md](Q3-LOAD-TEST-LIGHT-spec.md) — catalog 시드 = probe 후보, UI 「N가지」 힌트.
