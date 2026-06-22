@@ -20,6 +20,7 @@
 3. **문서만 늘리기 주문 금지** — 증명은 pytest·게이트·스크립트·`branch_state.json`
 4. **기조:** 기초공사(읽기) → 분석(Gemini). 쪼개서, 분기마다 검증. 통과 전 다음 단계 금지
 5. **μ-ω 주석 고정 (절대 생략 금지):** 작업자 주문문 **맨 아래에 반드시** §1.1 블록을 **원문 그대로** 붙인다. 검증만 하고 ω 없이 끝낸 보고는 **미완료**로 본다.
+6. **사후 수정 = 0단계 재진입 (§1.2):** “완성” 이후에도 해당 파일만 고치지 않는다. **전체를 다시 쪼개고**, **가장 아래층(0단계)부터** 순차 재검증한다. 감독은 구조 변경 주문 시 §1.2 블록을 **반드시** 붙인다.
 
 ### 1.1 μ-ω 주석 고정 — 강제 규칙 (strict completion gate)
 
@@ -73,6 +74,53 @@
 완료 보고 필수 섹션: 「μ-ω 체크리스트」표 (W1~W5, 파일 경로, commit hash)
 
 금지: 주석·sample 없이 검증만 하고 완료 보고. spec만 쓰고 pytest 없음. RECORD에 추측 숫자.
+```
+
+### 1.2 사후 수정 — 0단계 재진입 (부분 패치 금지)
+
+**코드·파이프라인·ingest·capabilities 계약을 건드리는 수정은 “완성 후 유지보수”가 아니다. 0단계 공사를 다시 연다.**
+
+| 하면 안 되는 것 | 해야 하는 것 |
+|-----------------|--------------|
+| 버그·개선 한 군데만 패치하고 끝 | **영향 범위를 μ로 다시 쪼개기** |
+| 상위 기능(Q2…)부터 손대기 | **ω-0 baseline → Phase R → 해당 분기 → ω** 순 |
+| 검증 없이 “고쳤습니다” | `phase_r_regression` + 해당 분기 회귀(예: REG-B1) + μ-ω |
+
+**재진입 층 (순서 고정 — 통과 전 다음 층 금지):**
+
+```text
+ω-0  stage0_reaudit_baseline.py — 문서·게이트·branch_state 불일치 표
+L0   0-1/0-2 계약과 모순 없는지 (변경 시 spec 먼저)
+L-R  phase_r_regression.py exit 0
+L-μ  이번 수정의 μ-ID 구현 + pytest
+L-A  (Phase A 건드렸으면) E2E·RECORD·회귀 스냅샷
+ω    μ-ω W1~W5
+```
+
+**실제 사례 (본 repo):**
+
+- Q1 2-pass → **μ-REG-B1** full E2E 재증명 → **REG-B1ω** (STAGE 0 재검토와 동일 원칙)
+- Q2 capabilities 추가 후 → **μ-POST-Q2-0** (`stage0_reaudit_baseline.py` Q1/Q2 필드 확장)
+- 앞으로 Q3·파이프라인 수정도 동일 — **해당 모듈만 수정 주문 금지**
+
+**예외 (0단계 재진입 생략 가능):** 오타·주석만(ω 해당 시 W1~W3)·sample JSON 값만 — **단, 토폴로지·ingest·API 계약·JSON 스키마 변경은 예외 아님.**
+
+**감독 AI:** 파이프라인·ingest·capabilities·분기 상태를 건드리는 주문문 맨 아래에 §1.2 블록을 **§1.1 다음에** 붙인다.
+
+**작업자 주문문에 붙이는 §1.2 블록 (구조 변경 시·생략 불가):**
+
+```markdown
+=== μ-0 재진입 (사후 수정 — 부분 패치 금지) ===
+
+이번 변경은 "한 파일만" 끝내지 않는다. 0단계부터 다시 잠근다.
+
+1) python scripts/stage0_reaudit_baseline.py → mismatches 보고 (있으면 먼저 수습)
+2) python scripts/phase_r_regression.py → exit 0
+3) 이번 μ 구현·pytest
+4) (파이프라인/Phase A 영향 시) branch1_regression_snapshot 또는 해당 E2E smoke
+5) μ-ω W1~W5 + 완료 보고 체크리스트
+
+금지: 변경 파일만 고치고 baseline·phase_r·회귀 생략. 상위(Q3) 선행.
 ```
 
 ### 새 채팅 첫 메시지
@@ -151,7 +199,8 @@ Deconstruct → Verify → Dreamer → Fact-Checker → Skeptic → Weaver → V
 
 ### 지금 활성 (작업자)
 
-- **Q2** — 능력·한계 카드 + 업로드 전 경고 (`POST-BRANCH-1-WORK-QUEUE.md`)
+- **μ-POST-Q2-0** — `stage0_reaudit_baseline.py` Q2 필드 확장 (ω-0 재스냅샷)
+- **다음:** Q3 catalog probe 또는 큐 마감
 - ingest 수정 시: `python scripts/phase_r_regression.py`
 - **금지:** `branch_2_unlocked` 수동 true, Branch-2/3/STAGE-1 선행
 
@@ -197,8 +246,8 @@ Deconstruct → Verify → Dreamer → Fact-Checker → Skeptic → Weaver → V
 
 | | |
 |---|---|
-| **완료** | Branch-1, STAGE 0 재검토, Q1, V5, μ-Q1-E2E, μ-REG-B1+ω, μ-HANDOFF-ω |
-| **작업자 지금 할 일** | **Q2** (능력·한계 카드) — `POST-BRANCH-1-WORK-QUEUE.md` |
+| **완료** | Branch-1, STAGE 0 재검토, Q1, V5, μ-Q1-E2E, μ-REG-B1+ω, μ-HANDOFF-ω, **Q2** (`c472879`) |
+| **작업자 지금 할 일** | **μ-POST-Q2-0** (ω-0 baseline) → **Q3** 또는 `POST-BRANCH-1-WORK-QUEUE` 마감 |
 | **금지** | Branch-2/3/STAGE-1, `branch_2_unlocked` 수동 true, μ-ω 생략 |
 
 ### 작업자 명령 치트시트
@@ -208,6 +257,7 @@ Deconstruct → Verify → Dreamer → Fact-Checker → Skeptic → Weaver → V
 | ingest 수정 후 | `python scripts/phase_r_regression.py` |
 | quota 후 Branch-1 | `python scripts/branch1_full_e2e.py` |
 | 잠금 확인 | `pytest tests/test_branch_gates.py` |
+| 사후 수정·Q2 이후 | `python scripts/stage0_reaudit_baseline.py` (ω-0, §1.2) |
 
 ---
 
@@ -233,8 +283,8 @@ Deconstruct → Verify → Dreamer → Fact-Checker → Skeptic → Weaver → V
 
 시작 전: git pull → docs/design/SUPERVISOR-AI-HANDOFF.md + POST-BRANCH-1-WORK-QUEUE.md 읽기.
 
-현재: Branch-0 ✅, Branch-1 ✅ (`branch_1_complete=true`), Q2 착수.
-지금 작업자: Q2 capabilities + 업로드 전 경고. branch_2_unlocked=false 유지.
+현재: Branch-0 ✅, Branch-1 ✅, Q2 ✅ (`c472879`). 다음 Q3 또는 큐 마감.
+사후 수정 시 §1.2 — `stage0_reaudit_baseline.py` → `phase_r_regression` 순.
 
 임시 큐는 작업 완료 후 삭제. 매 답변: 풀어설명 + 작업자 복붙블록 + 지금 할 일(있/없).
 ```
