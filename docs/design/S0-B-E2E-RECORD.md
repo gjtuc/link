@@ -25,8 +25,8 @@
 | μ-B-ING-04 | ✅ | long total 12088 chars retained |
 | μ-B-PIPE-01 | ✅ | `pipeline_ok=true` |
 | μ-B-PIPE-02 | ✅ | pipeline completed (short full run) |
-| μ-B-SKP-01 | ✅ | `gap_count=20` |
-| μ-B-SKP-02 | ✅ | `weak_count=3` |
+| μ-B-SKP-01 | ✅ | `gap_count=16` |
+| μ-B-SKP-02 | ✅ | `weak_count=2` |
 | μ-B-REC-01 | ✅ | recompose report present |
 | μ-A-B-FC-01 | ✅ | `fact_checker.mode=corpus` |
 
@@ -46,6 +46,8 @@ Flash breadth diversity (s0b short, 3-run avg): dup=0.0, uniq_subj=1.0, mech_sim
 Flash breadth pass2 (s0b short, 3-run avg): dup=0.0, uniq_subj=1.0, mech_sim=0.053 (μ-V5 DIV03 PASS). pass1_edges=0, pass2_sources=5 (전부 Gap).
 
 Q1 2-pass smoke (short live, 2026-06-22): pass1_edges=1, pass2_gap=3, pass2_sources=4, promoted=5, skeleton gap=7 weak=1, fc=corpus (Branch-1 gap=20·weak=3과 별개).
+
+Q1 후 REG-B1 (2026-06-22): Branch-1 full 재증명 exit 0 — gap=16 weak=2 pipeline_ok fc=corpus (이전 gap=20 weak=3, Q1 2-pass·LLM 분산 가능).
 
 ---
 
