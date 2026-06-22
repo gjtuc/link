@@ -23,7 +23,8 @@ def test_capabilities_sample_schema():
     data = json.loads(SAMPLE.read_text(encoding="utf-8"))
     assert REQUIRED_TOP_KEYS <= set(data)
     assert data["branch_state"]["branch_1_complete"] is True
-    assert data["branch_state"]["branch_2_unlocked"] is False
+    assert data["branch_state"]["branch_2_unlocked"] is True
+    assert any(c["id"] == "cap-branch2a-active" for c in data["capabilities"])
     for cap in data["capabilities"]:
         assert CAPABILITY_ITEM_KEYS <= set(cap)
         assert cap["status"] in {"verified", "untested", "unsupported"}

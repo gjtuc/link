@@ -52,7 +52,7 @@ def test_gate_branch_state_file_valid():
 
 
 def test_gate_branch2_specs_forbidden_while_locked():
-    """Branch-2a/2b/3: no spec files until branch_2_unlocked."""
+    """Branch-2b/3/STAGE-1: no spec files until branch_2_unlocked."""
     if _branch_state().get("branch_2_unlocked"):
         pytest.skip("branch_2_unlocked")
     found: list[str] = []
@@ -61,17 +61,31 @@ def test_gate_branch2_specs_forbidden_while_locked():
     assert found == [], f"locked branch specs exist: {found}"
 
 
+def test_gate_branch2a_spec_allowed_when_unlocked():
+    """BRANCH-2a-spec.md allowed when branch_2_unlocked."""
+    if not _branch_state().get("branch_2_unlocked"):
+        pytest.skip("branch_2 still locked")
+    assert (DESIGN / "BRANCH-2a-spec.md").is_file()
+
+
 def test_gate_branch1_state_consistent_with_lock():
-    """branch_2 stays locked; branch_1 reflects E2E outcome."""
+    """branch_1 reflects E2E; branch_2 per unlock policy."""
     s = _branch_state()
-    assert s["branch_2_unlocked"] is False
+    assert isinstance(s["branch_2_unlocked"], bool)
     assert isinstance(s["branch_1_complete"], bool)
 
 
 def test_gate_branch1_complete_post_e2e():
-    """After branch1_full_e2e exit 0: branch_1_complete=true, branch_2 still locked."""
+    """After branch1_full_e2e exit 0: branch_1_complete=true."""
     s = _branch_state()
     assert s["branch_1_complete"] is True
+
+
+def test_gate_branch2_locked_until_probes():
+    """Pre-unlock: branch_2_unlocked stays false (skip after unlock)."""
+    s = _branch_state()
+    if s.get("branch_2_unlocked"):
+        pytest.skip("already unlocked")
     assert s["branch_2_unlocked"] is False
 
 

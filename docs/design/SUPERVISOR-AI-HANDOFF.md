@@ -244,8 +244,8 @@ Deconstruct → Verify → Dreamer → Fact-Checker → Skeptic → Weaver → V
 
 | | |
 |---|---|
-| **완료** | Branch-1, STAGE 0, Q1, Q2, μ-POST-Q2-0, **Q3 경량** — POST-BRANCH-1 큐 **마감** |
-| **작업자 지금 할 일** | (큐 없음) — 사후 수정 시 §1.2 ω-0 baseline 선행 |
+| **완료** | Q1–Q3 큐 마감, μ-POST-Q2-0, **μ-PROBE** (catalog 3건) |
+| **작업자 지금 할 일** | **Branch-2a** μ-B2a-01 density E2E (다음 μ) |
 | **금지** | Branch-2/3/STAGE-1, `branch_2_unlocked` 수동 true, μ-ω 생략 |
 
 ### 작업자 명령 치트시트
@@ -281,7 +281,7 @@ Deconstruct → Verify → Dreamer → Fact-Checker → Skeptic → Weaver → V
 
 시작 전: git pull → docs/design/SUPERVISOR-AI-HANDOFF.md 읽기.
 
-현재: Branch-0 ✅, Branch-1 ✅, **Q1–Q3 큐 마감** (`POST-BRANCH-1-WORK-QUEUE` 삭제됨).
+현재: Branch-0 ✅, Branch-1 ✅, Q1–Q3 큐 마감. **Branch-2a 착수** (probe 3건 + unlock).
 사후 수정 시 §1.2 — `stage0_reaudit_baseline.py` → `phase_r_regression` 순.
 
 매 답변: 풀어설명 + 작업자 복붙블록 + 지금 할 일(있/없).

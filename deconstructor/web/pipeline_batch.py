@@ -34,6 +34,7 @@ INGEST Foundation (Phase R → A)
 
 from __future__ import annotations
 
+import os
 import uuid
 from pathlib import Path
 
@@ -59,6 +60,15 @@ def run_pipeline_batch(
 
 
 def _ensure_neo4j_tracked(tracker: LinkStepTracker, pipeline_states: list) -> tuple[bool, dict | None]:
+    if os.getenv("LINK_DISABLE_NEO4J_AUTO_START", "").lower() in ("1", "true", "yes"):
+        tracker.skip("S5-NEO4J-ENSURE", "auto-start disabled (probe)")
+        return False, {
+            "attempted": False,
+            "available": False,
+            "method": "disabled",
+            "message": "LINK_DISABLE_NEO4J_AUTO_START",
+        }
+
     from deconstructor.neo4j_launcher import (
         ensure_neo4j_running,
         persist_state_to_neo4j,

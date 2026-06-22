@@ -15,7 +15,7 @@ CATALOG_SEEDS: tuple[dict[str, Any], ...] = (
         "status": "untested",
         "human_line": "PDF 세 개를 한꺼번에 올리는 건 아직 안 해봤어요. 한 번에 많이 넣으면 느려질 수 있어요.",
         "source": "catalog",
-        "evidence": "probe 미실행 — 개수 부하 후보",
+        "evidence": "probe 2026-06-22 exit 0 — 3 source_file, pipeline_ok, ~496s",
     },
     {
         "id": "cat-opju-origin",
@@ -29,7 +29,7 @@ CATALOG_SEEDS: tuple[dict[str, Any], ...] = (
         "status": "untested",
         "human_line": "스캔 PDF나 표만 있는 PDF는 글자 추출이 잘 안 될 수 있어요. 아직 충분히 검증하지 않았어요.",
         "source": "catalog",
-        "evidence": "probe 미실행 — OCR/내용 부하",
+        "evidence": "probe 2026-06-22 exit 2 — not_true_scan (no scan PDF); Phase-R ok",
     },
     {
         "id": "cat-file-10mb",
@@ -43,7 +43,7 @@ CATALOG_SEEDS: tuple[dict[str, Any], ...] = (
         "status": "untested",
         "human_line": "Neo4j가 꺼져 있어도 그래프는 보여 줄 수 있지만, 전체 동작은 Neo4j 켠 상태에서만 확인했어요.",
         "source": "catalog",
-        "evidence": "probe 미실행 — 환경 부하",
+        "evidence": "probe 2026-06-22 exit 0 — bolt offline, pipeline_ok, ~292s (S5 auto-start skip 권장)",
     },
     {
         "id": "cat-gemini-429",

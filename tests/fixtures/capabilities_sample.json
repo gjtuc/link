@@ -1,8 +1,8 @@
 {
-  "generated_at": "2026-06-22T12:24:28+00:00",
+  "generated_at": "2026-06-22T14:44:40+00:00",
   "branch_state": {
     "branch_1_complete": true,
-    "branch_2_unlocked": false
+    "branch_2_unlocked": true
   },
   "capabilities": [
     {
@@ -13,11 +13,11 @@
       "evidence": "branch_1_complete=true (branch1_full_e2e.py)"
     },
     {
-      "id": "cap-branch2-locked",
+      "id": "cap-branch2a-active",
       "status": "verified",
-      "human_line": "Branch-2·STAGE-1은 아직 잠겨 있어요. 지금은 0단계 클로저 범위만 쓰세요.",
+      "human_line": "Branch-2a(μ-A 깊이)가 열렸어요. 밀도 관측 E2E는 다음 단계에서 진행합니다.",
       "source": "branch_state.json",
-      "evidence": "branch_2_unlocked=false"
+      "evidence": "branch_2_unlocked=true (unlock_branch2.py post-probe)"
     },
     {
       "id": "cap-s0a-pdf",
@@ -73,7 +73,7 @@
       "status": "untested",
       "human_line": "PDF 세 개를 한꺼번에 올리는 건 아직 안 해봤어요. 한 번에 많이 넣으면 느려질 수 있어요.",
       "source": "catalog",
-      "evidence": "probe 미실행 — 개수 부하 후보"
+      "evidence": "probe 2026-06-22 exit 0 — 3 source_file, pipeline_ok, ~496s"
     },
     {
       "id": "cat-opju-origin",
@@ -87,7 +87,7 @@
       "status": "untested",
       "human_line": "스캔 PDF나 표만 있는 PDF는 글자 추출이 잘 안 될 수 있어요. 아직 충분히 검증하지 않았어요.",
       "source": "catalog",
-      "evidence": "probe 미실행 — OCR/내용 부하"
+      "evidence": "probe 2026-06-22 exit 2 — not_true_scan (no scan PDF); Phase-R ok"
     },
     {
       "id": "cat-file-10mb",
@@ -101,7 +101,7 @@
       "status": "untested",
       "human_line": "Neo4j가 꺼져 있어도 그래프는 보여 줄 수 있지만, 전체 동작은 Neo4j 켠 상태에서만 확인했어요.",
       "source": "catalog",
-      "evidence": "probe 미실행 — 환경 부하"
+      "evidence": "probe 2026-06-22 exit 0 — bolt offline, pipeline_ok, ~292s (S5 auto-start skip 권장)"
     },
     {
       "id": "cat-gemini-429",

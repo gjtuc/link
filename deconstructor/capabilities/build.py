@@ -73,6 +73,16 @@ def _branch_verified_items(state: dict[str, Any]) -> list[dict[str, str]]:
                 "branch_2_unlocked=false",
             )
         )
+    else:
+        items.append(
+            _item(
+                "cap-branch2a-active",
+                "verified",
+                "Branch-2a(μ-A 깊이)가 열렸어요. 밀도 관측 E2E는 다음 단계에서 진행합니다.",
+                "branch_state.json",
+                "branch_2_unlocked=true (unlock_branch2.py post-probe)",
+            )
+        )
     return items
 
 

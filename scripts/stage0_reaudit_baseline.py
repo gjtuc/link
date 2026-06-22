@@ -92,8 +92,8 @@ def _mismatches(
     b1 = state.get("branch_1_complete")
     if not b1:
         out.append("branch_1_complete=false (expected true after Branch-1)")
-    if state.get("branch_2_unlocked"):
-        out.append("branch_2_unlocked=true (expected false until post-closure unlock)")
+    if state.get("branch_2_unlocked") and not b1:
+        out.append("branch_2_unlocked=true but branch_1_complete=false")
     for cid, record_a in records.items():
         closure = closures.get(cid) or ""
         if b1 and record_a and "PASS" not in record_a and "✅" not in record_a:
