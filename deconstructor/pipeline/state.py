@@ -31,6 +31,7 @@ Field guide / 필드 가이드
 - ``inferred_facts`` / ``dreamer_log``: Dreamer agent outputs (Step 2).
 - ``promoted_facts`` / ``dropped_hypotheses`` / ``fact_checker_log``: Fact-Checker (Step 3).
 - ``enable_dreamer``: CLI ``--enable-dreamer`` — dreamer→fact_checker 경로 활성.
+- ``verified_edges_pass1`` / ``pass2_gap_nodes``: Q1 2-pass Dreamer pass-1 outputs.
 - ``weaver_result``: final persistence summary.
 
 Modification guide for other AIs / 다른 AI 수정 가이드
@@ -78,6 +79,9 @@ class State(TypedDict):
     dropped_hypotheses: list[DroppedHypothesis]
     fact_checker_log: list[str]
     enable_dreamer: bool
+    verified_edges_pass1: list[CausalEdge]
+    pass2_gap_nodes: list[dict]
+    skeptic_pass1_log: list[SkepticLogEntry]
     analysis_run_id: str
     source_document_meta: dict[str, str | int]
     corpus_fact_pool: list[AtomicFact]

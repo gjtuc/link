@@ -75,6 +75,9 @@ def make_initial_state(
         "dropped_hypotheses": [],
         "fact_checker_log": [],
         "enable_dreamer": enable_dreamer,
+        "verified_edges_pass1": [],
+        "pass2_gap_nodes": [],
+        "skeptic_pass1_log": [],
         "corpus_fact_pool": list(corpus_fact_pool or []),
         "weaver_result": None,
     }

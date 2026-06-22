@@ -21,30 +21,8 @@
 
 ### Q1 — 2-pass Dreamer (양끝 + Gap)
 
-- [ ] **상태:** 미착수
-- **사용자 결정:** Gap **포함** (옵션 A). 양끝 **노드만** (화살표 전체 X). 고아 제외.
-- **목적:** 1차 검증 뼈대 + 근거 없는 결론(Gap)에서 새 인과 방향 탐색; FC→Skeptic 불변.
-
-<details>
-<summary>작업자 복붙 블록 (Branch-1 후)</summary>
-
-```markdown
-Link — 2-pass Dreamer (사용자 결정: Gap 포함, 옵션 A)
-
-순서: 1차 Skeptic(파란만) → 2차 Dreamer → Fact-Checker → Skeptic
-2차 Dreamer 입력 fact id:
-  - verified CAUSES edges의 source/target (양끝 노드만)
-  - PLUS skeleton Gap nodes (conclusion-like, CAUSES in-degree 0)
-  - EXCLUDE: orphan extracted (비-Gap 고아), 중간 노드
-
-목적: 검증된 뼈대 + Gap에서 새 화살표 방향 탐색
-검증: FC→Skeptic 불변; 코어 DAG 블록 순서 유지(2-pass)
-spec+pytest로 Gap 포함 규칙 고정; md만 늘리지 말 것
-
-금지: branch_1_complete 수동 true, Branch-2/3/STAGE-1 선행
-```
-
-</details>
+- [x] **상태:** 완료 (2026-06-22)
+- **증거:** `pytest tests/test_q1_pass2_inputs.py tests/test_q1_two_pass_dry_run.py` + `phase_r_regression.py` exit 0 — PR `feat/stage0-sprint0-7`
 
 ---
 
@@ -97,7 +75,7 @@ Link POST-Branch-1 — capabilities + pre-upload warnings + run logs
 
 | ID | 완료일 | 증거 (pytest / E2E / PR) |
 |----|--------|--------------------------|
-| Q1 | | |
+| Q1 | 2026-06-22 | `test_q1_pass2_inputs` (7) + `test_q1_two_pass_dry_run` + `phase_r_regression` exit 0 |
 | Q2 | | |
 | Q3 | | |
 

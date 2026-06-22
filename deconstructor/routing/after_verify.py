@@ -37,15 +37,15 @@ from typing import Literal
 from deconstructor.pipeline.state import State
 
 
-def _post_decompose_target(state: State) -> Literal["skeptic", "dreamer"]:
-    """enable_dreamer 시 verify 탈출 → dreamer, 아니면 skeptic."""
+def _post_decompose_target(state: State) -> Literal["skeptic", "skeptic_pass1"]:
+    """enable_dreamer 시 verify 탈출 → skeptic_pass1 (Q1 2-pass), 아니면 skeptic."""
     if state.get("enable_dreamer"):
-        print("[STEP4-route] enable_dreamer=True → dreamer")
-        return "dreamer"
+        print("[STEP4-route] enable_dreamer=True → skeptic_pass1")
+        return "skeptic_pass1"
     return "skeptic"
 
 
-def route_after_verify(state: State) -> Literal["deconstruct", "skeptic", "dreamer"]:
+def route_after_verify(state: State) -> Literal["deconstruct", "skeptic", "skeptic_pass1"]:
     """
     Micro-step R-1: null floor -> skeptic.
     Micro-step R-2: non-atomic + under cap -> deconstruct.
