@@ -2,7 +2,11 @@
 """
 μ-B2-00 — unlock Branch-2a after catalog probes.
 
-선행: branch_1_complete=true, probe logs cat-neo4j-off / cat-pdf-triple / cat-scanned-pdf
+μ-ID: μ-B2-00 / μ-UNLOCK-ω
+선행: branch_1_complete=true; probe logs 3건 필수
+  - logs/capability_runs/*cat-neo4j-off*.json
+  - logs/capability_runs/*cat-pdf-triple*.json
+  - logs/capability_runs/*cat-scanned-pdf*.json
 실행: python scripts/unlock_branch2.py
 스펙: docs/design/BRANCH-2a-spec.md
 """

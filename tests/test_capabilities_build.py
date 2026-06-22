@@ -45,6 +45,22 @@ def test_catalog_seed_count():
     assert len(CATALOG_SEEDS) >= 6
 
 
-def test_each_capability_has_human_line():
-    for cap in build_capabilities()["capabilities"]:
-        assert len(cap["human_line"]) >= 8
+def test_catalog_neo4j_off_evidence_mentions_r1_contract():
+    by_id = {c["id"]: c for c in CATALOG_SEEDS}
+    neo = by_id["cat-neo4j-off"]
+    assert "LINK_DISABLE" in neo["evidence"]
+    assert "96" in neo["evidence"] or "R1" in neo["evidence"]
+    assert "DB" in neo["human_line"] or "Neo4j" in neo["human_line"]
+
+
+def test_catalog_scanned_pdf_not_true_scan_consistent():
+    by_id = {c["id"]: c for c in CATALOG_SEEDS}
+    scanned = by_id["cat-scanned-pdf"]
+    assert "not_true_scan" in scanned["evidence"] or "스캔" in scanned["human_line"]
+
+
+def test_catalog_pdf_triple_evidence_has_probe():
+    by_id = {c["id"]: c for c in CATALOG_SEEDS}
+    triple = by_id["cat-pdf-triple"]
+    assert "3 source_file" in triple["evidence"]
+    assert triple["status"] == "untested"

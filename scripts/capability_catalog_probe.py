@@ -132,6 +132,7 @@ def _run_probe(
     pipeline_ok = bool(result and result.get("ok"))
     failed_step = None if pipeline_ok else (result or {}).get("failed_step")
     distinct_sources = sorted({getattr(s, "source_file", "") or "" for s in sources})
+    link_disable = os.getenv("LINK_DISABLE_NEO4J_AUTO_START", "").lower() in ("1", "true", "yes")
     detail = {
         "scenario": scenario,
         "cat_id": cat_id,
@@ -140,6 +141,7 @@ def _run_probe(
         "phase_r_ok": True,
         "neo4j_available": _neo4j_available(),
         "neo4j_method": neo4j_method,
+        "link_disable_neo4j_auto_start": link_disable,
         "pipeline_ok": pipeline_ok,
         "failed_step": failed_step,
         "elapsed_sec": elapsed,
@@ -270,14 +272,25 @@ def cmd_scanned_pdf(args: argparse.Namespace) -> int:
     )
 
 
+def _add_skip_phase_r(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument(
+        "--skip-phase-r",
+        action="store_true",
+        help="batch: phase_r already run",
+    )
+
+
 def main() -> int:
     bootstrap_stdio_utf8()
     ap = argparse.ArgumentParser(description="Capability catalog live probes")
-    ap.add_argument("--skip-phase-r", action="store_true", help="batch: phase_r already run")
+    _add_skip_phase_r(ap)
     sub = ap.add_subparsers(dest="cmd", required=True)
-    sub.add_parser("neo4j-off", help="Neo4j bolt unavailable + short text Phase A")
-    sub.add_parser("pdf-triple", help="3 PDF batch Phase A")
+    p_neo = sub.add_parser("neo4j-off", help="Neo4j bolt unavailable + short text Phase A")
+    _add_skip_phase_r(p_neo)
+    p_pdf = sub.add_parser("pdf-triple", help="3 PDF batch Phase A")
+    _add_skip_phase_r(p_pdf)
     sp = sub.add_parser("scanned-pdf", help="scanned/image PDF ingest probe")
+    _add_skip_phase_r(sp)
     sp.add_argument("--path", default="", help="explicit PDF path")
     args = ap.parse_args()
     if args.cmd == "neo4j-off":

@@ -1,6 +1,6 @@
 # Capability catalog probes (live)
 
-> **상태:** μ-PROBE Phase 1  
+> **상태:** μ-PROBE Phase 1 + ω 재진입 (S5·R1)  
 > **선행:** Q3 `aa9b243`, `stage0_reaudit_baseline` exit 0  
 > **스크립트:** `scripts/capability_catalog_probe.py`
 
@@ -14,12 +14,36 @@
 | **μ-PROBE-01** | `cat-neo4j-off` | `neo4j-off` |
 | **μ-PROBE-02** | `cat-pdf-triple` | `pdf-triple` |
 | **μ-PROBE-03** | `cat-scanned-pdf` | `scanned-pdf [--path]` |
+| **μ-PROBE-S5** | Neo4j S5 auto-start skip 계약 | `LINK_DISABLE_NEO4J_AUTO_START` + pytest |
+| **μ-PROBE-R1** | neo4j-off 재실행 (S5 적용) | `neo4j-off` 1회 |
 
-**관측 (2026-06-22):**
+---
+
+## LINK_DISABLE_NEO4J_AUTO_START (μ-PROBE-S5)
+
+**목적:** bolt 불가 probe 시 S5 ``ensure_neo4j_running``(Desktop 기동·최대 90s) 생략.
+
+| 항목 | 값 |
+|------|-----|
+| env | `LINK_DISABLE_NEO4J_AUTO_START=1` (`true`/`yes` 동일) |
+| 설정 주체 | `capability_catalog_probe.py neo4j-off` (cmd 진입 시) |
+| 코드 | `deconstructor/web/pipeline_batch.py` → `_ensure_neo4j_tracked` |
+| tracker | `S5-NEO4J-ENSURE` skip — `auto-start disabled (probe)` |
+| pytest | `tests/test_pipeline_neo4j_probe_skip.py` |
+
+**배치 공통:** probe 외 스크립트도 동일 env 로 S5 스킵 가능 (세션 그래프·HTML은 유지).
+
+---
+
+## 관측 (neo4j-off)
+
+| run | cat-id | exit | pipeline_ok | elapsed | 비고 |
+|-----|--------|------|-------------|---------|------|
+| R0 | `cat-neo4j-off` | 0 | true | **291.6s** | S5 auto-start 대기 가능 (`20260622-2315`) |
+| R1 | `cat-neo4j-off` | 0 | true | **96.2s** | `LINK_DISABLE_NEO4J_AUTO_START=1` (`20260623-0024`) |
 
 | cat-id | exit | pipeline_ok | 비고 |
 |--------|------|-------------|------|
-| `cat-neo4j-off` | 0 | true | bolt offline, ~292s; `LINK_DISABLE_NEO4J_AUTO_START` 권장 |
 | `cat-pdf-triple` | 0 | true | 3 source_file, ~496s |
 | `cat-scanned-pdf` | 2 | — | `not_true_scan` (스캔 PDF 없음), log·detail 필수 |
 
@@ -27,9 +51,10 @@
 
 ## neo4j-off
 
-- **방법:** `NEO4J_URI=bolt://127.0.0.1:19999` (bolt 불가)
+- **방법:** `NEO4J_URI=bolt://127.0.0.1:19999` + `LINK_DISABLE_NEO4J_AUTO_START=1`
 - **입력:** `tests/fixtures/s0b_draft_short.txt` 1건
 - **합격:** Phase R ok + `pipeline_ok=true`
+- **detail:** `neo4j_method`, `link_disable_neo4j_auto_start=true`
 
 ---
 
@@ -42,7 +67,7 @@
 
 ## scanned-pdf
 
-- 우선순위: fixtures `*scan*.pdf` → Desktop/KCH 탐색 → `not_true_scan` fallback exit 2
+- 우선순위: fixtures `*scan*.pdf` → `--path` → Desktop/KCH 탐색 → `not_true_scan` fallback exit 2
 
 ---
 

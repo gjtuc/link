@@ -41,9 +41,9 @@ CATALOG_SEEDS: tuple[dict[str, Any], ...] = (
     {
         "id": "cat-neo4j-off",
         "status": "untested",
-        "human_line": "Neo4j가 꺼져 있어도 그래프는 보여 줄 수 있지만, 전체 동작은 Neo4j 켠 상태에서만 확인했어요.",
+        "human_line": "Neo4j DB가 꺼져 있어도 분석과 HTML 그래프는 보여 줄 수 있어요. DB 동기·영구 저장은 제한됩니다.",
         "source": "catalog",
-        "evidence": "probe 2026-06-22 exit 0 — bolt offline, pipeline_ok, ~292s (S5 auto-start skip 권장)",
+        "evidence": "probe R1 2026-06-23 exit 0 — bolt offline, pipeline_ok, ~96s, LINK_DISABLE_NEO4J_AUTO_START",
     },
     {
         "id": "cat-gemini-429",

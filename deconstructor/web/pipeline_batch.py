@@ -29,6 +29,15 @@ INGEST Foundation (Phase R → A)
   - **Phase A (분석 확인):** Deconstruct+ — ``read_verify.ok`` 후만 실행
   - See ``docs/design/INGEST-FOUNDATION-spec.md``
 
+μ-PROBE-S5 — Neo4j auto-start skip (probe·배치 공통)
+---------------------------------------------------
+  - **env:** ``LINK_DISABLE_NEO4J_AUTO_START=1`` (또는 ``true``/``yes``)
+  - **효과:** ``_ensure_neo4j_tracked`` 가 S5 ``ensure_neo4j_running``·90s 대기·Desktop
+    기동을 **건너뜀** — tracker ``S5-NEO4J-ENSURE`` skip
+  - **용도:** ``capability_catalog_probe.py neo4j-off`` (bolt 불가 시 세션 그래프만)
+  - **스펙:** ``docs/design/CAPABILITY-PROBE-spec.md`` § LINK_DISABLE_NEO4J_AUTO_START
+  - **검증:** ``tests/test_pipeline_neo4j_probe_skip.py``
+
 진행 규칙: ``docs/design/PROCESS.md``
 """
 
