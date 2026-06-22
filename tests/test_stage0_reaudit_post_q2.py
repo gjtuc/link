@@ -30,7 +30,7 @@ def test_post_q2_sample_schema():
     assert data["mismatches"] == []
     assert data["phase_r_regression_exit"] == 0
     assert data["branch_state"]["branch_1_complete"] is True
-    assert data["branch_state"]["branch_2_unlocked"] is False
+    assert data["branch_state"]["branch_2_unlocked"] is True
     assert REQUIRED_Q2_CAP_KEYS <= set(data["q2_capabilities"])
     assert data["q2_capabilities"]["total"] >= 10
     assert data["q2_capabilities"]["verified"] >= 1
