@@ -23,6 +23,7 @@
 | **μ-Q2-04** | 업로드 전 경고 모달 | `tests/test_capabilities_ui.py` |
 | **μ-Q2-05** | probe run log | `scripts/log_capability_run.py`, `tests/test_capabilities_log.py` |
 | **μ-Q2-06** | 회귀 | `phase_r_regression.py` + branch gates |
+| **μ-POST-Q2-0** | Q2 후 ω-0 baseline 확장 | `stage0_reaudit_baseline.py` — PASS 2026-06-22 |
 
 **관측 (2026-06-22):** verified ≥6, catalog 시드 6건, `/api/capabilities` 200, UI 모달 문자열 wired.
 
