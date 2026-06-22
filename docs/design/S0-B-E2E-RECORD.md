@@ -45,6 +45,8 @@ Flash breadth diversity (s0b short, 3-run avg): dup=0.0, uniq_subj=1.0, mech_sim
 
 Flash breadth pass2 (s0b short, 3-run avg): dup=0.0, uniq_subj=1.0, mech_sim=0.053 (μ-V5 DIV03 PASS). pass1_edges=0, pass2_sources=5 (전부 Gap).
 
+Q1 2-pass smoke (short live, 2026-06-22): pass1_edges=1, pass2_gap=3, pass2_sources=4, promoted=5, skeleton gap=7 weak=1, fc=corpus (Branch-1 gap=20·weak=3과 별개).
+
 ---
 
 ## 재실행

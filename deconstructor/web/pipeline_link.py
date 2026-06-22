@@ -15,6 +15,7 @@ from deconstructor.web.progress_ctx import bind_progress, set_node_step, unbind_
 NODE_LABELS: dict[str, str] = {
     "deconstruct": "Gemini 사실 분해 (Deconstruct)",
     "verify": "재귀·깊이 검증 (Verify)",
+    "skeptic_pass1": "1차 인과 검증 (Skeptic pass1)",
     "dreamer": "가설 생성 (Dreamer Flash→Pro)",
     "fact_checker": "팩트체크 (Tavily / Corpus)",
     "skeptic": "인과 검증 (Skeptic)",

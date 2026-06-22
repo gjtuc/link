@@ -50,6 +50,8 @@ deconstruct → verify ⇄ loop
 | **μ-V5-01** | `dreamer_pass2_breadth_probe.py` (2-pass pass2 Flash) | 스크립트 |
 | **μ-V5-02** | s0b/s0a live 3-run 실측 vs DIV03 | `logs/dreamer_breadth/pass2-*-summary.json` |
 | **μ-V5-03** | `test_dreamer_pass2_breadth_diversity.py` | pytest offline + `@live` |
+| **μ-Q1-E2E-01** | `q1_s0b_short_smoke_e2e.py` — short live 2-pass pipeline | `logs/q1_e2e_smoke/` |
+| **μ-Q1-E2E-03** | `test_q1_s0b_short_smoke.py` | pytest offline schema |
 
 ---
 

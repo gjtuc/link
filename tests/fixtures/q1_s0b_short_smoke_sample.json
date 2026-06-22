@@ -1,0 +1,39 @@
+{
+  "scenario": "S0-B-short-Q1-smoke",
+  "timestamp": "2026-06-22T19:31:00",
+  "exit_code": 0,
+  "checklist": {
+    "Phase-R_ok": true,
+    "pipeline_ok": true,
+    "pass1_edge_count": 1,
+    "pass2_gap_count": 3,
+    "pass2_source_count": 4,
+    "pass2_source_count_from_log": 4,
+    "pass2_gap_count_from_log": 3,
+    "promoted_count": 5,
+    "dropped_count": 0,
+    "verified_edges_pass2_count": 2,
+    "gap_count": 7,
+    "weak_count": 1,
+    "fc_mode": "corpus",
+    "partial_run": false,
+    "elapsed_sec": 92.0,
+    "v5_baseline_pass2_source_count": 5,
+    "v5_vs_smoke_pass2_source_match": false,
+    "v5_note": "V5 probe deconstruct=5; smoke deconstruct may differ",
+    "deconstruct_fact_count": 4,
+    "pass2_source_ids": [
+      "fact-4",
+      "fact-3",
+      "fact-2",
+      "fact-1"
+    ]
+  },
+  "dreamer_log_tail": [
+    "[DREAM-S2-6] pass2_source_count=4 pass2_gap_count=3",
+    "[DREAM-S2-6] sources=4 dry_run=False",
+    "[DREAM-S2-6] pro finalists=5 (max 5 for fact_checker)",
+    "[DREAM-S2-6] inferred_facts=5"
+  ],
+  "steps_count": 22
+}
