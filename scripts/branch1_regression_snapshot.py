@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
 """
-μ-REG-B1 — Branch-1 regression snapshot (post-Q1).
+μ-REG-B1b/c — Branch-1 regression snapshot (post-Q1).
 
-  python scripts/branch1_regression_snapshot.py
-  python scripts/branch1_regression_snapshot.py --skip-run  # parse-only (no-op without log)
+μ-ID: μ-REG-B1b (branch1_full_e2e), μ-REG-B1c (관측 JSON)
+선행: μ-REG-B1a phase_r_regression exit 0
+실행: python scripts/branch1_regression_snapshot.py
+스펙: docs/design/BRANCH-1-spec.md § REG-B1 — Q1 후 회귀
 
-Runs phase_r_regression + branch1_full_e2e, writes:
-  logs/branch1_regression/YYYYMMDD-HHMM-regression.json
+Baseline (비교용, 실패 조건 아님): gap=20, weak=3 (S0-B); bridge=1 (S0-C).
+Fixture 샘플: tests/fixtures/branch1_regression_sample.json
+Live 로그: logs/branch1_regression/YYYYMMDD-HHMM-regression.json (gitignore)
 """
 
 from __future__ import annotations

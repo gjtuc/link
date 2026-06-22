@@ -60,6 +60,8 @@ Branch-0  Phase R  pytest + phase_r_regression     ← 지속 MUST
 
 **DoD:** S0-B/C Phase A exit 0 + RECORD ✅ — **0단계 클로저 Branch-1 닫힘**
 
+**REG-B1 (2026-06-22, `ee54729`):** Q1 2-pass 후 Branch-1 full 회귀 exit 0 (~542 s). S0-B gap=16 weak=2, S0-C bridge=1 — [BRANCH-1-spec.md](BRANCH-1-spec.md) § REG-B1.
+
 ---
 
 ## μ 재쪼개기 (분기 공통)

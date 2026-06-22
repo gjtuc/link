@@ -84,3 +84,28 @@ python scripts/branch1_full_e2e.py
 
 - Phase R은 Branch-0 pytest로 **이미** 증명 — Branch-1은 **A만** 추가  
 - F0-B2: Gap 많음 = PASS (약한 뼈대 드러남)
+
+---
+
+## REG-B1 — Q1 후 회귀 (2026-06-22, `ee54729`)
+
+Q1 2-pass Dreamer (`285ef9f`) 적용 후 Branch-1 DoD(S0-B/C Phase A full) 재증명. **exit 0 = 합격** (관측 숫자 변동은 Q1·LLM 분산 가능, 실패 조건 아님).
+
+| μ-ID | 내용 | 스크립트 / 산출 |
+|------|------|-----------------|
+| **μ-REG-B1a** | Phase R 선행 게이트 | `python scripts/phase_r_regression.py` → exit 0 |
+| **μ-REG-B1b** | Branch-1 full (Gemini) | `python scripts/branch1_full_e2e.py` → exit 0, ~542 s |
+| **μ-REG-B1c** | 관측 스냅샷 | `scripts/branch1_regression_snapshot.py` → `logs/branch1_regression/*-regression.json` (gitignore) |
+| **μ-REG-B1ω** | 주석 고정 | 본 §, 스크립트 헤더, `tests/fixtures/branch1_regression_sample.json` |
+
+### 관측 (2026-06-22, 재실행 없이 기록)
+
+| 시나리오 | 관측 | 이전 Branch-1 (2026-06-22) | delta |
+|----------|------|---------------------------|-------|
+| **S0-B** | gap=16, weak=2, `pipeline_ok`, fc=corpus | gap=20, weak=3 | gap −4, weak −1 |
+| **S0-C** | bridge=1, `merge_mode=batch_corpus`, 교차 1건 | 동일 | — |
+
+**branch_state:** `branch_1_complete=true`, `branch_2_unlocked=false`  
+**RECORD:** [S0-B-E2E-RECORD.md](S0-B-E2E-RECORD.md) 갱신 (gap/weak). S0-C 숫자 동일 → 미변경.  
+**pytest:** `tests/test_branch1_regression_sample.py`, `tests/test_branch_gates.py`  
+**fixture 샘플:** `tests/fixtures/branch1_regression_sample.json` (로그 gitignore 대체)

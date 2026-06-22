@@ -52,6 +52,7 @@ deconstruct → verify ⇄ loop
 | **μ-V5-03** | `test_dreamer_pass2_breadth_diversity.py` | pytest offline + `@live` |
 | **μ-Q1-E2E-01** | `q1_s0b_short_smoke_e2e.py` — short live 2-pass pipeline | `logs/q1_e2e_smoke/` |
 | **μ-Q1-E2E-03** | `test_q1_s0b_short_smoke.py` | pytest offline schema |
+| **μ-REG-B1** | Branch-1 full post-Q1 회귀 | `branch1_full_e2e.py` — PASS 2026-06-22 (`ee54729`) |
 
 ---
 

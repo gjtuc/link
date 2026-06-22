@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
 """
-Branch-1 full E2E — quota 복구 후 다음 작업.
+Branch-1 full E2E + REG-B1 post-Q1 regression entry.
+
+μ-ID: Branch-1 Phase A (μ-A-B/C), REG-B1b (Q1 후 회귀 재증명)
+선행: python scripts/phase_r_regression.py (Branch-0 / μ-REG-B1a)
+실행: python scripts/branch1_full_e2e.py
+스펙: docs/design/BRANCH-1-spec.md § REG-B1 — Q1 후 회귀
 
 Runs S0-B / S0-C Phase A (no --read-only). On success updates branch_state.json.
-
-Prerequisite: python scripts/phase_r_regression.py (Branch-0)
+branch_2_unlocked remains false until explicitly unlocked post-closure.
 """
 
 from __future__ import annotations

@@ -1,0 +1,45 @@
+{
+  "timestamp": "2026-06-22T21:00:37",
+  "phase_r_exit": 0,
+  "branch1_full_exit": 0,
+  "duration_sec": 542.6,
+  "q1_note": "post Q1 2-pass",
+  "s0b": {
+    "pipeline_ok": true,
+    "gap_count": 16,
+    "weak_count": 2,
+    "fc_mode": "corpus"
+  },
+  "s0c": {
+    "pipeline_ok": true,
+    "bridge_count": 1,
+    "cross_doc_label": "교차 1건",
+    "merge_mode": "batch_corpus"
+  },
+  "branch_state": {
+    "branch_1_complete": true,
+    "branch_2_unlocked": false
+  },
+  "delta_vs_prior": {
+    "s0b": {
+      "gap_count": {"prior": 20, "current": 16},
+      "weak_count": {"prior": 3, "current": 2}
+    },
+    "s0c": {}
+  },
+  "prior_branch1": {
+    "date": "2026-06-22",
+    "s0b": {
+      "gap_count": 20,
+      "weak_count": 3,
+      "pipeline_ok": true,
+      "fc_mode": "corpus"
+    },
+    "s0c": {
+      "bridge_count": 1,
+      "pipeline_ok": true,
+      "cross_doc_label": "교차 1건",
+      "merge_mode": "batch_corpus"
+    }
+  }
+}
