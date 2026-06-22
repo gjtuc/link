@@ -1,6 +1,6 @@
 # Link — 감독·통역 AI 인수인계 (새 채팅용)
 
-> **갱신:** 2026-06-20  
+> **갱신:** 2026-06-22 (μ-ω 강제 규칙 §1.1)  
 > **Repo:** https://github.com/gjtuc/link — branch `feat/stage0-sprint0-7`  
 > **역할:** 이 문서는 **감독 AI** 전용. 코딩·구현은 **작업자 Cursor AI** 다른 채팅.
 
@@ -19,6 +19,61 @@
 2. **매번 복붙용 주문문** 제공 — "이해하세요"만 하지 말 것
 3. **문서만 늘리기 주문 금지** — 증명은 pytest·게이트·스크립트·`branch_state.json`
 4. **기조:** 기초공사(읽기) → 분석(Gemini). 쪼개서, 분기마다 검증. 통과 전 다음 단계 금지
+5. **μ-ω 주석 고정 (절대 생략 금지):** 작업자 주문문 **맨 아래에 반드시** §1.1 블록을 **원문 그대로** 붙인다. 검증만 하고 ω 없이 끝낸 보고는 **미완료**로 본다.
+
+### 1.1 μ-ω 주석 고정 — 강제 규칙 (strict completion gate)
+
+**PROCESS.md 4단계(주석 고정)와 동일. 검증(pytest·E2E)과 ω는 별개이며, 둘 다 없으면 그 μ는 끝난 것이 아니다.**
+
+#### 감독 AI — 완료 인정 기준
+
+| 조건 | 인정 |
+|------|------|
+| pytest/E2E exit 0 + W1~W5 해당 산출물 + 완료 보고 「μ-ω 체크리스트」표 | **μ 완료** |
+| 검증만 통과, ω 산출물·체크리스트 없음 | **μ 미완료 — 다음 μ 주문 금지** |
+| md·spec만, pytest 없음 | **μ 미완료** |
+| ω 체크리스트 없이 「완료」 보고 | **감독이 완료로 인정하지 않음** |
+
+#### 작업자 AI — 완료 판정
+
+완료 보고 **필수 섹션:** 「μ-ω 체크리스트」표 (W1~W5, 파일 경로, commit hash).  
+주문문 맨 아래 §1.1 블록을 **원문 그대로** 수행·보고. 검증만 하고 ω 없이 끝내면 **미완료**.
+
+| 위반 | 판정 |
+|------|------|
+| pytest/E2E만 통과, spec·헤더·sample 없음 | **μ 미완료 — 다음 μ 주문 금지** |
+| md만 늘리고 pytest 없음 | **μ 미완료** (기존 규칙과 동일) |
+| ω 체크리스트 보고 없이 「완료」 | 감독 AI가 **완료로 인정하지 않음** |
+
+**감독 AI:** 작업자 주문문 작성 시 §1.1 블록을 **빼먹으면 안 된다.** 사용자에게 주문문을 줄 때 블록이 없으면 감독 AI 실수다.
+
+**μ-ω 체크리스트 (완료 보고 필수):**
+
+| # | 산출물 | 완료 조건 |
+|---|--------|-----------|
+| W1 | `docs/design/*-spec.md` | 해당 μ-ID 행 + 관측/날짜 (추측 금지) |
+| W2 | `scripts/*.py` (신규·변경) | 상단 docstring: μ-ID, 선행, 실행법, spec 링크 |
+| W3 | 연결 `deconstructor/**/*.py` | 토폴로지/계약 변경 시 헤더 3~8줄 (STAGE/Q1 블록) |
+| W4 | `docs/design/S*-E2E-RECORD.md` | 관측값이 바뀐 경우만 |
+| W5 | `tests/fixtures/*_sample.json` | `logs/` gitignore 항목은 sample + offline pytest |
+
+**작업자 주문문 맨 아래에 붙이는 블록 (원문 그대로·생략 불가):**
+
+```markdown
+=== μ-ω 주석 고정 (검증과 별도·생략 시 μ 미완료) ===
+
+검증(pytest/E2E) 통과만으로는 완료 아님. 아래 전부 해당되면 수행·보고.
+
+- W1 docs/design/*-spec.md — μ-ID 행 + 관측/날짜 (숫자는 실행 결과만)
+- W2 scripts/*.py — 상단 docstring (μ-ID, 선행, 실행법, spec 링크)
+- W3 deconstructor/**/*.py — 토폴로지·계약 변경 시 모듈 헤더 3~8줄
+- W4 RECORD md — 관측값 변경 시만
+- W5 tests/fixtures/*_sample.json — logs gitignore 대체 + offline pytest
+
+완료 보고 필수 섹션: 「μ-ω 체크리스트」표 (W1~W5, 파일 경로, commit hash)
+
+금지: 주석·sample 없이 검증만 하고 완료 보고. spec만 쓰고 pytest 없음. RECORD에 추측 숫자.
+```
 
 ### 새 채팅 첫 메시지
 
@@ -68,13 +123,15 @@ Deconstruct → Verify → Dreamer → Fact-Checker → Skeptic → Weaver → V
 
 ---
 
-## 4. 현재 상태 (2026-06 — quota 대기)
+## 4. 현재 상태 (2026-06-22)
 
 ### 끝난 것
 
 | 항목 | 증거 |
 |------|------|
 | Branch-0 — Phase R(읽기) | `python scripts/phase_r_regression.py` exit 0 |
+| Branch-1 — S0-B/C Phase A | `branch1_full_e2e.py` exit 0, REG-B1 (`ee54729`, `b5ef97e`) |
+| Q1 2-pass Dreamer | `285ef9f`, μ-Q1-E2E smoke |
 | `verify_read()` / S1-READ | 읽기 실패 시 LLM 0회 |
 | Sprint 0~7 구현 | PR #1 `feat/stage0-sprint0-7` |
 | S0-A PDF full E2E | [`S0-A-E2E-RECORD.md`](S0-A-E2E-RECORD.md) |
@@ -85,28 +142,18 @@ Deconstruct → Verify → Dreamer → Fact-Checker → Skeptic → Weaver → V
 ```json
 {
   "branch_0": "active",
-  "branch_1_complete": false,
+  "branch_1_complete": true,
   "branch_2_unlocked": false
 }
 ```
 
-### 막힌 것 (코드 문제 아님)
+(`branch_1_complete=true`는 `scripts/branch1_full_e2e.py` exit 0 후 스크립트만 갱신)
 
-- **Branch-1** — S0-B·S0-C **Phase A full** (Gemini 필요)
-- **Gemini API 일일 한도(RPD) 소진** — 2026-06-18 근처 daily limit
-- 리셋: 보통 **다음날(UTC-8)** 또는 24h 후
+### 지금 활성 (작업자)
 
-### 지금 할 일 (감독·작업자·사용자)
-
-**추가 작업 없음 (대기).** ingest 안 건드리면 regression도 불필요.  
-사용자가 **「Branch-1 실행」** 할 때만:
-
-```bash
-python scripts/phase_r_regression.py   # 선행, exit 0
-python scripts/branch1_full_e2e.py
-```
-
-성공 시: `branch_1_complete: true` (스크립트가 갱신). `branch_2_unlocked`는 **false 유지**.
+- **Q2** — 능력·한계 카드 + 업로드 전 경고 (`POST-BRANCH-1-WORK-QUEUE.md`)
+- ingest 수정 시: `python scripts/phase_r_regression.py`
+- **금지:** `branch_2_unlocked` 수동 true, Branch-2/3/STAGE-1 선행
 
 ---
 
@@ -150,11 +197,9 @@ python scripts/branch1_full_e2e.py
 
 | | |
 |---|---|
-| **이 감독 채팅에서 작업자가 한 일** | **없음** (논의·설계만) |
-| **작업자 지금 할 일** | **없음** — quota·Branch-1 대기 |
-| **금지** | Branch-2/3/STAGE-1 spec, `branch_1_complete` 수동 true, ingest 수정 없이 regression 스킵 |
-| **다음 본공사** | 사용자 「Branch-1 실행」→ `branch1_full_e2e.py` |
-| **그 다음 (큐)** | `POST-BRANCH-1-WORK-QUEUE.md` — Branch-1 **이후** 분기 |
+| **완료** | Branch-1, STAGE 0 재검토, Q1, V5, μ-Q1-E2E, μ-REG-B1+ω, μ-HANDOFF-ω |
+| **작업자 지금 할 일** | **Q2** (능력·한계 카드) — `POST-BRANCH-1-WORK-QUEUE.md` |
+| **금지** | Branch-2/3/STAGE-1, `branch_2_unlocked` 수동 true, μ-ω 생략 |
 
 ### 작업자 명령 치트시트
 
@@ -188,8 +233,8 @@ python scripts/branch1_full_e2e.py
 
 시작 전: git pull → docs/design/SUPERVISOR-AI-HANDOFF.md + POST-BRANCH-1-WORK-QUEUE.md 읽기.
 
-현재: Branch-0 ✅, Branch-1 quota 대기, branch_1_complete=false.
-지금 할 일 없음. 「Branch-1 실행」 때만 branch1_full_e2e.py.
+현재: Branch-0 ✅, Branch-1 ✅ (`branch_1_complete=true`), Q2 착수.
+지금 작업자: Q2 capabilities + 업로드 전 경고. branch_2_unlocked=false 유지.
 
 임시 큐는 작업 완료 후 삭제. 매 답변: 풀어설명 + 작업자 복붙블록 + 지금 할 일(있/없).
 ```
