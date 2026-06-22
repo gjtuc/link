@@ -13,7 +13,9 @@ from deconstructor.agents.dreamer.diversity import (
     unique_subject_ratio,
 )
 
-# μ-DR-DIV-03 live s0a averages (2026-06-22, 3 runs): dup=0.0, unique_subj=1.0, mech_sim=0.082
+# μ-DR-DIV-03 live averages (2026-06-22, 3 runs):
+#   s0a: dup=0.0, unique_subj=1.0, mech_sim=0.082
+#   s0b: dup=0.0, unique_subj=1.0, mech_sim=0.063
 DIV03_THRESHOLDS = {
     "exact_duplicate_rate_max": 0.10,
     "unique_subject_ratio_min": 0.70,
@@ -69,23 +71,36 @@ def test_div03_threshold_constants_documented():
     assert DIV03_THRESHOLDS["unique_subject_ratio_min"] >= 0.70
 
 
-@pytest.mark.live
-def test_div03_live_s0a_breadth_meets_thresholds():
-    """Optional live — run dreamer_breadth_probe --fixture s0a --runs 3 first."""
-    pytest.importorskip("langchain_google_genai")
+def _load_breadth_summary(fixture: str) -> dict:
+    import json
     from pathlib import Path
 
     log_dir = Path(__file__).resolve().parents[1] / "logs" / "dreamer_breadth"
-    summaries = sorted(log_dir.glob("s0a-*-summary.json"))
-    if not summaries:
-        sample = Path(__file__).resolve().parent / "fixtures" / "dreamer_breadth_s0a_summary_sample.json"
-        if sample.is_file():
-            data = __import__("json").loads(sample.read_text(encoding="utf-8"))
-        else:
-            pytest.skip("no s0a breadth summary — run scripts/dreamer_breadth_probe.py --fixture s0a --runs 3")
-    else:
-        data = __import__("json").loads(summaries[-1].read_text(encoding="utf-8"))
+    summaries = sorted(log_dir.glob(f"{fixture}-*-summary.json"))
+    if summaries:
+        return json.loads(summaries[-1].read_text(encoding="utf-8"))
+    sample = Path(__file__).resolve().parent / "fixtures" / f"dreamer_breadth_{fixture}_summary_sample.json"
+    if sample.is_file():
+        return json.loads(sample.read_text(encoding="utf-8"))
+    raise pytest.skip(f"no {fixture} breadth summary — run dreamer_breadth_probe --fixture {fixture} --runs 3")
+
+
+def _assert_div03_thresholds(data: dict) -> None:
     avg = data.get("averages") or {}
     assert avg.get("exact_duplicate_rate", 1.0) <= DIV03_THRESHOLDS["exact_duplicate_rate_max"]
     assert avg.get("unique_subject_ratio", 0.0) >= DIV03_THRESHOLDS["unique_subject_ratio_min"]
     assert avg.get("mechanism_similarity_mean", 1.0) <= DIV03_THRESHOLDS["mechanism_similarity_mean_max"]
+
+
+@pytest.mark.live
+def test_div03_live_s0a_breadth_meets_thresholds():
+    """Optional live — run dreamer_breadth_probe --fixture s0a --runs 3 first."""
+    pytest.importorskip("langchain_google_genai")
+    _assert_div03_thresholds(_load_breadth_summary("s0a"))
+
+
+@pytest.mark.live
+def test_div03_live_s0b_breadth_meets_thresholds():
+    """Optional live — run dreamer_breadth_probe --fixture s0b --runs 3 first."""
+    pytest.importorskip("langchain_google_genai")
+    _assert_div03_thresholds(_load_breadth_summary("s0b"))
