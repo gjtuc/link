@@ -47,6 +47,9 @@ deconstruct → verify ⇄ loop
 | **μ-Q1-05** | 회귀 | `phase_r_regression.py`, branch gates |
 | **μ-Q1-06** | dry-run smoke | `test_q1_two_pass_dry_run.py` |
 | **μ-Q1-07** | live read-only (선택) | `s0b_e2e_run.py --read-only` |
+| **μ-V5-01** | `dreamer_pass2_breadth_probe.py` (2-pass pass2 Flash) | 스크립트 |
+| **μ-V5-02** | s0b/s0a live 3-run 실측 vs DIV03 | `logs/dreamer_breadth/pass2-*-summary.json` |
+| **μ-V5-03** | `test_dreamer_pass2_breadth_diversity.py` | pytest offline + `@live` |
 
 ---
 

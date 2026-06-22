@@ -41,7 +41,9 @@
 
 **Branch-0:** PASS. **Branch-1:** PASS (2026-06-22, `branch1_full_e2e.py`).
 
-Flash breadth diversity (s0b short, 3-run avg): dup=0.0, uniq_subj=1.0, mech_sim=0.063 (μ-DR-DIV-03 PASS).
+Flash breadth diversity (s0b short, 3-run avg): dup=0.0, uniq_subj=1.0, mech_sim=0.063 (μ-DR-DIV-03 PASS, 1-pass 전체 completed).
+
+Flash breadth pass2 (s0b short, 3-run avg): dup=0.0, uniq_subj=1.0, mech_sim=0.053 (μ-V5 DIV03 PASS). pass1_edges=0, pass2_sources=5 (전부 Gap).
 
 ---
 
