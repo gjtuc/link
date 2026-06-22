@@ -244,8 +244,8 @@ Deconstruct → Verify → Dreamer → Fact-Checker → Skeptic → Weaver → V
 
 | | |
 |---|---|
-| **완료** | Q1–Q3 큐 마감, μ-POST-Q2-0, **μ-PROBE** (catalog 3건) |
-| **작업자 지금 할 일** | **Branch-2a** μ-B2a-01 density E2E (다음 μ) |
+| **완료** | Q1–Q3, μ-PROBE, unlock Branch-2a (`03d44de`) |
+| **작업자 지금 할 일** | **μ-B2a-01** live E2E → RECORD 갱신 → μ-B2a-02/03 마무리 |
 | **금지** | Branch-2/3/STAGE-1, `branch_2_unlocked` 수동 true, μ-ω 생략 |
 
 ### 작업자 명령 치트시트

@@ -1,0 +1,23 @@
+{
+  "mu_id": "μ-B2a-01",
+  "scenario": "B2a-DENSITY",
+  "fixture": "s0b_draft_short+long",
+  "files": ["s0b_draft_short.txt", "s0b_draft_long.txt"],
+  "phase_r_ok": true,
+  "pipeline_ok": true,
+  "failed_step": null,
+  "elapsed_sec": 0.0,
+  "ac_dec_02_median_target": 5,
+  "ac_dec_02_meets_should": true,
+  "deconstruct_batch": {
+    "runs": 4,
+    "completed_facts_per_run": [5, 5, 13, 6],
+    "median_completed_facts": 5.5,
+    "runs_with_depth_gt_1": 2,
+    "recursion_depths": [1, 2, 1, 2],
+    "partial_run_count": 0
+  },
+  "per_run_meta": [
+    {"chunk_id": "s0b_draft_short.txt#chunk-1/1", "completed_facts": 3, "recursion_depth": 1}
+  ]
+}
