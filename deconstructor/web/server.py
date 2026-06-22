@@ -30,6 +30,7 @@ STAGE 0-2 (사용자 시나리오) — UI ↔ 시나리오 매핑
   GET  /graph_output.html — pyvis 산출물 (범례·hover JS 주입됨)
   GET  /debug.html       — 마지막 배치 파이프라인·Neo4j·색상 디버그
   GET  /api/debug/pipeline — 동일 JSON
+  GET  /api/capabilities — Q2 능력·한계 카드 JSON (μ-Q2-03)
 
 런타임 연동
 -----------
@@ -342,6 +343,12 @@ class LinkUIHandler(BaseHTTPRequestHandler):
                     },
                 }
             )
+            return
+
+        if path == "/api/capabilities":
+            from deconstructor.capabilities import build_capabilities
+
+            self._send_json(build_capabilities())
             return
 
         if path.startswith("/static/"):

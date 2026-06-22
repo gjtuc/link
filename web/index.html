@@ -295,6 +295,11 @@
       background: #fff;
     }
     .modal-actions button.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .cap-warn-list {
+      margin: 0 0 12px; padding: 0 0 0 18px; font-size: 13px; line-height: 1.5; color: #3c4043;
+      max-height: 220px; overflow-y: auto;
+    }
+    .cap-warn-list li { margin-bottom: 8px; }
   </style>
 </head>
 <body>
@@ -421,6 +426,18 @@
       <div class="modal-actions">
         <button type="button" id="link-modal-no">아니오, 텍스트 유지</button>
         <button type="button" class="primary" id="link-modal-yes">예, 링크로 분석</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="cap-warn-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="cap-warn-title">
+    <div class="modal-card">
+      <h3 id="cap-warn-title">분석 전에 확인해 주세요</h3>
+      <p class="hint" style="margin:0 0 10px;">아래는 아직 충분히 검증하지 않았거나 지원하지 않는 항목이에요.</p>
+      <ul id="cap-warn-list" class="cap-warn-list"></ul>
+      <div class="modal-actions">
+        <button type="button" id="cap-warn-later">나중에</button>
+        <button type="button" class="primary" id="cap-warn-proceed">그래도 실행</button>
       </div>
     </div>
   </div>
@@ -917,7 +934,68 @@
       setStatus("분석을 취소했습니다. (서버에서 이미 처리 중인 건은 잠시 더 돌 수 있습니다)", "info");
     });
 
+    /** Q2 μ-Q2-04 — capabilities pre-run warning */
+    const capWarnModal = document.getElementById("cap-warn-modal");
+    const capWarnList = document.getElementById("cap-warn-list");
+    const capWarnProceed = document.getElementById("cap-warn-proceed");
+    const capWarnLater = document.getElementById("cap-warn-later");
+
+    function formatCapabilityStatus(status) {
+      if (status === "verified") return "✅ 확인됨";
+      if (status === "untested") return "⚠️ 미검증";
+      if (status === "unsupported") return "❌ 미지원";
+      return status;
+    }
+
+    function showCapWarnModal(warnings) {
+      return new Promise((resolve) => {
+        if (!capWarnModal || !capWarnList) {
+          resolve(true);
+          return;
+        }
+        capWarnList.innerHTML = warnings.map((c) =>
+          `<li><strong>${formatCapabilityStatus(c.status)}</strong> ${c.human_line || c.id}</li>`
+        ).join("");
+        capWarnModal.classList.remove("hidden");
+        const onProceed = () => {
+          capWarnModal.classList.add("hidden");
+          capWarnProceed.removeEventListener("click", onProceed);
+          capWarnLater.removeEventListener("click", onLater);
+          resolve(true);
+        };
+        const onLater = () => {
+          capWarnModal.classList.add("hidden");
+          capWarnProceed.removeEventListener("click", onProceed);
+          capWarnLater.removeEventListener("click", onLater);
+          resolve(false);
+        };
+        capWarnProceed.addEventListener("click", onProceed);
+        capWarnLater.addEventListener("click", onLater);
+      });
+    }
+
+    async function ensureCapabilityAck() {
+      try {
+        const res = await fetch("/api/capabilities", { cache: "no-store" });
+        if (!res.ok) return true;
+        const data = await res.json();
+        const warnings = (data.capabilities || []).filter(
+          (c) => c.status === "untested" || c.status === "unsupported"
+        );
+        if (!warnings.length) return true;
+        return await showCapWarnModal(warnings);
+      } catch {
+        return true;
+      }
+    }
+
     async function runAnalyze() {
+      const ack = await ensureCapabilityAck();
+      if (!ack) {
+        setStatus("분석을 취소했습니다. 준비되면 다시 「전체 분석 시작」을 눌러 주세요.", "info");
+        return;
+      }
+
       const n = countInputs();
       if (n === 0) {
         setStatus("텍스트·링크·파일 중 하나 이상 입력하세요.", "error");

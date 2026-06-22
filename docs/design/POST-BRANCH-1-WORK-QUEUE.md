@@ -28,8 +28,8 @@
 
 ### Q2 — 능력·한계 카드 + 업로드 전 경고
 
-- [ ] **상태:** 미착수
-- **사용자 결정:** branch/E2E 기록을 UI로 번역; **감독 AI 말투** `human_line`; 업로드 전 경고 ✅; probe 로그 git push.
+- [x] **상태:** 완료 (2026-06-22)
+- **증거:** `pytest tests/test_capabilities_build.py tests/test_capabilities_api.py tests/test_capabilities_ui.py tests/test_capabilities_log.py` + `GET /api/capabilities` + `phase_r_regression.py` exit 0
 
 <details>
 <summary>작업자 복붙 블록 (Branch-1 후)</summary>
@@ -76,7 +76,7 @@ Link POST-Branch-1 — capabilities + pre-upload warnings + run logs
 | ID | 완료일 | 증거 (pytest / E2E / PR) |
 |----|--------|--------------------------|
 | Q1 | 2026-06-22 | `test_q1_pass2_inputs` (7) + `test_q1_two_pass_dry_run` + `phase_r_regression` exit 0 |
-| Q2 | | |
+| Q2 | 2026-06-22 | `test_capabilities_*` + `/api/capabilities` + UI cap-warn-modal |
 | Q3 | | |
 
 **전부 완료 시:** 이 파일 삭제 → `git commit -m "chore: remove POST-BRANCH-1-WORK-QUEUE (all items done)"`
