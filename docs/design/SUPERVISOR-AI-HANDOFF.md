@@ -253,6 +253,7 @@ Deconstruct → Verify → Dreamer → Fact-Checker → Skeptic → Weaver → V
 | 상황 | 명령 |
 |------|------|
 | ingest 수정 후 | `python scripts/phase_r_regression.py` |
+| Branch-0 유지 점검 | `python scripts/branch0_health_check.py` |
 | quota 후 Branch-1 | `python scripts/branch1_full_e2e.py` |
 | 잠금 확인 | `pytest tests/test_branch_gates.py` |
 | 사후 수정·Q2 이후 | `python scripts/stage0_reaudit_baseline.py` (ω-0, §1.2) |
