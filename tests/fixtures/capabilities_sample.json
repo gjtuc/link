@@ -15,9 +15,9 @@
     {
       "id": "cap-branch2a-active",
       "status": "verified",
-      "human_line": "Branch-2a(μ-A 깊이)가 열렸어요. AC-DEC-02 밀도 median=5.5로 관측했어요.",
+      "human_line": "Branch-2a(μ-A 깊이)가 열렸어요. AC-DEC-02 밀도 S0-B median=5.5, S0-A PDF median=12로 관측했어요.",
       "source": "branch_state.json",
-      "evidence": "branch_2_unlocked=true; B2a RECORD median=5.5 (b268c08)"
+      "evidence": "branch_2_unlocked=true; B2a S0-B median=5.5 (b268c08), S0-A median=12.0"
     },
     {
       "id": "cap-s0a-pdf",

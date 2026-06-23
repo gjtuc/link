@@ -31,7 +31,7 @@ Branch-0  Phase R  pytest + phase_r_regression     ← 지속 MUST
 | μ-ID | 내용 | 상태 |
 |------|------|------|
 | μ-B2a-01 | AC-DEC-02 density E2E | ✅ `b268c08` median=5.5 |
-| μ-B2a-02 | probe → capabilities evidence | catalog.py (ω) |
+| μ-B2a-02 | S0-A PDF AC-DEC-02 density | ✅ median=12.0 (`20260623-1315`) |
 | μ-B2a-03 | ROADMAP + baseline | 본 문서 |
 
 ---

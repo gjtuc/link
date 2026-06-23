@@ -244,8 +244,8 @@ Deconstruct → Verify → Dreamer → Fact-Checker → Skeptic → Weaver → V
 
 | | |
 |---|---|
-| **완료** | μ-REG-B1-smoke (`aa526d5`), **μ-PROBE-SCAN-ω**, **μ-PROBE-SCAN-R2a** (`ecf996a`), **μ-PROBE-SCAN-R2b** (watson-crick OCR, catalog `untested` 유지) |
-| **작업자 지금 할 일** | **μ-B2a-02** (quota) |
+| **완료** | μ-REG-B1-smoke, μ-PROBE-SCAN-ω/R2a/R2b, **μ-B2a-01** (`b268c08` median=5.5), **μ-B2a-02** (S0-A median=12.0) |
+| **작업자 지금 할 일** | **μ-B2a-03** (ROADMAP) 또는 Branch-2a ω 마감 협의 |
 | **금지** | Branch-2/3/STAGE-1, `branch_2_unlocked` 수동 true, μ-ω 생략 |
 
 ### 작업자 명령 치트시트
@@ -281,7 +281,7 @@ Deconstruct → Verify → Dreamer → Fact-Checker → Skeptic → Weaver → V
 
 시작 전: git pull → docs/design/SUPERVISOR-AI-HANDOFF.md 읽기.
 
-현재: Branch-0 ✅, Branch-1 ✅, μ-B2a-01 ✅ (`b268c08`). **B2a ω·probe ω 마감** 후 다음 μ 협의.
+현재: Branch-0 ✅, Branch-1 ✅, μ-B2a-01 ✅ (`b268c08`), **μ-B2a-02** ✅ (S0-A median=12.0). **B2a ω·probe ω 마감** 후 다음 μ 협의.
 사후 수정 시 §1.2 — `stage0_reaudit_baseline.py` → `phase_r_regression` 순.
 
 매 답변: 풀어설명 + 작업자 복붙블록 + 지금 할 일(있/없).

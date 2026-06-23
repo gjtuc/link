@@ -78,9 +78,9 @@ def _branch_verified_items(state: dict[str, Any]) -> list[dict[str, str]]:
             _item(
                 "cap-branch2a-active",
                 "verified",
-                "Branch-2a(μ-A 깊이)가 열렸어요. AC-DEC-02 밀도 median=5.5로 관측했어요.",
+                "Branch-2a(μ-A 깊이)가 열렸어요. AC-DEC-02 밀도 S0-B median=5.5, S0-A PDF median=12로 관측했어요.",
                 "branch_state.json",
-                "branch_2_unlocked=true; B2a RECORD median=5.5 (b268c08)",
+                "branch_2_unlocked=true; B2a S0-B median=5.5 (b268c08), S0-A median=12.0",
             )
         )
     return items

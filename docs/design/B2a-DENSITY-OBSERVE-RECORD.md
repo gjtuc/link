@@ -38,3 +38,23 @@
 **B2a-DENSITY PASS** — pipeline ok; AC-DEC-02 SHOULD median≥5 **충족** (관측).
 
 **로그:** `logs/b2a_density/20260623-0004-b2a-density-detail.json`
+
+---
+
+## μ-B2a-02 — S0-A PDF (`s0a_paper.pdf`)
+
+| 항목 | 값 |
+|------|-----|
+| 날짜 | 2026-06-23 |
+| elapsed_sec | **174.0** |
+| runs | 1 |
+| completed_facts_per_run | **[12]** |
+| median_completed_facts | **12.0** |
+| ac_dec_02_meets_should | **true** |
+| atomic_facts_total | 12 |
+| nodes / edges | 17 / 64 |
+| pipeline_ok | true |
+
+**B2a-DENSITY-S0A PASS** — S0-A born-digital PDF, AC-DEC-02 SHOULD **충족** (관측).
+
+**로그:** `logs/b2a_density/20260623-1315-b2a-density-s0a-detail.json`
