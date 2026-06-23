@@ -3,7 +3,20 @@
 > **계약 원칙:** ingest 계약을 **조금만** 어겨도(요약·출처 누락·F0-A2) 분석 결과가 **그럴듯하게** 깨진다.  
 > **그래서:** LLM(Phase A) 전 **읽기(Phase R) 게이트** + **분기마다 pytest 증명**.  
 > **μ 재쪼개기:** 1차 → μ-ID → pytest/스크립트 → ω → 다음 분기 **하나만** 잠금 해제.  
-> **지금 활성:** Branch-0 **MUST**. Branch-1 **완료**. **Branch-2a 1차 관측 마감** (μ-B2a-ω). **μ-STAGE0-ω** (파도 3) — STAGE-0-3/0-4 AC-DEC-02 관측 반영 ✅. 2b/3 **잠금**.
+> **지금 활성:** Branch-0 **MUST**. Branch-1 **완료**. Branch-2a 1차 관측 마감 (μ-B2a-ω). **μ-PRE-2b-00** (파도 4) — Branch-2b **설계 완료**, **구현 잠금 유지**. 2b/3 **코드 착수 금지**.
+
+---
+
+## Branch-2b — 설계만 ✅ (μ-PRE-2b-00)
+
+**스펙:** [BRANCH-2b-spec.md](BRANCH-2b-spec.md) (구현 **미착수**)
+
+| μ-ID | 내용 | 상태 |
+|------|------|------|
+| **μ-PRE-2b-00** | STAGE-1 cross-run corpus 설계 | ✅ spec + sample |
+| **μ-UNLOCK-2b** | 2b 착수 잠금 해제 | ⬜ 사용자·감독 승인 대기 |
+
+**다음:** 승인 후 **μ-UNLOCK-2b** — `branch_2b_unlocked` (제안 필드). Branch-0 MUST 지속.
 
 ---
 
@@ -35,7 +48,7 @@ Branch-0  Phase R  pytest + phase_r_regression     ← 지속 MUST
 | μ-B2a-03 | ROADMAP + baseline | ✅ 본 문서 |
 | **μ-B2a-ω** | Branch-2a 1차 관측 마감 | ✅ sample + pytest |
 
-**다음:** Branch-2b/STAGE-1 — **감독 승인 전 착수 금지**. Branch-0 MUST 지속.
+**다음:** Branch-2b/STAGE-1 — **μ-PRE-2b-00 설계 완료**; **구현·unlock은 사용자 승인 후 μ-UNLOCK-2b**. Branch-0 MUST 지속.
 
 ---
 
