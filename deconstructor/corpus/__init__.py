@@ -22,6 +22,13 @@ from deconstructor.corpus.ingest_hook import (
     reset_corpus_store,
 )
 
+from deconstructor.corpus.query import (
+    CorpusQuerySummary,
+    query_facts,
+    query_runs,
+    summarize_corpus,
+)
+
 __all__ = [
     "CORPUS_SCOPE_BATCH",
     "CORPUS_SCOPE_CROSS_RUN",
@@ -35,6 +42,10 @@ __all__ = [
     "get_corpus_store",
     "maybe_append_batch_corpus",
     "reset_corpus_store",
+    "CorpusQuerySummary",
+    "query_facts",
+    "query_runs",
+    "summarize_corpus",
     "facts_from_run_dict",
     "utc_now_iso",
     "validate_fact_record",

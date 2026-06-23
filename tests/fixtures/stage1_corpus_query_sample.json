@@ -1,0 +1,17 @@
+{
+  "mu_id": "μ-2b-02-R",
+  "scenario": "two_runs_one_session",
+  "session_id": "sess-demo",
+  "runs": [
+    {"run_id": "run-1", "fact_id": "f-a", "subject": "Ni catalyst", "source_file": "a.txt"},
+    {"run_id": "run-2", "fact_id": "f-b", "subject": "CH4 conversion", "source_file": "b.txt"}
+  ],
+  "expected": {
+    "query_runs_session": {"run_count": 2, "run_ids": ["run-1", "run-2"]},
+    "query_facts_session": {"fact_count": 2, "fact_ids": ["f-a", "f-b"]},
+    "query_facts_run_id": {"run_id": "run-1", "fact_ids": ["f-a"]},
+    "query_facts_subject": {"subject_contains": "CH4", "fact_ids": ["f-b"]},
+    "empty_store_summary": {"run_count": 0, "fact_count": 0, "source_files": []}
+  },
+  "spec_ref": "docs/design/STAGE-1-CORPUS-spec.md"
+}

@@ -1,8 +1,8 @@
 # STAGE-1 — Cross-run corpus 계약
 
-> **상태:** μ-2b-00 (skeleton)  
-> **선행:** μ-UNLOCK-2b (`branch_2b_unlocked=true`)  
-> **다음:** μ-2b-01 — cross-run ingest (pipeline·Neo4j 경계)  
+> **상태:** μ-2b-02-R (READ 계약)  
+> **선행:** μ-2b-01 (`ingest_hook`)  
+> **다음:** μ-2b-02-API — `/api/status` corpus 힌트  
 > **금지:** 코어 DAG 토폴로지 변경, live Gemini E2E, `batch_corpus` 동작 변경
 
 ---
@@ -16,7 +16,7 @@ Branch-2b **STAGE 1** — 단일 batch(`merge_mode=batch_corpus`)를 넘어 **�
 | 계약·타입 | ✅ `deconstructor/corpus/contract.py` | ingest hook |
 | 저장소 스켈레ton | ✅ `memory_store.py` (in-process) | ✅ ingest hook (μ-2b-01) |
 | pipeline_batch | read-only hook (`LINK_CROSS_RUN_CORPUS`) | Neo4j 영속 |
-| UI/API | — | μ-2b-02 |
+| UI/API | — | μ-2b-02-API |
 
 **0단계와의 관계:** Sprint 2 `batch_corpus` + `corpus_bridge` = **단일 런** 내 교차. STAGE-1 = **런 간** global corpus.
 
@@ -28,7 +28,8 @@ Branch-2b **STAGE 1** — 단일 batch(`merge_mode=batch_corpus`)를 넘어 **�
 |------|------|------|
 | **μ-2b-00** | corpus 계약 + in-memory store | `tests/test_stage1_corpus_contract.py` |
 | **μ-2b-01** | cross-run ingest hook | `tests/test_stage1_corpus_ingest.py` |
-| **μ-2b-02** | corpus query / UI | TBD |
+| **μ-2b-02-R** | corpus READ/query 계약 | `tests/test_stage1_corpus_query.py` |
+| **μ-2b-02-API** | `/api/status` corpus 힌트 | TBD |
 | **μ-2b-ω** | 2b 1차 마감 | sample + baseline |
 
 ---
@@ -108,7 +109,29 @@ python -m pytest tests/test_stage1_corpus_ingest.py tests/test_stage1_corpus_con
 
 ---
 
-## NON-GOALS (μ-2b-00~01)
+## READ 계약 (μ-2b-02-R)
+
+**모듈:** `deconstructor/corpus/query.py`
+
+| 함수 | 동작 |
+|------|------|
+| `query_runs(store, session_id=None)` | run 목록; `session_id` optional |
+| `query_facts(store, session_id=, run_id=, subject_contains=)` | fact 필터 (AND); 빈 store → `[]` |
+| `summarize_corpus(store, session_id=None)` | `CorpusQuerySummary` — run/fact count, source_files |
+
+**빈 store:** `run_count=0`, `fact_count=0`, `source_files=[]`.
+
+**검증:** 빈 `session_id`/`run_id` 문자열 → `ValueError`.
+
+```bash
+python -m pytest tests/test_stage1_corpus_query.py -q
+```
+
+**sample:** `tests/fixtures/stage1_corpus_query_sample.json`
+
+---
+
+## NON-GOALS (μ-2b-00~02-R)
 
 - `pipeline_batch.py` DAG 변경  
 - Neo4j MERGE / cross-run sync  

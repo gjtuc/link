@@ -47,7 +47,8 @@ Branch-2b = **[STAGE 1](STAGE-0-CLOSURE-spec.md)** — 0단계 클로저 이후 
 | **μ-UNLOCK-2b** | branch_2b 착수 잠금 해제 조건 | `branch_state` + pytest gate | ✅ |
 | **μ-2b-00** | STAGE-1 skeleton / corpus 계약 | spec + offline pytest | ✅ |
 | **μ-2b-01** | cross-run ingest hook | `ingest_hook.py` + env | ✅ |
-| **μ-2b-02** | corpus query / UI 힌트 (선택) | TBD | [ ] |
+| **μ-2b-02-R** | corpus READ/query 계약 | `query.py` + pytest | ✅ |
+| **μ-2b-02-API** | `/api/status`·UI corpus 힌트 | TBD | [ ] |
 | **μ-2b-ω** | 2b 1차 마감 | sample + `stage0_reaudit_baseline.py` | [ ] |
 
 ---
