@@ -27,9 +27,9 @@ CATALOG_SEEDS: tuple[dict[str, Any], ...] = (
     {
         "id": "cat-scanned-pdf",
         "status": "untested",
-        "human_line": "스캔 PDF나 표만 있는 PDF는 글자 추출이 잘 안 될 수 있어요. 아직 충분히 검증하지 않았어요.",
+        "human_line": "스캔 PDF나 표만 있는 PDF는 글자 추출이 잘 안 될 수 있어요. OCR이 깨진 스캔은 오타가 많아도 분석은 될 수 있어요. 아직 충분히 검증하지 않았어요.",
         "source": "catalog",
-        "evidence": "probe 2026-06-22 exit 2 — not_true_scan (no scan PDF); Phase-R ok; R2a 2026-06-23 handwriting scan_no_text_layer empty_extract exit 2, 0 chars/1p",
+        "evidence": "probe 2026-06-22 exit 2 — not_true_scan (no scan PDF); Phase-R ok; R2a 2026-06-23 handwriting scan_no_text_layer empty_extract exit 2, 0 chars/1p; R2b 2026-06-23 watson-crick scan_ocr_noisy pipeline_ok exit 0, 6630 chars/2p, ~241s",
     },
     {
         "id": "cat-file-10mb",

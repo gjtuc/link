@@ -18,6 +18,7 @@
 | **μ-PROBE-R1** | neo4j-off 재실행 (S5 적용) | `neo4j-off` 1회 |
 | **μ-PROBE-SCAN-ω** | born-digital PDF 503 관측 (catalog 무변경) | spec + sample only |
 | **μ-PROBE-SCAN-R2a** | 진짜 스캔 PDF (텍스트 레이어 0자) 관측 | `scanned-pdf --path handwriting.pdf` |
+| **μ-PROBE-SCAN-R2b** | OCR 노이즈 스캔 PDF 관측 | `scanned-pdf --path watson-crick.pdf` |
 
 ---
 
@@ -80,6 +81,33 @@
 | fixture | `tests/fixtures/probe_scan_handwriting.pdf` |
 
 **오프라인:** `tests/fixtures/probe_scan_preflight_sample.json`, `tests/test_probe_scan_preflight.py`.
+
+---
+
+## μ-PROBE-SCAN-R2b — scan_ocr_noisy (관측 전용)
+
+**목적:** pypdf OCR 노이즈 스캔 PDF(`molecularstructureofDNAswatsoncrick.pdf`) — ingest·Phase A 관측.  
+**catalog:** `cat-scanned-pdf` **evidence·human_line 보강**, **status `untested` 유지** (`verified` 승격 없음).
+
+| 필드 | 관측 (`20260623-1130`) |
+|------|------------------------|
+| file | `molecularstructureofDNAswatsoncrick.pdf` |
+| pdf_class | **scan_ocr_noisy** |
+| pypdf_extract_chars | **6630** |
+| page_count | **2** |
+| phase_r_ok | true |
+| pipeline_ok | **true** |
+| failed_step | — |
+| failure_class | **pipeline_ok** |
+| nodes / edges | **12** / **23** |
+| elapsed_sec | **241.4** |
+| exit | **0** |
+| log | `logs/capability_probes/20260623-1130-cat-scanned-pdf-detail.json` |
+| fixture | `tests/fixtures/probe_scan_watson_crick.pdf` |
+
+**선행 503 시도:** `20260623-1124` exit 2, `S4-1-NODE-dreamer-FLASH`, ~130.7s (Gemini 503, 재시도 후 성공).
+
+**오프라인:** `tests/fixtures/capability_scan_r2b_sample.json`, `tests/test_capability_scan_r2b_sample.py`.
 
 ---
 

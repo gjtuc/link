@@ -67,6 +67,14 @@ def test_catalog_scanned_pdf_evidence_mentions_r2a_handwriting():
     assert "scan_no_text_layer" in scanned["evidence"] or "empty_extract" in scanned["evidence"]
 
 
+def test_catalog_scanned_pdf_evidence_mentions_r2b_watson_crick():
+    by_id = {c["id"]: c for c in CATALOG_SEEDS}
+    scanned = by_id["cat-scanned-pdf"]
+    assert "R2b" in scanned["evidence"] or "watson" in scanned["evidence"].lower()
+    assert "scan_ocr_noisy" in scanned["evidence"] or "6630" in scanned["evidence"]
+    assert scanned["status"] == "untested"
+
+
 def test_catalog_pdf_triple_evidence_has_probe():
     by_id = {c["id"]: c for c in CATALOG_SEEDS}
     triple = by_id["cat-pdf-triple"]

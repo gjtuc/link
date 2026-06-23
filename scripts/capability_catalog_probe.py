@@ -2,15 +2,16 @@
 """
 μ-PROBE-00 — capability catalog live probes.
 
-μ-ID: μ-PROBE-00~03
+μ-ID: μ-PROBE-00~03, μ-PROBE-SCAN-R2a/R2b
 선행: phase_r_regression exit 0
 실행:
   python scripts/capability_catalog_probe.py neo4j-off
   python scripts/capability_catalog_probe.py pdf-triple
-  python scripts/capability_catalog_probe.py scanned-pdf [--path <pdf>]
+  python scripts/capability_catalog_probe.py scanned-pdf [--path <pdf>] [--skip-phase-r]
 스펙: docs/design/CAPABILITY-PROBE-spec.md
 
 neo4j-off: NEO4J_URI=bolt://127.0.0.1:19999 로 bolt 불가 강제 후 short text Phase A.
+scanned-pdf: R2a (0-char scan_no_text_layer) / R2b (scan_ocr_noisy) 관측 — detail JSON.
 """
 
 from __future__ import annotations
@@ -79,6 +80,28 @@ def _pdf_probe_stats(data: bytes) -> tuple[int, int]:
     return sum(len(p) for p in pages), len(pages)
 
 
+def _failure_class(
+    *,
+    pipeline_ok: bool,
+    failed_step: str | None,
+    message: str | None,
+    phase_r_block: bool = False,
+    read_verify_block: bool = False,
+) -> str:
+    if phase_r_block:
+        return "phase_r_block"
+    if read_verify_block:
+        return "read_verify_fail"
+    if pipeline_ok:
+        return "pipeline_ok"
+    blob = f"{failed_step or ''} {message or ''}".lower()
+    if "503" in blob or "unavailable" in blob:
+        return "gemini_503"
+    if "429" in blob:
+        return "gemini_429"
+    return "pipeline_fail"
+
+
 def _finish(cat_id: str, exit_code: int, detail: dict, *, probe_meta: dict | None = None) -> int:
     if probe_meta:
         detail = {**detail, **probe_meta}
@@ -114,6 +137,7 @@ def _run_probe(
             "neo4j_method": neo4j_method,
             "pipeline_ok": False,
             "failed_step": "phase_r_regression",
+            "failure_class": _failure_class(pipeline_ok=False, failed_step="phase_r_regression", message=None, phase_r_block=True),
             "elapsed_sec": round(time.monotonic() - t0, 1),
         }
         return _finish(cat_id, 1, detail, probe_meta=probe_meta)
@@ -129,6 +153,7 @@ def _run_probe(
             "neo4j_method": neo4j_method,
             "pipeline_ok": False,
             "failed_step": "read_verify",
+            "failure_class": _failure_class(pipeline_ok=False, failed_step="read_verify", message=None, read_verify_block=True),
             "elapsed_sec": round(time.monotonic() - t0, 1),
         }
         return _finish(cat_id, 2, detail, probe_meta=probe_meta)
@@ -142,6 +167,12 @@ def _run_probe(
     elapsed = round(time.monotonic() - t0, 1)
     pipeline_ok = bool(result and result.get("ok"))
     failed_step = None if pipeline_ok else (result or {}).get("failed_step")
+    message = (result or {}).get("message") or (result or {}).get("error")
+    if not pipeline_ok and tracker:
+        for rec in reversed(tracker.steps):
+            if rec.status == "error" and rec.detail:
+                message = message or rec.detail
+                break
     distinct_sources = sorted({getattr(s, "source_file", "") or "" for s in sources})
     link_disable = os.getenv("LINK_DISABLE_NEO4J_AUTO_START", "").lower() in ("1", "true", "yes")
     detail = {
@@ -155,10 +186,11 @@ def _run_probe(
         "link_disable_neo4j_auto_start": link_disable,
         "pipeline_ok": pipeline_ok,
         "failed_step": failed_step,
+        "failure_class": _failure_class(pipeline_ok=pipeline_ok, failed_step=failed_step, message=message),
         "elapsed_sec": elapsed,
         "nodes": (result or {}).get("nodes"),
         "edges": (result or {}).get("edges"),
-        "message": (result or {}).get("message"),
+        "message": message,
     }
     if tracker and tracker.failed_step:
         detail["link_failed_step"] = tracker.failed_step
@@ -300,6 +332,17 @@ def cmd_scanned_pdf(args: argparse.Namespace) -> int:
             f"[probe] scan_no_text_layer — pypdf 0 chars / {page_count}p, exit 2"
         )
         return _finish(CAT_SCANNED, 2, detail, probe_meta=probe_meta)
+
+    if pypdf_chars > 1000:
+        probe_meta = {
+            "mu_id": "μ-PROBE-SCAN-R2b",
+            "pdf_class": "scan_ocr_noisy",
+            "pypdf_extract_chars": pypdf_chars,
+            "page_count": page_count,
+        }
+        safe_print(
+            f"[probe] scan_ocr_noisy — pypdf {pypdf_chars} chars / {page_count}p"
+        )
 
     sources = document_sources_from_bytes(raw_bytes, name, "application/pdf")
     return _run_probe(
