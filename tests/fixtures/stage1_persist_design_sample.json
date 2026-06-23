@@ -1,0 +1,22 @@
+{
+  "mu_id": "μ-PRE-2b-PERSIST",
+  "implementation_started": false,
+  "baseline_commit": "e5d4a28",
+  "namespace": {
+    "session_id": "opaque — LINK_SESSION_ID or UI heartbeat",
+    "run_id": "UUID per successful pipeline batch",
+    "fact_id": "AtomicFact.id reference only",
+    "analysis_run_id": "Neo4j graph filter — not equal to corpus run_id"
+  },
+  "scopes": {
+    "batch_corpus": "single batch merge_mode + corpus_bridge",
+    "cross_run": "InMemoryCorpusStore global pool",
+    "neo4j_fact": "weaver :Fact persist per analysis_run_id"
+  },
+  "migration": {
+    "current": "in-memory singleton",
+    "next_mu": "μ-2b-03",
+    "adapter": "append_run / query semantics unchanged"
+  },
+  "spec_ref": "docs/design/STAGE-1-PERSIST-spec.md"
+}

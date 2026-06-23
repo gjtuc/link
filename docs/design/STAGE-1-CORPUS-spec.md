@@ -1,8 +1,8 @@
 # STAGE-1 — Cross-run corpus 계약
 
-> **상태:** μ-2b-02-R (READ 계약)  
+> **상태:** μ-2b-02-API + **μ-PRE-2b-PERSIST** (영속 설계)  
 > **선행:** μ-2b-01 (`ingest_hook`)  
-> **다음:** μ-2b-02-API — `/api/status` corpus 힌트  
+> **다음:** μ-2b-02-UI (선택) 또는 **μ-2b-03** (영속) — [STAGE-1-PERSIST-spec.md](STAGE-1-PERSIST-spec.md)
 > **금지:** 코어 DAG 토폴로지 변경, live Gemini E2E, `batch_corpus` 동작 변경
 
 ---
@@ -145,6 +145,8 @@ python -m pytest tests/test_stage1_corpus_query.py -q
 | `session_id` | 필터 적용 시 (`LINK_SESSION_ID` 또는 인자) |
 
 `enabled=false` 시 counts 0, `source_files=[]` 고정.
+
+**관련:** [STAGE-1-PERSIST-spec.md](STAGE-1-PERSIST-spec.md) (μ-PRE-2b-PERSIST — 영속 경계 설계)
 
 ```bash
 python -m pytest tests/test_stage1_corpus_status_api.py -q

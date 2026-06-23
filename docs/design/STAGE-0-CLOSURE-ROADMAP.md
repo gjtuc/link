@@ -16,9 +16,9 @@
 | **μ-PRE-2b-00** | STAGE-1 cross-run corpus 설계 | ✅ spec + sample |
 | **μ-UNLOCK-2b** | 2b 착수 잠금 해제 | ✅ `branch_2b_unlocked=true` |
 
-**다음:** **μ-2b-02** 또는 **μ-2b-ω**. Branch-0 MUST 지속.
+**다음:** **μ-2b-03** (영속) 또는 μ-2b-02-UI. Branch-0 MUST 지속.
 
-**STAGE-1:** [STAGE-1-CORPUS-spec.md](STAGE-1-CORPUS-spec.md) — `deconstructor/corpus/` (μ-2b-00 ✅)
+**STAGE-1:** [STAGE-1-CORPUS-spec.md](STAGE-1-CORPUS-spec.md) · [STAGE-1-PERSIST-spec.md](STAGE-1-PERSIST-spec.md) (μ-2b-02-API ✅, μ-PRE-2b-PERSIST ✅)
 
 ---
 

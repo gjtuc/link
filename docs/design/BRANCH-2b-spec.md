@@ -50,6 +50,8 @@ Branch-2b = **[STAGE 1](STAGE-0-CLOSURE-spec.md)** — 0단계 클로저 이후 
 | **μ-2b-02-R** | corpus READ/query 계약 | `query.py` + pytest | ✅ |
 | **μ-2b-02-API** | `/api/status` corpus 힌트 | `status_block.py` + pytest | ✅ |
 | **μ-2b-02-UI** | index.html 힌트 (선택) | TBD | [ ] |
+| **μ-PRE-2b-PERSIST** | Neo4j·영속 경계 설계 | `STAGE-1-PERSIST-spec.md` | ✅ |
+| **μ-2b-03** | 영속 store 구현 | TBD | [ ] |
 | **μ-2b-ω** | 2b 1차 마감 | sample + `stage0_reaudit_baseline.py` | [ ] |
 
 ---
@@ -91,7 +93,8 @@ Branch-2b = **[STAGE 1](STAGE-0-CLOSURE-spec.md)** — 0단계 클로저 이후 
 - [STAGE-0-CLOSURE-ROADMAP.md](STAGE-0-CLOSURE-ROADMAP.md) — 분기 로드맵  
 - [STAGE-0-CLOSURE-spec.md](STAGE-0-CLOSURE-spec.md) — Branch 2b = STAGE 1  
 - [BRANCH-0-MAINTENANCE-spec.md](BRANCH-0-MAINTENANCE-spec.md) — Branch-0 MUST 지속  
-- [Q2-CAPABILITIES-spec.md](Q2-CAPABILITIES-spec.md) — catalog status policy  
+- [STAGE-1-CORPUS-spec.md](STAGE-1-CORPUS-spec.md) — corpus 계약  
+- [STAGE-1-PERSIST-spec.md](STAGE-1-PERSIST-spec.md) — 영속 경계 (μ-PRE-2b-PERSIST)  
 
 ---
 
