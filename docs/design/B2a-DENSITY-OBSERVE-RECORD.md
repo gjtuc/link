@@ -58,3 +58,17 @@
 **B2a-DENSITY-S0A PASS** — S0-A born-digital PDF, AC-DEC-02 SHOULD **충족** (관측).
 
 **로그:** `logs/b2a_density/20260623-1315-b2a-density-s0a-detail.json`
+
+---
+
+## μ-B2a-ω — 1차 관측 마감 (2026-06-23)
+
+| 항목 | 값 |
+|------|-----|
+| S0-B median | **5.5** (`b268c08`) |
+| S0-A PDF median | **12.0** (`51c3afa`) |
+| AC-DEC-02 SHOULD | **양쪽 충족** |
+| L3 SCAN | R2a + R2b ✅ |
+| live 재실행 | **없음** (문서 ω) |
+
+**판정:** Branch-2a **1차 관측 마감** — AC-DEC-02 텍스트·PDF born-digital 관측 기록 완료. Branch-2b **잠금 유지**.

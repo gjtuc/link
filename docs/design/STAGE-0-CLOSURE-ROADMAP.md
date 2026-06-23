@@ -3,7 +3,7 @@
 > **계약 원칙:** ingest 계약을 **조금만** 어겨도(요약·출처 누락·F0-A2) 분석 결과가 **그럴듯하게** 깨진다.  
 > **그래서:** LLM(Phase A) 전 **읽기(Phase R) 게이트** + **분기마다 pytest 증명**.  
 > **μ 재쪼개기:** 1차 → μ-ID → pytest/스크립트 → ω → 다음 분기 **하나만** 잠금 해제.  
-> **지금 활성:** Branch-0 **MUST**. Branch-1 **완료**. **Branch-2a 착수** (probe 후 unlock). 2b/3 **잠금**.
+> **지금 활성:** Branch-0 **MUST**. Branch-1 **완료**. **Branch-2a 1차 관측 마감** (μ-B2a-ω). 2b/3 **잠금**.
 
 ---
 
@@ -14,7 +14,7 @@ Branch-0  Phase R  pytest + phase_r_regression     ← 지속 MUST
     │
     └─ DONE ──► Branch-1  S0-B/C Phase A E2E ✅     ← 2026-06-22
                     │
-                    └─► Branch-2a  μ-A 깊이 (probe ✅ → unlock)  ← 활성
+                    └─ DONE ──► Branch-2a  μ-A 깊이 1차 관측 ✅  ← μ-B2a-ω 마감
 ```
 
 ## 잠금 분기 (생각·착수 금지)
@@ -24,15 +24,18 @@ Branch-0  Phase R  pytest + phase_r_regression     ← 지속 MUST
 | 2b | STAGE 1 | 클로저 전 |
 | 3 | μ-R edge | 실 PDF/DOCX R fail 관측 전 |
 
-## Branch-2a — 활성 (probe 후)
+## Branch-2a — 1차 관측 마감 ✅ (μ-B2a-ω)
 
 **스펙:** [BRANCH-2a-spec.md](BRANCH-2a-spec.md) · probes: [CAPABILITY-PROBE-spec.md](CAPABILITY-PROBE-spec.md)
 
 | μ-ID | 내용 | 상태 |
 |------|------|------|
-| μ-B2a-01 | AC-DEC-02 density E2E | ✅ `b268c08` median=5.5 |
-| μ-B2a-02 | S0-A PDF AC-DEC-02 density | ✅ median=12.0 (`20260623-1315`) |
-| μ-B2a-03 | ROADMAP + baseline | 본 문서 |
+| μ-B2a-01 | AC-DEC-02 density E2E (S0-B) | ✅ `b268c08` median=5.5 |
+| μ-B2a-02 | S0-A PDF AC-DEC-02 density | ✅ `51c3afa` median=12.0 |
+| μ-B2a-03 | ROADMAP + baseline | ✅ 본 문서 |
+| **μ-B2a-ω** | Branch-2a 1차 관측 마감 | ✅ sample + pytest |
+
+**다음:** Branch-2b/STAGE-1 — **감독 승인 전 착수 금지**. Branch-0 MUST 지속.
 
 ---
 
