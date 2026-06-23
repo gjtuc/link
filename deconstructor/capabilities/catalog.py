@@ -29,7 +29,7 @@ CATALOG_SEEDS: tuple[dict[str, Any], ...] = (
         "status": "untested",
         "human_line": "스캔 PDF나 표만 있는 PDF는 글자 추출이 잘 안 될 수 있어요. 아직 충분히 검증하지 않았어요.",
         "source": "catalog",
-        "evidence": "probe 2026-06-22 exit 2 — not_true_scan (no scan PDF); Phase-R ok",
+        "evidence": "probe 2026-06-22 exit 2 — not_true_scan (no scan PDF); Phase-R ok; R2a 2026-06-23 handwriting scan_no_text_layer empty_extract exit 2, 0 chars/1p",
     },
     {
         "id": "cat-file-10mb",

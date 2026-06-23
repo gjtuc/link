@@ -1,0 +1,7 @@
+{
+  "mu_id": "μ-PROBE-SCAN-R2a",
+  "fixture": "probe_scan_handwriting.pdf",
+  "pypdf_extract_chars": 0,
+  "page_count": 1,
+  "pdf_class": "scan_no_text_layer"
+}

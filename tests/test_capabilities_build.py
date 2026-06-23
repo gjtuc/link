@@ -57,6 +57,14 @@ def test_catalog_scanned_pdf_not_true_scan_consistent():
     by_id = {c["id"]: c for c in CATALOG_SEEDS}
     scanned = by_id["cat-scanned-pdf"]
     assert "not_true_scan" in scanned["evidence"] or "스캔" in scanned["human_line"]
+    assert scanned["status"] == "untested"
+
+
+def test_catalog_scanned_pdf_evidence_mentions_r2a_handwriting():
+    by_id = {c["id"]: c for c in CATALOG_SEEDS}
+    scanned = by_id["cat-scanned-pdf"]
+    assert "R2a" in scanned["evidence"] or "handwriting" in scanned["evidence"]
+    assert "scan_no_text_layer" in scanned["evidence"] or "empty_extract" in scanned["evidence"]
 
 
 def test_catalog_pdf_triple_evidence_has_probe():

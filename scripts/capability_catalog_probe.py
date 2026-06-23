@@ -72,7 +72,17 @@ def _write_detail(cat_id: str, detail: dict) -> Path:
     return path
 
 
-def _finish(cat_id: str, exit_code: int, detail: dict) -> int:
+def _pdf_probe_stats(data: bytes) -> tuple[int, int]:
+    from deconstructor.web.extract import _read_pdf_pages
+
+    pages = _read_pdf_pages(data)
+    return sum(len(p) for p in pages), len(pages)
+
+
+def _finish(cat_id: str, exit_code: int, detail: dict, *, probe_meta: dict | None = None) -> int:
+    if probe_meta:
+        detail = {**detail, **probe_meta}
+    detail.setdefault("exit_code", exit_code)
     detail_path = _write_detail(cat_id, detail)
     run_path = log_capability_run(cat_id, SCRIPT_NAME, exit_code)
     safe_print(f"[probe] detail {detail_path}")
@@ -90,6 +100,7 @@ def _run_probe(
     files: list[str],
     neo4j_method: str = "",
     skip_phase_r: bool = False,
+    probe_meta: dict | None = None,
 ) -> int:
     t0 = time.monotonic()
     pr = ensure_phase_r(skip=skip_phase_r)
@@ -105,7 +116,7 @@ def _run_probe(
             "failed_step": "phase_r_regression",
             "elapsed_sec": round(time.monotonic() - t0, 1),
         }
-        return _finish(cat_id, 1, detail)
+        return _finish(cat_id, 1, detail, probe_meta=probe_meta)
 
     read_report = verify_read(sources, raw_by_file=raw_by_file)
     if not read_report.ok:
@@ -120,7 +131,7 @@ def _run_probe(
             "failed_step": "read_verify",
             "elapsed_sec": round(time.monotonic() - t0, 1),
         }
-        return _finish(cat_id, 2, detail)
+        return _finish(cat_id, 2, detail, probe_meta=probe_meta)
 
     result, tracker, _ = run_batch(
         sources,
@@ -152,7 +163,7 @@ def _run_probe(
     if tracker and tracker.failed_step:
         detail["link_failed_step"] = tracker.failed_step
     exit_code = 0 if pipeline_ok else 2
-    return _finish(cat_id, exit_code, detail)
+    return _finish(cat_id, exit_code, detail, probe_meta=probe_meta)
 
 
 def cmd_neo4j_off(_args: argparse.Namespace) -> int:
@@ -258,8 +269,38 @@ def cmd_scanned_pdf(args: argparse.Namespace) -> int:
         return _finish(CAT_SCANNED, 2, detail)
 
     raw_bytes = path.read_bytes()
+    pypdf_chars, page_count = _pdf_probe_stats(raw_bytes)
     text = _read_pdf(raw_bytes)
     name = path.name
+    probe_meta: dict | None = None
+    if pypdf_chars == 0:
+        probe_meta = {
+            "mu_id": "μ-PROBE-SCAN-R2a",
+            "pdf_class": "scan_no_text_layer",
+            "pypdf_extract_chars": pypdf_chars,
+            "page_count": page_count,
+        }
+        pr = ensure_phase_r(skip=getattr(args, "skip_phase_r", False))
+        failure_class = "phase_r_block" if pr != 0 else "empty_extract"
+        detail = {
+            "scenario": "PROBE-scanned-pdf",
+            "cat_id": CAT_SCANNED,
+            "files": [name],
+            "scan_origin": origin,
+            "phase_r_ok": pr == 0,
+            "phase_r_exit": pr,
+            "neo4j_available": _neo4j_available(),
+            "neo4j_method": f"origin={origin}",
+            "pipeline_ok": False,
+            "failed_step": "empty_extract",
+            "failure_class": failure_class,
+            "elapsed_sec": round(time.monotonic() - t0, 1),
+        }
+        safe_print(
+            f"[probe] scan_no_text_layer — pypdf 0 chars / {page_count}p, exit 2"
+        )
+        return _finish(CAT_SCANNED, 2, detail, probe_meta=probe_meta)
+
     sources = document_sources_from_bytes(raw_bytes, name, "application/pdf")
     return _run_probe(
         CAT_SCANNED,
@@ -269,6 +310,7 @@ def cmd_scanned_pdf(args: argparse.Namespace) -> int:
         files=[name],
         neo4j_method=f"origin={origin}",
         skip_phase_r=getattr(args, "skip_phase_r", False),
+        probe_meta=probe_meta,
     )
 
 

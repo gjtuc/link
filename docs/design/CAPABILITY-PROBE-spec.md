@@ -17,6 +17,7 @@
 | **μ-PROBE-S5** | Neo4j S5 auto-start skip 계약 | `LINK_DISABLE_NEO4J_AUTO_START` + pytest |
 | **μ-PROBE-R1** | neo4j-off 재실행 (S5 적용) | `neo4j-off` 1회 |
 | **μ-PROBE-SCAN-ω** | born-digital PDF 503 관측 (catalog 무변경) | spec + sample only |
+| **μ-PROBE-SCAN-R2a** | 진짜 스캔 PDF (텍스트 레이어 0자) 관측 | `scanned-pdf --path handwriting.pdf` |
 
 ---
 
@@ -54,7 +55,33 @@
 
 **목적:** `cat-scanned-pdf` catalog와 **별개** — 잘못된 픽스처 클래스(born-digital Nature PDF) + Gemini 503 기록.  
 **catalog:** `cat-scanned-pdf` **유지** (`not_true_scan` evidence 변경 없음).  
-**R2:** **μ-PROBE-SCAN-R2** = 진짜 스캔 PDF `--path` 확보 시에만.
+**R2:** **μ-PROBE-SCAN-R2** = 진짜 스캔 PDF `--path` 확보 시에만. **R2a** (텍스트 레이어 없음) 완료·승인 전 **R2b** live 금지.
+
+---
+
+## μ-PROBE-SCAN-R2a — scan_no_text_layer (관측 전용)
+
+**목적:** pypdf 추출 0자·1페이지 스캔 PDF(`handwriting.pdf`) — ingest 전 `empty_extract` 차단 관측.  
+**catalog:** `cat-scanned-pdf` **evidence·human_line 보강**, **status `untested` 유지** (`verified` 승격 없음).
+
+| 필드 | 관측 (`20260623-1100`) |
+|------|------------------------|
+| file | `handwriting.pdf` |
+| pdf_class | **scan_no_text_layer** |
+| pypdf_extract_chars | **0** |
+| page_count | **1** |
+| phase_r_ok | true |
+| pipeline_ok | false |
+| failed_step | `empty_extract` |
+| failure_class | **empty_extract** |
+| elapsed_sec | **5.4** |
+| exit | 2 |
+| log | `logs/capability_probes/20260623-1100-cat-scanned-pdf-detail.json` |
+| fixture | `tests/fixtures/probe_scan_handwriting.pdf` |
+
+**오프라인:** `tests/fixtures/probe_scan_preflight_sample.json`, `tests/test_probe_scan_preflight.py`.
+
+---
 
 | 필드 | 관측 (`20260623-0116`) |
 |------|------------------------|
