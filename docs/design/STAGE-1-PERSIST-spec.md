@@ -21,7 +21,9 @@
 | μ-ID | 내용 | 상태 |
 |------|------|------|
 | **μ-PRE-2b-PERSIST** | 영속 경계 설계 + sample | ✅ (본 문서) |
-| **μ-2b-03** | Neo4j/file corpus store 구현 | [ ] 미착수 |
+| **μ-2b-03-00** | CorpusStore protocol + memory factory | `factory.py` + pytest | ✅ |
+| **μ-2b-03-01** | Neo4j adapter (mock) | TBD | [ ] |
+| **μ-2b-03** | 영속 store 통합 | TBD | [ ] |
 | **μ-2b-02-UI** | index.html 힌트 (선택) | [ ] |
 
 ---
@@ -79,7 +81,22 @@
 
 ---
 
-## μ-2b-03 구현 DoD (예정)
+## μ-2b-03-00 — factory (✅)
+
+| 항목 | 내용 |
+|------|------|
+| Protocol | `deconstructor/corpus/store_protocol.py` — `CorpusStore` |
+| Adapter | `memory_adapter.py` — `MemoryCorpusStoreAdapter` |
+| Factory | `factory.py` — `LINK_CORPUS_BACKEND=memory` (default); `neo4j` → NotImplementedError |
+| 소비 | `ingest_hook`, `status_block` → `get_corpus_store()` factory 경유 |
+
+```bash
+python -m pytest tests/test_stage1_corpus_store_factory.py -q
+```
+
+---
+
+## μ-2b-03 구현 DoD (잔여)
 
 1. `CorpusStore` protocol — `InMemoryCorpusStore` + `Neo4jCorpusStore` (또는 file)  
 2. `ingest_hook` → store factory (`LINK_CORPUS_BACKEND=memory|neo4j`)  

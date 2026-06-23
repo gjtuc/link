@@ -10,7 +10,8 @@ from __future__ import annotations
 
 import os
 
-from deconstructor.corpus.ingest_hook import cross_run_corpus_enabled, get_corpus_store
+from deconstructor.corpus.factory import get_corpus_store
+from deconstructor.corpus.ingest_hook import cross_run_corpus_enabled
 from deconstructor.corpus.query import summarize_corpus
 
 _ENV_SESSION_ID = "LINK_SESSION_ID"

@@ -51,7 +51,9 @@ Branch-2b = **[STAGE 1](STAGE-0-CLOSURE-spec.md)** — 0단계 클로저 이후 
 | **μ-2b-02-API** | `/api/status` corpus 힌트 | `status_block.py` + pytest | ✅ |
 | **μ-2b-02-UI** | index.html 힌트 (선택) | TBD | [ ] |
 | **μ-PRE-2b-PERSIST** | Neo4j·영속 경계 설계 | `STAGE-1-PERSIST-spec.md` | ✅ |
-| **μ-2b-03** | 영속 store 구현 | TBD | [ ] |
+| **μ-2b-03-00** | CorpusStore protocol + factory | `factory.py` + pytest | ✅ |
+| **μ-2b-03-01** | Neo4j adapter mock | TBD | [ ] |
+| **μ-2b-03** | 영속 store 통합 | TBD | [ ] |
 | **μ-2b-ω** | 2b 1차 마감 | sample + `stage0_reaudit_baseline.py` | [ ] |
 
 ---

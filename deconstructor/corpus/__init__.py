@@ -14,12 +14,17 @@ from deconstructor.corpus.contract import (
     validate_scope,
 )
 from deconstructor.corpus.memory_store import InMemoryCorpusStore
+from deconstructor.corpus.factory import (
+    corpus_backend,
+    get_corpus_store,
+    reset_corpus_store,
+)
+from deconstructor.corpus.memory_adapter import MemoryCorpusStoreAdapter
+from deconstructor.corpus.store_protocol import CorpusStore
 from deconstructor.corpus.ingest_hook import (
     append_pipeline_to_corpus,
     cross_run_corpus_enabled,
-    get_corpus_store,
     maybe_append_batch_corpus,
-    reset_corpus_store,
 )
 
 from deconstructor.corpus.query import (
@@ -38,6 +43,9 @@ __all__ = [
     "FACT_RECORD_KEYS",
     "RUN_RECORD_KEYS",
     "InMemoryCorpusStore",
+    "CorpusStore",
+    "MemoryCorpusStoreAdapter",
+    "corpus_backend",
     "append_pipeline_to_corpus",
     "cross_run_corpus_enabled",
     "get_corpus_store",

@@ -20,30 +20,15 @@ from deconstructor.corpus.contract import (
     CorpusRunRecord,
     utc_now_iso,
 )
-from deconstructor.corpus.memory_store import InMemoryCorpusStore
+from deconstructor.corpus.factory import get_corpus_store, reset_corpus_store
+from deconstructor.corpus.store_protocol import CorpusStore
 
 _ENV_CROSS_RUN = "LINK_CROSS_RUN_CORPUS"
 _ENV_SESSION_ID = "LINK_SESSION_ID"
 
-_global_store: InMemoryCorpusStore | None = None
-
 
 def cross_run_corpus_enabled() -> bool:
     return os.getenv(_ENV_CROSS_RUN, "").strip().lower() in ("1", "true", "yes")
-
-
-def get_corpus_store() -> InMemoryCorpusStore:
-    global _global_store
-    if _global_store is None:
-        _global_store = InMemoryCorpusStore()
-    return _global_store
-
-
-def reset_corpus_store(store: InMemoryCorpusStore | None = None) -> InMemoryCorpusStore:
-    """Tests: replace process singleton."""
-    global _global_store
-    _global_store = store if store is not None else InMemoryCorpusStore()
-    return _global_store
 
 
 def _source_file_for_fact(fact: Any, meta: dict[str, Any]) -> str:
@@ -86,7 +71,7 @@ def facts_from_pipeline_states(
 
 
 def append_pipeline_to_corpus(
-    store: InMemoryCorpusStore,
+    store: CorpusStore,
     pipeline_result: dict[str, Any],
     *,
     session_id: str,

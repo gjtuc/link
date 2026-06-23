@@ -13,7 +13,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from deconstructor.corpus.contract import CorpusFactRecord, CorpusRunRecord
-from deconstructor.corpus.memory_store import InMemoryCorpusStore
+from deconstructor.corpus.store_protocol import CorpusStore
 
 
 @dataclass(frozen=True)
@@ -44,7 +44,7 @@ def _normalize_optional_id(value: str | None, field: str) -> str | None:
 
 
 def query_runs(
-    store: InMemoryCorpusStore,
+    store: CorpusStore,
     *,
     session_id: str | None = None,
 ) -> list[CorpusRunRecord]:
@@ -57,7 +57,7 @@ def query_runs(
 
 
 def query_facts(
-    store: InMemoryCorpusStore,
+    store: CorpusStore,
     *,
     session_id: str | None = None,
     run_id: str | None = None,
@@ -86,7 +86,7 @@ def query_facts(
 
 
 def summarize_corpus(
-    store: InMemoryCorpusStore,
+    store: CorpusStore,
     *,
     session_id: str | None = None,
 ) -> CorpusQuerySummary:
