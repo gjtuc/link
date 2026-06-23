@@ -53,7 +53,7 @@
 | AC-ID | Level | S0 | 조건 | 관측 | 상태 |
 |-------|-------|-----|------|------|------|
 | **AC-DEC-01** | MUST | A,B | 분석 `ok:true` & `failed_step` 없음 | `/api/analyze/result` | ✅ |
-| **AC-DEC-02** | SHOULD | A,B | 청크당 `completed_facts ≥ 5` (median) | pipeline_debug.deconstruct_batch | ⚠️ 힌트+관측 (Sprint 3) |
+| **AC-DEC-02** | SHOULD | A,B | 청크당 `completed_facts ≥ 5` (median) | pipeline_debug.deconstruct_batch | ⚠️ SHOULD 유지 — **관측:** [B2a-DENSITY-OBSERVE-RECORD.md](B2a-DENSITY-OBSERVE-RECORD.md) — S0-B median=**5.5** (`b268c08`, μ-B2a-01); S0-A median=**12.0** (`51c3afa`, μ-B2a-02). SHOULD(≥5) **충족 관측** — **MUST 승격 금지** |
 | **AC-DEC-03** | SHOULD | A,B | `recursion_depth > 1` 비율 >0 (non-atomic) | pipeline_debug | ✅ Sprint 3 (dry_run+heuristic) |
 | **AC-DEC-04** | MUST | A,B | `partial_run=true` 시 UI/debug **경고** | index `#watch-panel` + debug | ✅ Sprint 7 |
 
@@ -152,7 +152,7 @@
 | AC | τ-1 판정 | 조치 |
 |----|----------|------|
 | AC-ING-01 | ✅ numeric ratio | — |
-| AC-DEC-02 | ⚠️ threshold 5는 가설 | 「SHOULD, 튜닝 가능」 명시 ✅ |
+| AC-DEC-02 | ⚠️ threshold 5는 가설 | 「SHOULD, 튜닝 가능」 명시 ✅ — B2a 관측 2경로 median≥5 (`b268c08`/`51c3afa`), MUST 승격 없음 |
 | AC-SKP-03 | ✅ skeleton index | — | — |
 | AC-ORC-02 | ✅ bridge + UI | — | — |
 

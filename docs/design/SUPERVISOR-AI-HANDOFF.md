@@ -244,8 +244,8 @@ Deconstruct → Verify → Dreamer → Fact-Checker → Skeptic → Weaver → V
 
 | | |
 |---|---|
-| **완료** | μ-B2a-ω, **μ-MAINT-ω**, **μ-CAT-ω** (capabilities status policy) |
-| **작업자 지금 할 일** | **감독 협의** — Branch-2b/STAGE-1 또는 파도 3 |
+| **완료** | μ-B2a-ω, **μ-MAINT-ω**, **μ-CAT-ω**, **μ-STAGE0-ω** (AC-DEC-02 관측 반영) |
+| **작업자 지금 할 일** | **감독 협의** — Branch-2b/STAGE-1 |
 | **금지** | Branch-2/3/STAGE-1, `branch_2_unlocked` 수동 true, μ-ω 생략 |
 
 ### 작업자 명령 치트시트
@@ -282,7 +282,7 @@ Deconstruct → Verify → Dreamer → Fact-Checker → Skeptic → Weaver → V
 
 시작 전: git pull → docs/design/SUPERVISOR-AI-HANDOFF.md 읽기.
 
-현재: Branch-0 ✅ + μ-MAINT-ω. Branch-1 ✅, μ-B2a-ω ✅, **μ-CAT-ω** ✅ (status policy). Branch-2b **잠금**.
+현재: Branch-0 ✅ MUST 지속. Branch-1 ✅, μ-B2a-ω ✅, μ-CAT-ω ✅, **μ-STAGE0-ω** ✅ (AC-DEC-02 관측). Branch-2b **잠금**.
 사후 수정 시 §1.2 — `stage0_reaudit_baseline.py` → `phase_r_regression` 순.
 
 매 답변: 풀어설명 + 작업자 복붙블록 + 지금 할 일(있/없).

@@ -1,0 +1,36 @@
+{
+  "mu_id": "μ-STAGE0-ω",
+  "ac_id": "AC-DEC-02",
+  "level": "SHOULD",
+  "status_symbol": "partial",
+  "must_promotion_forbidden": true,
+  "median_threshold": 5,
+  "observations": [
+    {
+      "path": "S0-B",
+      "mu_id": "μ-B2a-01",
+      "median_completed_facts": 5.5,
+      "completed_facts_per_run": [5, 5, 13, 6],
+      "commit": "b268c08",
+      "meets_should": true
+    },
+    {
+      "path": "S0-A PDF",
+      "mu_id": "μ-B2a-02",
+      "median_completed_facts": 12.0,
+      "completed_facts_per_run": [12],
+      "commit": "51c3afa",
+      "meets_should": true
+    }
+  ],
+  "spec_refs": [
+    "docs/design/STAGE-0-3-acceptance-criteria.md",
+    "docs/design/STAGE-0-4-current-vs-target.md",
+    "docs/design/B2a-DENSITY-OBSERVE-RECORD.md"
+  ],
+  "scan_ingest": {
+    "level": "L3",
+    "probes": ["μ-PROBE-SCAN-R2a", "μ-PROBE-SCAN-R2b"],
+    "spec_ref": "docs/design/CAPABILITY-PROBE-spec.md"
+  }
+}

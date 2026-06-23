@@ -61,7 +61,7 @@
 | AC | Current | Target | Gap | 단계 | 우선 |
 |----|---------|--------|-----|------|------|
 | **AC-ING-05** | ❌ fact에 source_file/chunk 없음 | C-2 provenance on AtomicFact | **메타 갭** | 1b | ✅ Sprint 1 |
-| **AC-DEC-02** | ⚠️ ~1/chunk | median ≥5 (SHOULD) | **밀도 갭** | Sprint 3 | ⚠️ 힌트+debug |
+| **AC-DEC-02** | ⚠️ B2a 관측 2경로: S0-B median=**5.5** (`b268c08`), S0-A median=**12.0** (`51c3afa`) — [B2a-DENSITY-OBSERVE-RECORD.md](B2a-DENSITY-OBSERVE-RECORD.md) | median ≥5 (SHOULD) | **밀도 갭** (SHOULD 미달 아님·MUST 승격 없음) | Sprint 3 | ⚠️ 관측 링크 |
 | **AC-DEC-03** | ❌ recursion_depth≈1 | non-atomic 재분해 >0 | **재귀 갭** | Sprint 3 | ✅ |
 | **AC-DEC-04** | ✅ index + debug watch | — | — | Sprint 7 | ✅ |
 | **AC-SKP-03** | ✅ Gap count in skeleton index | — | — | Sprint 4 | ✅ |
@@ -102,7 +102,7 @@
 | **G-FC-UI** | AC-FC-02 | stub/corpus/live UI badges | Sprint 0,5 | ✅ |
 | **G-FC-CORPUS** | AC-FC-02 full | corpus FC vs extracted pool | Sprint 5 | ✅ |
 | **G-ING-META** | AC-ING-05 | AtomicFact source_file/page/chunk | Sprint 1 | ✅ |
-| **G-DEC-DENS** | AC-DEC-02 | 청크당 fact median ≥5 | Sprint 3 | ⚠️ |
+| **G-DEC-DENS** | AC-DEC-02 | 청크당 fact median ≥5 | Sprint 3 | ⚠️ B2a 2경로: S0-B **5.5** (`b268c08`), S0-A **12.0** (`51c3afa`) — [B2a-DENSITY-OBSERVE-RECORD.md](B2a-DENSITY-OBSERVE-RECORD.md) |
 | **G-DEC-RECUR** | AC-DEC-03 | Verify non-atomic 재분해 | Sprint 3 | ✅ |
 | **G-SKP-INDEX** | AC-SKP-03,04 | skeleton Gap/Strong index | Sprint 4 | ✅ |
 | **G-REC-COMPOSE** | AC-REC-02 | ε-2~4 recompose post-pipeline | Sprint 6 | ✅ |
@@ -164,7 +164,16 @@
 ### υ-4. 측정 가능성
 
 - 각 G-* 는 AC 합격식 또는 UI 요소로 **완료 판정** 가능  
-- G-DEC-DENS: expensive E2E optional (SHOULD)
+- G-DEC-DENS: expensive E2E optional (SHOULD); B2a median 관측 `b268c08`/`51c3afa` — MUST 승격 없음
+
+### L3 — 스캔 ingest (관측 링크만)
+
+| probe | cat-id | 관측 | spec |
+|-------|--------|------|------|
+| μ-PROBE-SCAN-R2a | `cat-scanned-pdf` | handwriting, `scan_no_text_layer`, exit 2, 0 chars/1p (`20260623-1100`) | [CAPABILITY-PROBE-spec.md](CAPABILITY-PROBE-spec.md) |
+| μ-PROBE-SCAN-R2b | `cat-scanned-pdf` | watson-crick, `scan_ocr_noisy`, exit 0, 6630 chars/2p (`20260623-1130`) | [CAPABILITY-PROBE-spec.md](CAPABILITY-PROBE-spec.md) |
+
+**판정:** ingest 계약·스캔 품질 스펙트럼 — capabilities `untested` 유지 ([Q2-CAPABILITIES-spec.md](Q2-CAPABILITIES-spec.md) § Status policy).
 
 ### υ-5. NON-GOALS 준수
 
