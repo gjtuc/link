@@ -244,8 +244,8 @@ Deconstruct → Verify → Dreamer → Fact-Checker → Skeptic → Weaver → V
 
 | | |
 |---|---|
-| **완료** | μ-REG-B1-smoke, μ-PROBE-SCAN-ω/R2a/R2b, **μ-B2a-01~02**, **μ-B2a-ω** (Branch-2a 1차 관측 마감) |
-| **작업자 지금 할 일** | **감독 협의** — Branch-2b/STAGE-1 또는 다음 sprint μ |
+| **완료** | μ-B2a-ω, **μ-MAINT-ω** (Branch-0 health check 계약) |
+| **작업자 지금 할 일** | **감독 협의** — Branch-2b/STAGE-1 또는 파도 2 |
 | **금지** | Branch-2/3/STAGE-1, `branch_2_unlocked` 수동 true, μ-ω 생략 |
 
 ### 작업자 명령 치트시트
@@ -281,7 +281,7 @@ Deconstruct → Verify → Dreamer → Fact-Checker → Skeptic → Weaver → V
 
 시작 전: git pull → docs/design/SUPERVISOR-AI-HANDOFF.md 읽기.
 
-현재: Branch-0 ✅, Branch-1 ✅, **μ-B2a-ω** ✅ (S0-B median=5.5, S0-A median=12.0). Branch-2b **잠금**.
+현재: Branch-0 ✅ + **μ-MAINT-ω** (`branch0_health_check.py`). Branch-1 ✅, **μ-B2a-ω** ✅. Branch-2b **잠금**.
 사후 수정 시 §1.2 — `stage0_reaudit_baseline.py` → `phase_r_regression` 순.
 
 매 답변: 풀어설명 + 작업자 복붙블록 + 지금 할 일(있/없).

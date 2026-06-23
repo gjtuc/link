@@ -37,7 +37,8 @@ Branch-2a/2b/3    잠금 · 착수 금지 (quota 후 Branch-1만)
 ```
 
 상세: ``docs/design/INGEST-FOUNDATION-spec.md``  
-분기: ``docs/design/STAGE-0-CLOSURE-ROADMAP.md`` · Branch-1: ``docs/design/BRANCH-1-spec.md``
+분기: ``docs/design/STAGE-0-CLOSURE-ROADMAP.md`` · Branch-1: ``docs/design/BRANCH-1-spec.md``  
+Branch-0 유지: ``docs/design/BRANCH-0-MAINTENANCE-spec.md`` (ingest touch → phase_r, health check)
 
 ## 0단계 서브단계 목록 (예정)
 
