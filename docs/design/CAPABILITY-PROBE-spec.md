@@ -156,4 +156,6 @@
 | `logs/capability_runs/YYYYMMDD-HHMM-<cat-id>.json` | `log_capability_run.py` |
 | `logs/capability_probes/YYYYMMDD-HHMM-<cat-id>-detail.json` | checklist·neo4j·files·pipeline_ok |
 
+**Evidence matrix (μ-CAT-02):** probe ID × evidence × status — [Q2-CAPABILITIES-spec.md § Evidence matrix](Q2-CAPABILITIES-spec.md#evidence-matrix-μ-cat-02-실측만) (실측만, 승격 규칙은 § Status policy).
+
 관련: [Q2-CAPABILITIES-spec.md](Q2-CAPABILITIES-spec.md), [BRANCH-2a-spec.md](BRANCH-2a-spec.md)

@@ -1,0 +1,18 @@
+{
+  "mu_id": "μ-CAT-03",
+  "policy_statuses": ["verified", "untested", "unsupported"],
+  "verified_promotion_requires": ["E2E/REG", "spec_observation", "supervisor_approval"],
+  "forbidden": "probe_single_run_to_verified",
+  "catalog_items": [
+    {"id": "cat-pdf-triple", "status": "untested", "probe": "μ-PROBE-02"},
+    {"id": "cat-scanned-pdf", "status": "untested", "probe": "μ-PROBE-SCAN-R2a/R2b/ω"},
+    {"id": "cat-neo4j-off", "status": "untested", "probe": "μ-PROBE-R1"},
+    {"id": "cat-opju-origin", "status": "unsupported", "probe": null}
+  ],
+  "cat_scanned_pdf": {
+    "status": "untested",
+    "reason": "conflicting probe outcomes; no E2E/REG + supervisor approval",
+    "evidence_refs": ["R2a empty_extract", "R2b pipeline_ok", "SCAN-ω gemini_503"]
+  },
+  "spec_ref": "docs/design/Q2-CAPABILITIES-spec.md"
+}
