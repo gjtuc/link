@@ -1,8 +1,8 @@
 # Branch-2b — STAGE 1 (cross-run corpus) — 설계만
 
-> **상태:** **μ-UNLOCK-2b** ✅ — Branch-2b 착수 잠금 해제 (2026-06-23)  
-> **선행:** Branch-0 MUST (μ-MAINT-ω), Branch-1 complete, Branch-2a 1차 관측 마감 (μ-B2a-ω), 파도 1~3, **μ-PRE-2b-00**  
-> **다음:** **μ-2b-00** — STAGE-1 skeleton / corpus 계약 (구현 설계)
+> **상태:** **μ-2b-00** ✅ — STAGE-1 corpus 계약·in-memory skeleton  
+> **선행:** μ-UNLOCK-2b  
+> **다음:** **μ-2b-01** — cross-run ingest (pipeline·Neo4j 경계)
 
 ---
 
@@ -45,7 +45,7 @@ Branch-2b = **[STAGE 1](STAGE-0-CLOSURE-spec.md)** — 0단계 클로저 이후 
 |------|------|-------------|------|
 | **μ-PRE-2b-00** | Branch-2b 설계 spec + sample | 본 spec + `branch2b_design_sample.json` | ✅ |
 | **μ-UNLOCK-2b** | branch_2b 착수 잠금 해제 조건 | `branch_state` + pytest gate | ✅ |
-| **μ-2b-00** | STAGE-1 skeleton / corpus 계약 | spec + offline pytest | [ ] |
+| **μ-2b-00** | STAGE-1 skeleton / corpus 계약 | spec + offline pytest | ✅ |
 | **μ-2b-01** | cross-run ingest (설계→구현) | TBD — Neo4j·session 경계 | [ ] |
 | **μ-2b-02** | corpus query / UI 힌트 (선택) | TBD | [ ] |
 | **μ-2b-ω** | 2b 1차 마감 | sample + `stage0_reaudit_baseline.py` | [ ] |

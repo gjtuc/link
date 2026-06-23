@@ -16,7 +16,9 @@
 | **μ-PRE-2b-00** | STAGE-1 cross-run corpus 설계 | ✅ spec + sample |
 | **μ-UNLOCK-2b** | 2b 착수 잠금 해제 | ✅ `branch_2b_unlocked=true` |
 
-**다음:** **μ-2b-00** — STAGE-1 skeleton / corpus 계약. Branch-0 MUST 지속.
+**다음:** **μ-2b-01** — cross-run ingest. Branch-0 MUST 지속.
+
+**STAGE-1:** [STAGE-1-CORPUS-spec.md](STAGE-1-CORPUS-spec.md) — `deconstructor/corpus/` (μ-2b-00 ✅)
 
 ---
 

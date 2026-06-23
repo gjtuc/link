@@ -244,8 +244,8 @@ Deconstruct → Verify → Dreamer → Fact-Checker → Skeptic → Weaver → V
 
 | | |
 |---|---|
-| **완료** | μ-PRE-2b-00, **μ-UNLOCK-2b** |
-| **작업자 지금 할 일** | **μ-2b-00** — STAGE-1 skeleton / corpus 계약 |
+| **완료** | μ-UNLOCK-2b, **μ-2b-00** (STAGE-1 corpus skeleton) |
+| **작업자 지금 할 일** | **μ-2b-01** — cross-run ingest |
 | **금지** | Branch-2/3/STAGE-1, `branch_2_unlocked` 수동 true, μ-ω 생략 |
 
 ### 작업자 명령 치트시트
@@ -282,7 +282,7 @@ Deconstruct → Verify → Dreamer → Fact-Checker → Skeptic → Weaver → V
 
 시작 전: git pull → docs/design/SUPERVISOR-AI-HANDOFF.md 읽기.
 
-현재: Branch-0 ✅ MUST. **μ-UNLOCK-2b** ✅. **다음 = μ-2b-00** (STAGE-1 skeleton). Branch-3 **잠금**.
+현재: **μ-2b-00** ✅ (`STAGE-1-CORPUS-spec`, `corpus/`). **다음 = μ-2b-01** (cross-run ingest). Branch-0 MUST.
 사후 수정 시 §1.2 — `stage0_reaudit_baseline.py` → `phase_r_regression` 순.
 
 매 답변: 풀어설명 + 작업자 복붙블록 + 지금 할 일(있/없).
