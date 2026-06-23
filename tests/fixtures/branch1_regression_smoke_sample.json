@@ -1,0 +1,24 @@
+{
+  "timestamp": "2026-06-23T01:02:00",
+  "scenario": "REG-B1-smoke",
+  "mu_id": "μ-REG-B1-smoke",
+  "phase_r_exit": 0,
+  "exit_code": 0,
+  "checklist": {
+    "Phase-R_ok": true,
+    "pipeline_ok": true,
+    "atomic_facts_total": 5,
+    "gap_count": 5,
+    "weak_count": 1,
+    "fc_mode": "corpus",
+    "neo4j_persisted": true,
+    "s5_step_count": 0,
+    "s5_steps": [],
+    "link_disable_neo4j_auto_start": null,
+    "failed_step": null,
+    "elapsed_sec": 107.5
+  },
+  "s5_detail": [],
+  "baseline_commit": "7937b59",
+  "note": "post μ-PROBE-S5 pipeline_batch touch; not full REG-B1b"
+}
