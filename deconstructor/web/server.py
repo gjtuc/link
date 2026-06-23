@@ -315,6 +315,7 @@ class LinkUIHandler(BaseHTTPRequestHandler):
                 probe_neo4j_installation,
             )
             from deconstructor.viz.neo4j_utils import neo4j_is_available
+            from deconstructor.corpus.status_block import build_corpus_status_block
 
             probe = probe_neo4j_installation(ROOT)
             self._send_json(
@@ -330,6 +331,7 @@ class LinkUIHandler(BaseHTTPRequestHandler):
                     "fact_checker": config.fact_checker_status_mode(),
                     "corpus_fc_enabled": config.corpus_fc_enabled(),
                     "tavily_disabled": config.TAVILY_DISABLED,
+                    "cross_run_corpus": build_corpus_status_block(),
                     "install": {
                         "docker": probe.docker_cli,
                         "compose": probe.compose_file,

@@ -28,6 +28,7 @@ from deconstructor.corpus.query import (
     query_runs,
     summarize_corpus,
 )
+from deconstructor.corpus.status_block import build_corpus_status_block
 
 __all__ = [
     "CORPUS_SCOPE_BATCH",
@@ -46,6 +47,7 @@ __all__ = [
     "query_facts",
     "query_runs",
     "summarize_corpus",
+    "build_corpus_status_block",
     "facts_from_run_dict",
     "utc_now_iso",
     "validate_fact_record",
