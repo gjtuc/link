@@ -38,6 +38,12 @@ INGEST Foundation (Phase R → A)
   - **스펙:** ``docs/design/CAPABILITY-PROBE-spec.md`` § LINK_DISABLE_NEO4J_AUTO_START
   - **검증:** ``tests/test_pipeline_neo4j_probe_skip.py``
 
+STAGE-1 (μ-2b-01) — cross-run corpus ingest
+-------------------------------------------
+  - **env:** ``LINK_CROSS_RUN_CORPUS=1`` (기본 off)
+  - **hook:** ``corpus.ingest_hook.maybe_append_batch_corpus`` (성공 후 side-effect)
+  - **스펙:** ``docs/design/STAGE-1-CORPUS-spec.md``
+
 진행 규칙: ``docs/design/PROCESS.md``
 """
 
@@ -295,6 +301,12 @@ def _run_pipeline_batch_inner(sources: list[ExtractedSource], tracker: LinkStepT
             tracker.start("S6-GRAPH-BRIDGE", "교차 문서 bridge", f"{len(bridge_edges)}건")
             tracker.ok("S6-GRAPH-BRIDGE")
 
+    if orchestration is not None:
+        from deconstructor.corpus.ingest_hook import cross_run_corpus_enabled
+
+        if cross_run_corpus_enabled():
+            orchestration = {**orchestration, "corpus_scope": "cross_run"}
+
     _render_graph_tracked(tracker, fetched.nodes, fetched.edges)
 
     from deconstructor.guards import build_watch_report
@@ -331,7 +343,7 @@ def _run_pipeline_batch_inner(sources: list[ExtractedSource], tracker: LinkStepT
         node_count=len(fetched.nodes),
     )
 
-    return {
+    result = {
         "ok": True,
         "steps": tracker.to_list(),
         "neo4j": use_db,
@@ -357,3 +369,14 @@ def _run_pipeline_batch_inner(sources: list[ExtractedSource], tracker: LinkStepT
         "watch": watch,
         "read_verify": read_verify_payload,
     }
+
+    from deconstructor.corpus.ingest_hook import maybe_append_batch_corpus
+
+    maybe_append_batch_corpus(
+        result,
+        pipeline_states,
+        run_id=batch_run_id,
+        session_id=os.getenv("LINK_SESSION_ID") or batch_run_id,
+    )
+
+    return result
