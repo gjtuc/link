@@ -244,8 +244,8 @@ Deconstruct → Verify → Dreamer → Fact-Checker → Skeptic → Weaver → V
 
 | | |
 |---|---|
-| **완료** | μ-PROBE, unlock, **μ-B2a-01** (`b268c08`), ω 재진입 S5·R1 |
-| **작업자 지금 할 일** | **B2a ω 마감 후** 다음 μ 협의 (Branch-2b/STAGE-1 금지) |
+| **완료** | μ-REG-B1-smoke (`aa526d5`), **μ-PROBE-SCAN-ω** (born-digital 503 spec, catalog 무변경) |
+| **작업자 지금 할 일** | **μ-PROBE-SCAN-R2** (스캔 PDF `--path` 확보 시) → μ-B2a-02 (quota) |
 | **금지** | Branch-2/3/STAGE-1, `branch_2_unlocked` 수동 true, μ-ω 생략 |
 
 ### 작업자 명령 치트시트

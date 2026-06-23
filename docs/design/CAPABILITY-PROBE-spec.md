@@ -16,6 +16,7 @@
 | **μ-PROBE-03** | `cat-scanned-pdf` | `scanned-pdf [--path]` |
 | **μ-PROBE-S5** | Neo4j S5 auto-start skip 계약 | `LINK_DISABLE_NEO4J_AUTO_START` + pytest |
 | **μ-PROBE-R1** | neo4j-off 재실행 (S5 적용) | `neo4j-off` 1회 |
+| **μ-PROBE-SCAN-ω** | born-digital PDF 503 관측 (catalog 무변경) | spec + sample only |
 
 ---
 
@@ -45,7 +46,29 @@
 | cat-id | exit | pipeline_ok | 비고 |
 |--------|------|-------------|------|
 | `cat-pdf-triple` | 0 | true | 3 source_file, ~496s |
-| `cat-scanned-pdf` | 2 | — | `not_true_scan` (스캔 PDF 없음), log·detail 필수 |
+| `cat-scanned-pdf` | 2 | — | `not_true_scan` fallback (`20260622-2309`), log·detail 필수 |
+
+---
+
+## μ-PROBE-SCAN-ω — born-digital 시도 (관측 전용)
+
+**목적:** `cat-scanned-pdf` catalog와 **별개** — 잘못된 픽스처 클래스(born-digital Nature PDF) + Gemini 503 기록.  
+**catalog:** `cat-scanned-pdf` **유지** (`not_true_scan` evidence 변경 없음).  
+**R2:** **μ-PROBE-SCAN-R2** = 진짜 스캔 PDF `--path` 확보 시에만.
+
+| 필드 | 관측 (`20260623-0116`) |
+|------|------------------------|
+| file | `s41467-021-23306-6.pdf` |
+| pdf_class | **born-digital** (스캔 아님) |
+| phase_r_ok | true |
+| pipeline_ok | false |
+| failed_step | `S4-4-NODE-dreamer-FLASH` |
+| failure_class | **gemini_503** (스캔 품질 아님) |
+| elapsed_sec | **3059.7** |
+| exit | 2 |
+| log | `logs/capability_probes/20260623-0116-cat-scanned-pdf-detail.json` |
+
+**재시도 (선택):** quota/503 해소 후 동일 `--path` 명령 — live 재실행은 별도 μ.
 
 ---
 
