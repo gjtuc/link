@@ -16,11 +16,13 @@ def test_branch2b_design_sample_schema():
     data = json.loads(SAMPLE.read_text(encoding="utf-8"))
     assert data["mu_id"] == "μ-PRE-2b-00"
     assert data["branch"] == "Branch-2b"
-    assert data["status"] == "design_only"
+    assert data["status"] == "unlocked"
     assert data["implementation_started"] is False
-    assert "branch_2b_unlocked" in data["unlock_fields_proposed"]
-    assert "μ-UNLOCK-2b" in data["mu_ids_planned"]
-    assert "μ-2b-ω" in data["mu_ids_planned"]
+    unlock = data["unlock_fields"]
+    assert unlock["branch_2b_unlocked"] is True
+    assert unlock["branch_2b_design_complete"] is True
+    assert data["unlock_mu_id"] == "μ-UNLOCK-2b"
+    assert "μ-2b-00" in data["mu_ids_planned"]
 
 
 def test_branch2b_spec_exists_with_required_sections():
@@ -38,22 +40,19 @@ def test_branch2b_spec_exists_with_required_sections():
     assert "BRANCH-0-MAINTENANCE-spec.md" in body
 
 
-def test_branch2b_spec_mu_table_all_pending_except_pre():
+def test_branch2b_spec_mu_table_unlock_complete():
     body = SPEC.read_text(encoding="utf-8")
+    assert "μ-UNLOCK-2b" in body
     assert "μ-2b-00" in body
-    assert "μ-2b-01" in body
-    assert "[ ]" in body
-    assert "MUST 승격" in body or "MUST 검토" in body
+    assert "✅" in body
 
 
-def test_roadmap_wave4_design_locked_implementation():
+def test_roadmap_documents_branch2b_unlock():
     body = ROADMAP.read_text(encoding="utf-8")
-    assert "μ-PRE-2b" in body
-    assert "2b" in body
-    assert "잠금" in body or "구현" in body
+    assert "μ-UNLOCK-2b" in body
+    assert "μ-2b-00" in body or "2b" in body
 
 
-def test_handoff_next_unlock_after_approval():
+def test_handoff_next_mu_2b_00():
     body = HANDOFF.read_text(encoding="utf-8")
-    assert "μ-PRE-2b" in body
-    assert "μ-UNLOCK-2b" in body or "승인" in body
+    assert "μ-UNLOCK-2b" in body or "μ-2b-00" in body

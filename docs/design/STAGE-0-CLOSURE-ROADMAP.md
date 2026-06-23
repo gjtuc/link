@@ -14,9 +14,9 @@
 | μ-ID | 내용 | 상태 |
 |------|------|------|
 | **μ-PRE-2b-00** | STAGE-1 cross-run corpus 설계 | ✅ spec + sample |
-| **μ-UNLOCK-2b** | 2b 착수 잠금 해제 | ⬜ 사용자·감독 승인 대기 |
+| **μ-UNLOCK-2b** | 2b 착수 잠금 해제 | ✅ `branch_2b_unlocked=true` |
 
-**다음:** 승인 후 **μ-UNLOCK-2b** — `branch_2b_unlocked` (제안 필드). Branch-0 MUST 지속.
+**다음:** **μ-2b-00** — STAGE-1 skeleton / corpus 계약. Branch-0 MUST 지속.
 
 ---
 

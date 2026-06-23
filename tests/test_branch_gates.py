@@ -49,10 +49,30 @@ def test_gate_branch_state_file_valid():
     assert s["branch_0"] == "active"
     assert isinstance(s["branch_1_complete"], bool)
     assert isinstance(s["branch_2_unlocked"], bool)
+    assert isinstance(s.get("branch_2b_unlocked"), bool)
+    assert isinstance(s.get("branch_2b_design_complete"), bool)
+
+
+def test_gate_branch2b_unlocked_after_mu_unlock_2b():
+    """μ-UNLOCK-2b: branch_2b_unlocked + design_complete true."""
+    s = _branch_state()
+    assert s.get("branch_2b_design_complete") is True
+    assert s.get("branch_2b_unlocked") is True
+    assert (DESIGN / "BRANCH-2b-spec.md").is_file()
+
+
+def test_gate_branch2b_implementation_specs_forbidden_until_unlocked():
+    """STAGE-1 / BRANCH-3 specs forbidden until branch_2b_unlocked."""
+    if _branch_state().get("branch_2b_unlocked"):
+        pytest.skip("branch_2b_unlocked")
+    found: list[str] = []
+    for pattern in FORBIDDEN_BRANCH2_GLOBS:
+        found.extend(p.name for p in DESIGN.glob(pattern))
+    assert found == [], f"locked 2b implementation specs exist: {found}"
 
 
 def test_gate_branch2_specs_forbidden_while_locked():
-    """Branch-2b/3/STAGE-1: no spec files until branch_2_unlocked."""
+    """Legacy: branch_2_unlocked=false blocks all FORBIDDEN_BRANCH2 globs."""
     if _branch_state().get("branch_2_unlocked"):
         pytest.skip("branch_2_unlocked")
     found: list[str] = []

@@ -2,13 +2,14 @@
   "mu_id": "μ-PRE-2b-00",
   "branch": "Branch-2b",
   "stage": "STAGE-1",
-  "status": "design_only",
+  "status": "unlocked",
   "implementation_started": false,
-  "baseline_commit": "a4dcfaf",
-  "unlock_fields_proposed": {
-    "branch_2_unlocked": "Branch-2a only (existing, do not conflate)",
-    "branch_2b_unlocked": "false until μ-UNLOCK-2b",
-    "branch_2b_design_complete": "true after μ-PRE-2b-00"
+  "unlock_mu_id": "μ-UNLOCK-2b",
+  "baseline_commit": "ac673d7",
+  "unlock_fields": {
+    "branch_2_unlocked": true,
+    "branch_2b_unlocked": true,
+    "branch_2b_design_complete": true
   },
   "mu_ids_planned": [
     "μ-PRE-2b-00",

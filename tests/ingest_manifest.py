@@ -17,9 +17,8 @@ INGEST_TOUCH_PATHS: tuple[str, ...] = (
 
 # Branch-2+ spec files must not exist while locked
 FORBIDDEN_BRANCH2_GLOBS: tuple[str, ...] = (
-    "BRANCH-2b*.md",
-    "BRANCH-3*.md",
     "STAGE-1*.md",
+    "BRANCH-3*.md",
 )
 
 BRANCH_STATE_PATH = "tests/fixtures/branch_state.json"

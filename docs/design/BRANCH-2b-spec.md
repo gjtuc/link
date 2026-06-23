@@ -1,8 +1,8 @@
 # Branch-2b — STAGE 1 (cross-run corpus) — 설계만
 
-> **상태:** **μ-PRE-2b-00** — 설계 문서만 (구현 **미착수**)  
-> **선행:** Branch-0 MUST (μ-MAINT-ω), Branch-1 complete, Branch-2a 1차 관측 마감 (μ-B2a-ω), 파도 1~3 (MAINT·CAT·STAGE0)  
-> **잠금:** **구현·STAGE-1 코드·unlock 스크립트 실행 금지** — 감독·사용자 승인 후 **μ-UNLOCK-2b**부터
+> **상태:** **μ-UNLOCK-2b** ✅ — Branch-2b 착수 잠금 해제 (2026-06-23)  
+> **선행:** Branch-0 MUST (μ-MAINT-ω), Branch-1 complete, Branch-2a 1차 관측 마감 (μ-B2a-ω), 파도 1~3, **μ-PRE-2b-00**  
+> **다음:** **μ-2b-00** — STAGE-1 skeleton / corpus 계약 (구현 설계)
 
 ---
 
@@ -30,10 +30,10 @@ Branch-2b = **[STAGE 1](STAGE-0-CLOSURE-spec.md)** — 0단계 클로저 이후 
 | 3 | Branch-2a 1차 관측 마감 — AC-DEC-02 SHOULD 2경로 | ✅ μ-B2a-ω |
 | 4 | 파도 1~3 — MAINT, CAT, STAGE0 | ✅ |
 | 5 | **μ-PRE-2b-00** 본 spec + offline sample | ✅ (본 문서) |
-| 6 | **감독·사용자 승인** | ⬜ **대기** |
-| 7 | **μ-UNLOCK-2b** — `branch_2b_unlocked` 등 잠금 해제 | ⬜ 미착수 |
+| 6 | **감독·사용자 승인** | ✅ μ-UNLOCK-2b |
+| 7 | **μ-UNLOCK-2b** — `branch_2b_unlocked` 등 잠금 해제 | ✅ |
 
-**구현 착수 금지:** 위 6~7 미충족 시 `μ-2b-00` 이하 코드·DAG·live E2E 금지.
+**μ-2b-00 착수 가능:** 위 1~7 충족. STAGE-1 코드·live E2E는 μ-2b-00 주문부터.
 
 ---
 
@@ -44,7 +44,7 @@ Branch-2b = **[STAGE 1](STAGE-0-CLOSURE-spec.md)** — 0단계 클로저 이후 
 | μ-ID | 내용 | 검증 (예정) | 상태 |
 |------|------|-------------|------|
 | **μ-PRE-2b-00** | Branch-2b 설계 spec + sample | 본 spec + `branch2b_design_sample.json` | ✅ |
-| **μ-UNLOCK-2b** | branch_2b 착수 잠금 해제 조건 | `branch_state` + pytest gate | [ ] |
+| **μ-UNLOCK-2b** | branch_2b 착수 잠금 해제 조건 | `branch_state` + pytest gate | ✅ |
 | **μ-2b-00** | STAGE-1 skeleton / corpus 계약 | spec + offline pytest | [ ] |
 | **μ-2b-01** | cross-run ingest (설계→구현) | TBD — Neo4j·session 경계 | [ ] |
 | **μ-2b-02** | corpus query / UI 힌트 (선택) | TBD | [ ] |

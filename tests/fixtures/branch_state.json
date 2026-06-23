@@ -2,5 +2,7 @@
   "branch_0": "active",
   "branch_1_complete": true,
   "branch_2_unlocked": true,
-  "_comment": "branch_1_complete=true only after scripts/branch1_full_e2e.py exit 0. branch_2_unlocked stays false until explicitly unlocked post-closure."
+  "branch_2b_unlocked": true,
+  "branch_2b_design_complete": true,
+  "_comment": "branch_1_complete=true after branch1_full_e2e exit 0. branch_2_unlocked=2a. branch_2b_unlocked=true after μ-UNLOCK-2b."
 }
