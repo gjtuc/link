@@ -315,6 +315,10 @@ def _run_pipeline_batch_inner(sources: list[ExtractedSource], tracker: LinkStepT
     from deconstructor.web.debug_report import build_pipeline_debug
 
     skeleton = skeleton_index(list(fetched.nodes), list(fetched.edges))
+    from deconstructor.spine.api_payload import build_link_rationales_payload, build_spine_payload
+
+    spine = build_spine_payload(list(fetched.nodes), list(fetched.edges))
+    link_rationales = build_link_rationales_payload(list(fetched.nodes), list(fetched.edges))
     fc_block = {
         "mode": fc_mode,
         "corpus_pool_size": len(corpus_pool_accum),
@@ -364,6 +368,8 @@ def _run_pipeline_batch_inner(sources: list[ExtractedSource], tracker: LinkStepT
         "orchestration": orchestration,
         "pipeline_debug": pipeline_debug,
         "skeleton": skeleton,
+        "spine": spine,
+        "link_rationales": link_rationales,
         "recompose": recompose,
         "fact_checker": fc_block,
         "watch": watch,

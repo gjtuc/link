@@ -86,7 +86,8 @@
   "tests": [
     "tests/test_spine_design_sample.py",
     "tests/test_spine_rationale.py",
-    "tests/test_spine_index.py"
+    "tests/test_spine_index.py",
+    "tests/test_spine_api_payload.py"
   ],
   "scenario_ref": "S-SPINE-A"
 }

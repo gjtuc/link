@@ -1,6 +1,6 @@
 # Branch-SPINE — 읽기 UX (μ-SPINE-00 설계)
 
-> **상태:** **μ-SPINE-02** ✅ — `index.py` + `main_path.py` · **μ-SPINE-02-API 착수 대기**  
+> **상태:** **μ-SPINE-02-API** ✅ — analyze JSON `spine` + `link_rationales` · **μ-SPINE-03-UI 착수 대기**  
 > **쉬운 설명:** [BRANCH-SPINE-spec-읽기가이드.md](BRANCH-SPINE-spec-읽기가이드.md)  
 > **입력:** [STAGE-0-SPINE-philosophy.md](STAGE-0-SPINE-philosophy.md) · [STAGE-0-SPINE-2-scenarios.md](STAGE-0-SPINE-2-scenarios.md) · [STAGE-0-SPINE-3-acceptance.md](STAGE-0-SPINE-3-acceptance.md)  
 > **잠금:** `branch_spine_unlocked=true` — **μ-SPINE-UNLOCK** ✅ (2026-06-24)
@@ -121,7 +121,7 @@ class SpineRecord:
 | **μ-SPINE-UNLOCK** | `branch_spine_unlocked=true` (감독 승인·sample 갱신) | branch_state gate | ✅ |
 | **μ-SPINE-01** | `contract.py` + `rationale.py` 생성 | unit + fixture | ✅ 2026-06-24 |
 | **μ-SPINE-02** | `spine_index.py` (DAG, BRIDGE, main_path) | unit | ✅ 2026-06-24 |
-| **μ-SPINE-02-API** | analyze JSON `spine`, `link_rationales` | API test | [ ] |
+| **μ-SPINE-02-API** | analyze JSON `spine`, `link_rationales` | API test | ✅ 2026-06-24 |
 | **μ-SPINE-03-UI** | 좌측 목록 + dim + hover R4 | E2E A | [ ] |
 | **μ-SPINE-04-UI** | 옆 패널 노드/링크 토글 | E2E F, E | [ ] |
 | **μ-SPINE-05-UI** | 5b-B 체크 + NG-3 | E2E E | [ ] |
@@ -137,6 +137,7 @@ class SpineRecord:
 |------|------|
 | `deconstructor/spine/contract.py` | LinkRationale, SpineRecord |
 | `deconstructor/spine/rationale.py` | R4/R6 mechanical fallback |
+| `deconstructor/spine/api_payload.py` | analyze result blocks |
 | `deconstructor/spine/index.py` | spine enumeration |
 | `deconstructor/spine/main_path.py` | DAG 주 경로 |
 | `web/index.html` | 목록·패널·필터 |
