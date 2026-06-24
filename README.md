@@ -1,7 +1,16 @@
-# Deconstructor — 인과 그래프 엔진
+# Deconstructor (Link) — 원인과 결과 논리 뼈대 엔진
 
-뉴스·헤드라인을 **기계적 원자 사실(atomic facts)** 로 분해하고, 규칙 기반 엔진(The Skeptic)으로 **상관은 거부·인과만 검증**한 뒤 Neo4j에 저장·시각화하는 LangGraph 파이프라인입니다.
+**완성품(논문·보고서·서술) → 원인과 결과 crumb 해체 → Skeptic·Fact-Checker로 뼈대 강약 드러내기 → (재조립)**
 
+겉으로 잘 조리된 글을 **부위별로 해체**하고, 튼 연결·빈 원인·약한·거짛 원인→결과를 **숨기지 않고** 보여 준다.  
+코어: Deconstruct → Verify → Dreamer → Fact-Checker → Skeptic → Weaver.
+
+> **0-1 계약:** [docs/design/STAGE-0-1-product-definition.md](docs/design/STAGE-0-1-product-definition.md)  
+> **0-2 시나리오:** [docs/design/STAGE-0-2-user-scenarios.md](docs/design/STAGE-0-2-user-scenarios.md)  
+> **0-3 Acceptance:** [docs/design/STAGE-0-3-acceptance-criteria.md](docs/design/STAGE-0-3-acceptance-criteria.md)  
+> **0-4 Gap:** [docs/design/STAGE-0-4-current-vs-target.md](docs/design/STAGE-0-4-current-vs-target.md)  
+> **0-5 로드맵:** [docs/design/STAGE-0-5-implementation-roadmap.md](docs/design/STAGE-0-5-implementation-roadmap.md)  
+> **진행 규칙:** [docs/design/PROCESS.md](docs/design/PROCESS.md)  
 > 저장소: [github.com/gjtuc/link](https://github.com/gjtuc/link)
 
 ---
@@ -10,19 +19,21 @@
 
 | 원칙 | 설명 |
 |------|------|
+| **압축 ≠ 분해** | document ingest는 요약 없이 원문 청크 (STAGE 0-1 β-1) |
 | 서술 제거 | 감정·평가·전망은 Pydantic 스키마에 슬롯이 없음 |
 | 인과 ≠ 상관 | LLM 내러티브가 아니라 **코드화된 규칙(R01~R11)** 으로만 판정 |
-| 최소 영속화 | Weaver는 **검증된 엣지의 양 끝 노드만** Neo4j에 기록 |
+| provenance | extracted / inferred / promoted / dropped — **검증·가설·기각 숨기지 않음** (STAGE 0-1 δ) |
+| 최소 영속화 | Weaver는 검증 엣지 endpoint 중심 (8단계에서 orphan 정책 확장 예정) |
 
 ---
 
 ## 파이프라인 흐름
 
 ```
-입력 헤드라인
+완성품(서술·논문·보고서) — STAGE 0-1: document ingest, 청크
     │
     ▼
-[Deconstruct]  LLM → FactList (subject + state_change + timestamp)
+[Deconstruct]  LLM → FactList (subject + state_change)  ← 원인과 결과 crumb
     │
     ▼
 [Verify]       is_atomic=True → completed_facts / False → 재분해 대기

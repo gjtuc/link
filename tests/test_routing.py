@@ -18,8 +18,8 @@ def test_null_floor_to_skeptic():
     assert route_after_verify(_state()) == "skeptic"
 
 
-def test_null_floor_to_dreamer_when_enabled():
-    assert route_after_verify(_state(enable_dreamer=True)) == "dreamer"
+def test_null_floor_to_skeptic_pass1_when_enabled():
+    assert route_after_verify(_state(enable_dreamer=True)) == "skeptic_pass1"
 
 
 def test_non_atomic_loops():

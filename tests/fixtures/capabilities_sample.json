@@ -1,0 +1,119 @@
+{
+  "generated_at": "2026-06-22T14:44:40+00:00",
+  "branch_state": {
+    "branch_1_complete": true,
+    "branch_2_unlocked": true
+  },
+  "capabilities": [
+    {
+      "id": "cap-branch1-closure",
+      "status": "verified",
+      "human_line": "0단계 Branch-1(S0-B·S0-C) 전체 분석은 통과했어요. 이제 기본 시나리오는 믿고 쓸 수 있어요.",
+      "source": "branch_state.json",
+      "evidence": "branch_1_complete=true (branch1_full_e2e.py)"
+    },
+    {
+      "id": "cap-branch2a-active",
+      "status": "verified",
+      "human_line": "Branch-2a(μ-A 깊이)가 열렸어요. AC-DEC-02 밀도 S0-B median=5.5, S0-A PDF median=12로 관측했어요.",
+      "source": "branch_state.json",
+      "evidence": "branch_2_unlocked=true; B2a S0-B median=5.5 (b268c08), S0-A median=12.0"
+    },
+    {
+      "id": "cap-s0a-pdf",
+      "status": "verified",
+      "human_line": "논문 PDF 한 편 읽기·분석은 확인했어요. 요약 없이 원문 글자를 ingest 합니다.",
+      "source": "S0-A-E2E-RECORD.md",
+      "evidence": "pipeline ok, gap_count=6"
+    },
+    {
+      "id": "cap-s0b-draft",
+      "status": "verified",
+      "human_line": "보고서 초안(짧은 글·긴 글 청크) 분석은 Branch-1에서 확인했어요. Gap이 많아도 정상이에요.",
+      "source": "S0-B-E2E-RECORD.md",
+      "evidence": "gap=16 weak=2 fc=corpus (REG-B1 2026-06-22)"
+    },
+    {
+      "id": "cap-s0c-cross-doc",
+      "status": "verified",
+      "human_line": "파일 두 개(논문+메모)를 묶어 교차 원인→결과를 찾는 건 확인했어요.",
+      "source": "S0-C-E2E-RECORD.md",
+      "evidence": "bridge=1 merge_mode=batch_corpus"
+    },
+    {
+      "id": "cap-phase-r-read",
+      "status": "verified",
+      "human_line": "분석 전 읽기 검증(Phase R)은 통과했어요. 읽기 실패 시 LLM은 아예 돌지 않아요.",
+      "source": "phase_r_regression.py",
+      "evidence": "Branch-0 MUST gate"
+    },
+    {
+      "id": "cap-q1-two-pass",
+      "status": "verified",
+      "human_line": "Dreamer 2-pass(1차 Skeptic → 2차 Gap) 파이프라인은 Q1·REG-B1 후에도 Branch-1이 통과했어요.",
+      "source": "Q1-2PASS-DREAMER-spec.md",
+      "evidence": "μ-REG-B1 PASS ee54729"
+    },
+    {
+      "id": "cap-ingest-read-verify",
+      "status": "verified",
+      "human_line": "PDF·DOCX·텍스트는 읽기 계약(출처·요약 금지)을 지키면 ingest 됩니다.",
+      "source": "ingest_manifest",
+      "evidence": "9 ingest touch paths gated"
+    },
+    {
+      "id": "cap-ingest-multi-file",
+      "status": "verified",
+      "human_line": "여러 파일을 한 번에 넣는 batch ingest는 S0-C에서 확인했어요.",
+      "source": "S0-C-E2E-RECORD.md",
+      "evidence": "2 distinct source_file"
+    },
+    {
+      "id": "cat-pdf-triple",
+      "status": "untested",
+      "human_line": "PDF 세 개를 한꺼번에 올리는 건 아직 안 해봤어요. 한 번에 많이 넣으면 느려질 수 있어요.",
+      "source": "catalog",
+      "evidence": "probe 2026-06-22 exit 0 — 3 source_file, pipeline_ok, ~496s"
+    },
+    {
+      "id": "cat-opju-origin",
+      "status": "unsupported",
+      "human_line": "Origin `.opju` 프로젝트 파일은 지금 Link가 읽지 못해요. PDF나 텍스트로보내 주세요.",
+      "source": "catalog",
+      "evidence": "extract 미구현 — 미지원 형식"
+    },
+    {
+      "id": "cat-scanned-pdf",
+      "status": "untested",
+      "human_line": "스캔 PDF나 표만 있는 PDF는 글자 추출이 잘 안 될 수 있어요. 아직 충분히 검증하지 않았어요.",
+      "source": "catalog",
+      "evidence": "probe 2026-06-22 exit 2 — not_true_scan (no scan PDF); Phase-R ok"
+    },
+    {
+      "id": "cat-file-10mb",
+      "status": "untested",
+      "human_line": "10MB 넘는 단일 파일은 메모리·시간이 많이 듭니다. 아직 큰 파일로는 안 해봤어요.",
+      "source": "catalog",
+      "evidence": "probe 미실행 — 크기 부하"
+    },
+    {
+      "id": "cat-neo4j-off",
+      "status": "untested",
+      "human_line": "Neo4j DB가 꺼져 있어도 분석과 HTML 그래프는 보여 줄 수 있어요. DB 동기·영구 저장은 제한됩니다.",
+      "source": "catalog",
+      "evidence": "probe R1 2026-06-23 exit 0 — bolt offline, pipeline_ok, ~96s, LINK_DISABLE_NEO4J_AUTO_START"
+    },
+    {
+      "id": "cat-gemini-429",
+      "status": "untested",
+      "human_line": "Gemini 일일 한도(429)에 걸리면 분석이 중간에 멈출 수 있어요. quota 리셋 후 다시 시도하세요.",
+      "source": "catalog",
+      "evidence": "probe 미실행 — 2026-06 Branch-1 quota 관측"
+    }
+  ],
+  "summary": {
+    "verified": 9,
+    "untested": 5,
+    "unsupported": 1
+  }
+}

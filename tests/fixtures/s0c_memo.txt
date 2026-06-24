@@ -1,0 +1,6 @@
+Lab Memo — Supplementary Notes
+
+Ni catalyst particle size grew from 3.5 nm to 10.5 nm when loading exceeded 4 wt%.
+Grid power supply remained stable during overnight runs.
+Ni catalyst surface area decreased slightly after the third regeneration cycle.
+Coolant flow was reduced at peak thermal load.

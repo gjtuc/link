@@ -95,6 +95,9 @@ class Neo4jWeaver:
                         f.reasoning = $reasoning,
                         f.anchor_fact_id = $anchor_fact_id,
                         f.author = $author,
+                        f.source_file = $source_file,
+                        f.page_range = $page_range,
+                        f.chunk_id = $chunk_id,
                         f.stress_level = coalesce(f.stress_level, $stress_level),
                         f.is_critical = coalesce(f.is_critical, $is_critical)
                     """,
@@ -109,6 +112,9 @@ class Neo4jWeaver:
                     reasoning=fact.reasoning or "",
                     anchor_fact_id=fact.anchor_fact_id,
                     author=fact.author,
+                    source_file=fact.source_file or "",
+                    page_range=fact.page_range or "",
+                    chunk_id=fact.chunk_id or "",
                     stress_level=fact.stress_level or DEFAULT_STRESS_LEVEL,
                     is_critical=fact.is_critical if fact.is_critical else DEFAULT_IS_CRITICAL,
                 )
@@ -182,6 +188,9 @@ class Neo4jWeaver:
                         f.reasoning = $reasoning,
                         f.anchor_fact_id = $anchor_fact_id,
                         f.author = $author,
+                        f.source_file = $source_file,
+                        f.page_range = $page_range,
+                        f.chunk_id = $chunk_id,
                         f.stress_level = coalesce(f.stress_level, $stress_level),
                         f.is_critical = coalesce(f.is_critical, $is_critical)
                     """,
@@ -196,6 +205,9 @@ class Neo4jWeaver:
                     reasoning=fact.reasoning or "",
                     anchor_fact_id=fact.anchor_fact_id,
                     author=fact.author,
+                    source_file=fact.source_file or "",
+                    page_range=fact.page_range or "",
+                    chunk_id=fact.chunk_id or "",
                     stress_level=fact.stress_level or DEFAULT_STRESS_LEVEL,
                     is_critical=fact.is_critical if fact.is_critical else DEFAULT_IS_CRITICAL,
                 )

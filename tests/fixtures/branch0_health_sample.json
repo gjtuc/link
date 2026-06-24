@@ -1,0 +1,11 @@
+{
+  "mu_id": "μ-MAINT-02",
+  "ok": true,
+  "steps": [
+    {"step": "stage0_reaudit_baseline", "exit_code": 0, "mismatches": []},
+    {"step": "phase_r_regression", "exit_code": 0},
+    {"step": "pytest_branch_gates_ingest", "exit_code": 0}
+  ],
+  "mismatches": [],
+  "log_ref": "logs/branch0_health/20260623-1357-health.json"
+}

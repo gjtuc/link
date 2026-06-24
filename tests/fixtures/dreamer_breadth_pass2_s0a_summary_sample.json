@@ -1,0 +1,42 @@
+{
+  "mode": "2pass_pass2",
+  "fixture": "s0a",
+  "runs": 3,
+  "timestamp": "2026-06-22T17:25:07",
+  "pass1_edge_count": 15,
+  "pass2_gap_count": 6,
+  "pass2_source_count": 10,
+  "deconstruct_fact_count": 12,
+  "averages": {
+    "exact_duplicate_rate": 0.0,
+    "unique_subject_ratio": 1.0,
+    "mechanism_similarity_mean": 0.06716005633245703
+  },
+  "runs_detail": [
+    {
+      "exact_duplicate_rate": 0.0,
+      "unique_subject_ratio": 1.0,
+      "mechanism_similarity_mean": 0.06716005633245703,
+      "count": 18.0
+    },
+    {
+      "exact_duplicate_rate": 0.0,
+      "unique_subject_ratio": 1.0,
+      "mechanism_similarity_mean": 0.06716005633245703,
+      "count": 18.0
+    },
+    {
+      "exact_duplicate_rate": 0.0,
+      "unique_subject_ratio": 1.0,
+      "mechanism_similarity_mean": 0.06716005633245703,
+      "count": 18.0
+    }
+  ],
+  "div03_thresholds": {
+    "exact_duplicate_rate_max": 0.1,
+    "unique_subject_ratio_min": 0.7,
+    "mechanism_similarity_mean_max": 0.15
+  },
+  "div03_pass": true,
+  "div03_notes": []
+}

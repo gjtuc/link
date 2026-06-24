@@ -15,8 +15,9 @@ from deconstructor.web.progress_ctx import bind_progress, set_node_step, unbind_
 NODE_LABELS: dict[str, str] = {
     "deconstruct": "Gemini 사실 분해 (Deconstruct)",
     "verify": "재귀·깊이 검증 (Verify)",
+    "skeptic_pass1": "1차 인과 검증 (Skeptic pass1)",
     "dreamer": "가설 생성 (Dreamer Flash→Pro)",
-    "fact_checker": "웹 팩트체크 (Tavily)",
+    "fact_checker": "팩트체크 (Tavily / Corpus)",
     "skeptic": "인과 검증 (Skeptic)",
     "weaver": "그래프 엣지·Neo4j (Weaver)",
 }
@@ -57,10 +58,13 @@ def run_pipeline_with_steps(
     dry_run: bool = False,
     dreamer_dry_run: bool | None = None,
     fact_checker_dry_run: bool | None = None,
+    fact_checker_mode: str | None = None,
     persist_db: bool = False,
     enable_dreamer: bool = True,
     max_recursion_depth: int | None = None,
     analysis_run_id: str | None = None,
+    source_document_meta: dict[str, str | int] | None = None,
+    corpus_fact_pool: list | None = None,
 ) -> dict[str, Any]:
     """파이프라인 1회 실행 — LangGraph task 시작/완료 + 노드 내부 하위 단계."""
     prefix = f"S4-{batch_idx}"
@@ -71,6 +75,7 @@ def run_pipeline_with_steps(
         dry_run=dry_run,
         dreamer_dry_run=dreamer_dry_run,
         fact_checker_dry_run=fact_checker_dry_run,
+        fact_checker_mode=fact_checker_mode,
         persist_db=persist_db,
         enable_dreamer=enable_dreamer,
     )
@@ -82,6 +87,8 @@ def run_pipeline_with_steps(
         max_recursion_depth=max_recursion_depth,
         enable_dreamer=enable_dreamer,
         analysis_run_id=analysis_run_id,
+        source_document_meta=source_document_meta,
+        corpus_fact_pool=corpus_fact_pool,
     )
     tracker.ok(f"{prefix}-INIT")
 

@@ -2,12 +2,19 @@
 
 from __future__ import annotations
 
+import pytest
+
 from datetime import datetime, timedelta
 
 from deconstructor.models import AtomicFact
 from deconstructor.skeptic.schemas import CausalHypothesis, RuleContext
 
 T0 = datetime(2026, 6, 1, 10, 0, 0)
+
+
+def pytest_configure(config):
+    config.addinivalue_line("markers", "expensive: live LLM E2E (Sprint 3, optional)")
+    config.addinivalue_line("markers", "live: live LLM probe (optional, e.g. dreamer breadth)")
 
 
 def fact(

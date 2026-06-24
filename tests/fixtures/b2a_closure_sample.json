@@ -1,0 +1,27 @@
+{
+  "mu_id": "μ-B2a-ω",
+  "branch": "Branch-2a",
+  "closure": "1차 관측 마감",
+  "baseline_commit": "51c3afa",
+  "branch_2_unlocked": true,
+  "branch_2b_locked": true,
+  "observations": {
+    "mu_b2a_01": {
+      "fixture": "s0b_draft_short+long",
+      "median_completed_facts": 5.5,
+      "completed_facts_per_run": [5, 5, 13, 6],
+      "commit": "b268c08",
+      "log_ref": "logs/b2a_density/20260623-0004-b2a-density-detail.json"
+    },
+    "mu_b2a_02": {
+      "fixture": "s0a_paper.pdf",
+      "median_completed_facts": 12.0,
+      "completed_facts_per_run": [12],
+      "commit": "51c3afa",
+      "log_ref": "logs/b2a_density/20260623-1315-b2a-density-s0a-detail.json"
+    }
+  },
+  "scan_probes_complete": ["μ-PROBE-SCAN-R2a", "μ-PROBE-SCAN-R2b"],
+  "ac_dec_02_median_target": 5,
+  "live_e2e_rerun": false
+}

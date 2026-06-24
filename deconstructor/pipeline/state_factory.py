@@ -46,6 +46,8 @@ def make_initial_state(
     max_recursion_depth: int | None = None,
     enable_dreamer: bool = False,
     analysis_run_id: str | None = None,
+    source_document_meta: dict[str, str | int] | None = None,
+    corpus_fact_pool: list | None = None,
 ) -> State:
     """Create fresh State dict ready for graph.stream / invoke."""
     cap = (
@@ -56,6 +58,7 @@ def make_initial_state(
     return {
         "raw_text": raw_text,
         "analysis_run_id": analysis_run_id or str(uuid.uuid4()),
+        "source_document_meta": dict(source_document_meta or {}),
         "extracted_facts": [],
         "completed_facts": [],
         "recursion_depth": 0,
@@ -72,5 +75,9 @@ def make_initial_state(
         "dropped_hypotheses": [],
         "fact_checker_log": [],
         "enable_dreamer": enable_dreamer,
+        "verified_edges_pass1": [],
+        "pass2_gap_nodes": [],
+        "skeptic_pass1_log": [],
+        "corpus_fact_pool": list(corpus_fact_pool or []),
         "weaver_result": None,
     }

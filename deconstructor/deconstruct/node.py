@@ -35,6 +35,7 @@ First pass: decompose full `raw_text`. Re-entry: re-split `pending[0]` as
 from __future__ import annotations
 
 from deconstructor.deconstruct.apply import apply_deconstruct_result
+from deconstructor.deconstruct.density_hints import min_facts_for_text
 from deconstructor.deconstruct.input import resolve_llm_target
 from deconstructor.deconstruct.llm_runner import invoke_fact_list
 from deconstructor.pipeline.state import State
@@ -56,7 +57,10 @@ def deconstruct_node(state: State) -> dict:
 
     # R12-2: structured output FactList
     with progress_sub("LLM", "Gemini FactList 호출", f"{len(target.text)}자"):
-        result = invoke_fact_list(target.text)
+        result = invoke_fact_list(
+            target.text,
+            min_facts_hint=min_facts_for_text(target.text),
+        )
 
     # parent_id 있으면 해당 crumb를 children으로 교체; depth +1
     return apply_deconstruct_result(

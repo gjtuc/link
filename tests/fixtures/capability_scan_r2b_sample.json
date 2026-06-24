@@ -1,0 +1,19 @@
+{
+  "mu_id": "μ-PROBE-SCAN-R2b",
+  "scenario": "PROBE-scanned-pdf",
+  "cat_id": "cat-scanned-pdf",
+  "catalog_unchanged": true,
+  "file": "molecularstructureofDNAswatsoncrick.pdf",
+  "pdf_class": "scan_ocr_noisy",
+  "pypdf_extract_chars": 6630,
+  "page_count": 2,
+  "phase_r_ok": true,
+  "pipeline_ok": true,
+  "failed_step": null,
+  "failure_class": "pipeline_ok",
+  "exit_code": 0,
+  "elapsed_sec": 241.4,
+  "nodes": 12,
+  "edges": 23,
+  "log_ref": "logs/capability_probes/20260623-1130-cat-scanned-pdf-detail.json"
+}

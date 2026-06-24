@@ -34,6 +34,7 @@ from __future__ import annotations
 
 from deconstructor.pipeline.state import State
 from deconstructor.provenance.assign import tag_as_extracted
+from deconstructor.verify.compound_heuristic import apply_compound_heuristic
 from deconstructor.verify.partition import partition_by_atomicity
 
 
@@ -43,8 +44,12 @@ def verify_node(state: State) -> dict:
 
     [PROV-S1-3] atomic 이동 시 source_type=extracted 강제.
     """
-    atomic, non_atomic = partition_by_atomicity(state["extracted_facts"])
-    tagged_atomic = tag_as_extracted(atomic)
+    adjusted = apply_compound_heuristic(state["extracted_facts"])
+    atomic, non_atomic = partition_by_atomicity(adjusted)
+    tagged_atomic = tag_as_extracted(
+        atomic,
+        document_meta=state.get("source_document_meta") or {},
+    )
     return {
         "extracted_facts": non_atomic,
         "completed_facts": tagged_atomic,

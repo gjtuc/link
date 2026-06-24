@@ -2,6 +2,24 @@
 로컬 웹 UI — Google 번역 스타일 입력 + graph_output.html 미리보기
 ================================================================
 
+STAGE 0-2 (사용자 시나리오) — UI ↔ 시나리오 매핑
+-------------------------------------------------
+  | UI 진입 | 시나리오 ID | 설명 |
+  |---------|-------------|------|
+  | 파일 탭 PDF/DOCX | S0-A, S0-C | 완성품 → 청크 ingest (ζ-1) |
+  | 텍스트 탭 붙여넣기 | S0-B | 보고서 초안, 길면 청크 |
+  | URL / 텍스트 내 URL | S0-D | HTML summarize (ingest 부록) |
+  | 그래프 우클릭 가설 | S0-E | Human-in-the-loop |
+  | /debug.html | S0-F | 파이프라인·FC mode 재현 (δ) |
+
+  상세 Given/When/Then: ``docs/design/STAGE-0-2-user-scenarios.md``
+  Acceptance (AC-*): ``docs/design/STAGE-0-3-acceptance-criteria.md``
+  Gap (G-*): ``docs/design/STAGE-0-4-current-vs-target.md`` — AC-FC-02 stub UI (G-FC-UI)
+  Roadmap: ``docs/design/STAGE-0-5-implementation-roadmap.md`` — Sprint 0 SP0-FC-* ✅
+  Sprint 0: ``config.fact_checker_status_mode()`` → index.html 「미검증 가설」 (AC-FC-02)
+  계약: ``docs/design/STAGE-0-1-product-definition.md``
+  진행: ``docs/design/PROCESS.md``
+
 엔드포인트
 ----------
   GET  /           — ``web/index.html`` (PDF·URL·텍스트 입력, 그래프 iframe)
@@ -12,11 +30,12 @@
   GET  /graph_output.html — pyvis 산출물 (범례·hover JS 주입됨)
   GET  /debug.html       — 마지막 배치 파이프라인·Neo4j·색상 디버그
   GET  /api/debug/pipeline — 동일 JSON
+  GET  /api/capabilities — Q2 능력·한계 카드 JSON (μ-Q2-03)
 
 런타임 연동
 -----------
   - ``neo4j_launcher`` — 분석 전 bolt 가용 시 자동 기동, 세션 heartbeat
-  - ``fact_checker_dry_run`` — ``config.has_tavily`` 없으면 stub 검증
+  - ``fact_checker_dry_run`` — ``config.tavily_enabled()`` False면 stub 검증
   - Neo4j 불가 시 ``state_graph.graph_from_pipeline_state`` 로 세션 그래프만 표시
 """
 
@@ -59,6 +78,8 @@ LINK_UI_FEATURES = (
     "analyze_result",
     "human_hypothesis",
     "debug_pipeline",
+    "skeleton",
+    "recompose",
 )
 
 _run_lock = threading.Lock()
@@ -191,6 +212,20 @@ class LinkUIHandler(BaseHTTPRequestHandler):
             self._send_json(_last_result or {"ok": False, "message": "아직 실행 기록 없음"})
             return
 
+        if path == "/api/skeleton":
+            if _last_result and _last_result.get("skeleton"):
+                self._send_json({"ok": True, "skeleton": _last_result["skeleton"]})
+                return
+            self._send_json({"ok": False, "message": "아직 skeleton 없음 — 분석 후 조회"}, status=404)
+            return
+
+        if path == "/api/recompose":
+            if _last_result and _last_result.get("recompose"):
+                self._send_json({"ok": True, "recompose": _last_result["recompose"]})
+                return
+            self._send_json({"ok": False, "message": "아직 recompose 없음 — 분석 후 조회"}, status=404)
+            return
+
         if path == "/api/graph-filter":
             from deconstructor.web.graph_context import get_graph_filter_snapshot
 
@@ -271,6 +306,7 @@ class LinkUIHandler(BaseHTTPRequestHandler):
             return
 
         if path == "/api/status":
+            from deconstructor import config
             from deconstructor.neo4j_launcher import (
                 _dbms_display_name,
                 active_ui_tab_count,
@@ -279,6 +315,7 @@ class LinkUIHandler(BaseHTTPRequestHandler):
                 probe_neo4j_installation,
             )
             from deconstructor.viz.neo4j_utils import neo4j_is_available
+            from deconstructor.corpus.status_block import build_corpus_status_block
 
             probe = probe_neo4j_installation(ROOT)
             self._send_json(
@@ -291,6 +328,10 @@ class LinkUIHandler(BaseHTTPRequestHandler):
                     "neo4j_managed": is_managed_neo4j(),
                     "neo4j_link_session": link_neo4j_ui_session_active(),
                     "ui_tabs": active_ui_tab_count(),
+                    "fact_checker": config.fact_checker_status_mode(),
+                    "corpus_fc_enabled": config.corpus_fc_enabled(),
+                    "tavily_disabled": config.TAVILY_DISABLED,
+                    "cross_run_corpus": build_corpus_status_block(),
                     "install": {
                         "docker": probe.docker_cli,
                         "compose": probe.compose_file,
@@ -304,6 +345,12 @@ class LinkUIHandler(BaseHTTPRequestHandler):
                     },
                 }
             )
+            return
+
+        if path == "/api/capabilities":
+            from deconstructor.capabilities import build_capabilities
+
+            self._send_json(build_capabilities())
             return
 
         if path.startswith("/static/"):
@@ -492,20 +539,22 @@ class LinkUIHandler(BaseHTTPRequestHandler):
 
 def main(host: str = "127.0.0.1", port: int = 8765) -> None:
     from deconstructor.neo4j_launcher import _cleanup_on_process_exit, start_ui_watchdog
+    from deconstructor.print_util import bootstrap_stdio_utf8, safe_print
 
+    bootstrap_stdio_utf8()
     bootstrap_ssl_trust()
     os.chdir(ROOT)
     start_ui_watchdog()
     server = ThreadingHTTPServer((host, port), LinkUIHandler)
     url = f"http://{host}:{port}/"
-    print(f"[LinkUI] Deconstructor web UI → {url}")
-    print("[LinkUI] 지원: 텍스트·URL·이미지·PDF/DOCX - 여러 개 동시 입력")
-    print("[LinkUI] 브라우저 탭·창이 닫히거나 45초 이상 숨겨지면 Link가 켠 Neo4j·Desktop 자동 정리")
-    print("[LinkUI] 종료: Ctrl+C")
+    safe_print(f"[LinkUI] Deconstructor web UI → {url}")
+    safe_print("[LinkUI] 지원: 텍스트·URL·이미지·PDF/DOCX - 여러 개 동시 입력")
+    safe_print("[LinkUI] 브라우저 탭·창이 닫히거나 45초 이상 숨겨지면 Link가 켠 Neo4j·Desktop 자동 정리")
+    safe_print("[LinkUI] 종료: Ctrl+C")
     try:
         server.serve_forever()
     except KeyboardInterrupt:
-        print("\n[LinkUI] stopped")
+        safe_print("\n[LinkUI] stopped")
     finally:
         _cleanup_on_process_exit()
 

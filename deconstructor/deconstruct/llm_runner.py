@@ -35,24 +35,36 @@ from typing import Any
 
 from langchain_core.messages import HumanMessage, SystemMessage
 
+from deconstructor.deconstruct.density_hints import density_hint_line
 from deconstructor.deconstruct.prompts import DECONSTRUCT_SYSTEM, DECONSTRUCT_USER
 from deconstructor.llm import get_chat_model
 from deconstructor.models import FactList
 
 
-def build_deconstruct_messages(text: str) -> list:
+def build_deconstruct_messages(text: str, *, min_facts_hint: int | None = None) -> list:
     """
     R12-1: assemble system + user messages.
 
     시스템 규칙(DECONSTRUCT_SYSTEM)과 사용자 입력 템플릿을 LangChain Message 리스트로 조립.
     """
+    extra = density_hint_line(text)
+    if min_facts_hint and min_facts_hint > 2 and not extra:
+        extra = (
+            f"\n- Extract at least {min_facts_hint} distinct facts when the text supports it.\n"
+        )
+    user_body = DECONSTRUCT_USER.format(text=text) + extra
     return [
         SystemMessage(content=DECONSTRUCT_SYSTEM),
-        HumanMessage(content=DECONSTRUCT_USER.format(text=text)),
+        HumanMessage(content=user_body),
     ]
 
 
-def invoke_fact_list(text: str, *, llm: Any | None = None) -> FactList:
+def invoke_fact_list(
+    text: str,
+    *,
+    llm: Any | None = None,
+    min_facts_hint: int | None = None,
+) -> FactList:
     """
     R12-2: call LLM with structured FactList output.
 
@@ -67,4 +79,4 @@ def invoke_fact_list(text: str, *, llm: Any | None = None) -> FactList:
         if llm is not None
         else get_chat_model(tier="flash").with_structured_output(FactList)
     )
-    return model.invoke(build_deconstruct_messages(text))
+    return model.invoke(build_deconstruct_messages(text, min_facts_hint=min_facts_hint))

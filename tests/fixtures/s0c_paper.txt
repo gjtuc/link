@@ -1,0 +1,7 @@
+Ni Catalyst Study — Primary Document
+
+Ni catalyst loading was increased from 2 wt% to 5 wt% in the reformer experiments.
+Reactor temperature rose from 650 C to 720 C during activation.
+CH4 conversion increased from 45 percent to 78 percent after catalyst activation.
+Heat input increased due to exothermic side reactions in the secondary loop.
+Overall yield improved under optimized Ni catalyst conditions at 700 C.

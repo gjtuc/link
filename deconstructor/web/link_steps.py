@@ -13,6 +13,8 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Any, Callable
 
+from deconstructor.print_util import safe_print
+
 
 @dataclass
 class LinkStepRecord:
@@ -42,7 +44,7 @@ class LinkStepTracker:
         line = f"[LinkUI:{step}] {label}"
         if detail:
             line += f" — {detail}"
-        print(line)
+        safe_print(line)
         self._notify()
 
     def ok(self, step: str | None = None, detail: str = "") -> None:
@@ -54,7 +56,7 @@ class LinkStepTracker:
                 rec.status = "ok"
                 if detail:
                     rec.detail = detail
-                print(f"[LinkUI:{code}] OK {detail}".rstrip())
+                safe_print(f"[LinkUI:{code}] OK {detail}".rstrip())
                 self._notify()
                 return
         self._notify()
@@ -63,7 +65,7 @@ class LinkStepTracker:
         self.steps.append(
             LinkStepRecord(step=step, label=label, status="skip", detail=detail)
         )
-        print(f"[LinkUI:{step}] SKIP {label} {detail}".rstrip())
+        safe_print(f"[LinkUI:{step}] SKIP {label} {detail}".rstrip())
         self._notify()
 
     def fail(self, exc: BaseException, *, step: str | None = None) -> dict[str, Any]:
@@ -81,8 +83,8 @@ class LinkStepTracker:
             self.steps.append(
                 LinkStepRecord(step=code, label="오류", status="error", detail=msg[:500])
             )
-        print(f"[LinkUI:{code}] ERROR {msg}")
-        print(tb)
+        safe_print(f"[LinkUI:{code}] ERROR {msg}")
+        safe_print(tb)
         self._notify()
         return {
             "ok": False,

@@ -58,6 +58,9 @@ class GraphNode:
     anchor_fact_id: str | None = None
     reasoning: str | None = None
     author: str | None = None
+    source_file: str | None = None
+    page_range: str | None = None
+    chunk_id: str | None = None
 
 
 @dataclass(frozen=True)
@@ -73,6 +76,7 @@ class GraphEdge:
     target_id: str
     probability: float
     latency: int | None
+    edge_kind: str = "CAUSES"  # CAUSES | BRIDGE (Sprint 2 cross-doc)
 
 
 @dataclass(frozen=True)
@@ -238,7 +242,10 @@ def fetch_causal_graph(
                            coalesce(f.is_critical, $default_critical) AS is_critical,
                            f.anchor_fact_id AS anchor_fact_id,
                            f.reasoning AS reasoning,
-                           f.author AS author
+                           f.author AS author,
+                           f.source_file AS source_file,
+                           f.page_range AS page_range,
+                           f.chunk_id AS chunk_id
                     ORDER BY f.timestamp, f.subject
                     LIMIT $limit
                 """
@@ -279,7 +286,10 @@ def fetch_causal_graph(
                            coalesce(f.is_critical, $default_critical) AS is_critical,
                            f.anchor_fact_id AS anchor_fact_id,
                            f.reasoning AS reasoning,
-                           f.author AS author
+                           f.author AS author,
+                           f.source_file AS source_file,
+                           f.page_range AS page_range,
+                           f.chunk_id AS chunk_id
                     ORDER BY f.timestamp, f.subject
                     LIMIT $limit
                 """
@@ -330,6 +340,9 @@ def fetch_causal_graph(
                     anchor_fact_id=row.get("anchor_fact_id"),
                     reasoning=row.get("reasoning") or None,
                     author=row.get("author") or None,
+                    source_file=row.get("source_file") or None,
+                    page_range=row.get("page_range") or None,
+                    chunk_id=row.get("chunk_id") or None,
                 )
                 for row in node_rows
             ]

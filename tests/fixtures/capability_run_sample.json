@@ -1,0 +1,7 @@
+{
+  "timestamp": "2026-06-22T12:00:00",
+  "id": "cap-s0b-draft",
+  "script": "s0b_e2e_run.py",
+  "exit_code": 0,
+  "human_line": "보고서 초안(짧은 글·긴 글 청크) 분석은 Branch-1에서 확인했어요. Gap이 많아도 정상이에요."
+}

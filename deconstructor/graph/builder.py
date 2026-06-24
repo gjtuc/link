@@ -2,11 +2,16 @@
 LangGraph 컴파일 및 파이프라인 실행 진입점 (Canonical Graph Builder)
 =====================================================================
 
-Step 4 토폴로지 (--enable-dreamer):
+STAGE 0-1 (제품 계약) — 코어 DAG (변경 금지 방향)
+-------------------------------------------------
+  완성품 → **Deconstruct(해체)** → Verify(粒度) → Dreamer(빈 원인) →
+  Fact-Checker(상함 검사) → Skeptic(원인→결과 법칙) → Weaver → END
+
+Q1 2-pass (enable_dreamer=True):
 
     deconstruct → verify ⇄ loop
                     ↓
-              dreamer (Flash 15~20 → Pro ≤5) → fact_checker → skeptic → weaver → END
+              skeptic_pass1 → dreamer → fact_checker → skeptic → weaver → END
 
 기본 (enable_dreamer=False):
 
@@ -19,6 +24,7 @@ from functools import partial
 
 from langgraph.graph import END, StateGraph
 
+from deconstructor import config
 from deconstructor.agents.dreamer.node import dreamer_node
 from deconstructor.agents.fact_checker.node import fact_checker_node
 from deconstructor.deconstruct.node import deconstruct_node
@@ -27,6 +33,7 @@ from deconstructor.pipeline.state import State
 from deconstructor.pipeline.state_factory import make_initial_state
 from deconstructor.routing.after_verify import route_after_verify
 from deconstructor.skeptic.node import skeptic_node
+from deconstructor.skeptic.pass1_node import skeptic_pass1_node
 from deconstructor.verify.node import verify_node
 from deconstructor.weaver.node import weaver_node
 
@@ -38,6 +45,7 @@ def build_graph(
     dry_run: bool = False,
     dreamer_dry_run: bool | None = None,
     fact_checker_dry_run: bool | None = None,
+    fact_checker_mode: str | None = None,
     persist_db: bool = False,
     enable_dreamer: bool = False,
 ):
@@ -47,12 +55,21 @@ def build_graph(
     Args:
         dry_run: stub deconstruct / skeptic mechanism (dreamer·fact_checker는 별도 인자).
         dreamer_dry_run: None이면 dry_run과 동일.
-        fact_checker_dry_run: None이면 dry_run과 동일.
+        fact_checker_dry_run: Legacy bool; True→stub. Prefer ``fact_checker_mode``.
+        fact_checker_mode: ``live`` | ``corpus`` | ``stub`` (Sprint 5).
         persist_db: Neo4j weaver + ghost persist.
-        enable_dreamer: verify 탈출 시 dreamer→fact_checker 경로.
+        enable_dreamer: Q1 2-pass — skeptic_pass1 → dreamer → fact_checker → skeptic.
     """
     _dreamer_dry = dry_run if dreamer_dry_run is None else dreamer_dry_run
-    _fc_dry = dry_run if fact_checker_dry_run is None else fact_checker_dry_run
+    if fact_checker_mode is None:
+        if fact_checker_dry_run is True:
+            _fc_mode = "stub"
+        elif fact_checker_dry_run is False:
+            _fc_mode = "live" if config.tavily_enabled() else config.resolve_fact_checker_mode()
+        else:
+            _fc_mode = config.resolve_fact_checker_mode()
+    else:
+        _fc_mode = fact_checker_mode
 
     workflow = StateGraph(State)
 
@@ -64,17 +81,17 @@ def build_graph(
 
     if enable_dreamer:
         print(
-            "[STEP4-build] wiring dreamer → fact_checker → skeptic "
-            f"(dreamer_dry={_dreamer_dry}, fact_checker_dry={_fc_dry})"
+            "[STEP4-build] wiring skeptic_pass1 → dreamer → fact_checker → skeptic "
+            f"(dreamer_dry={_dreamer_dry}, fact_checker_mode={_fc_mode})"
         )
+        workflow.add_node("skeptic_pass1", partial(skeptic_pass1_node, dry_run=dry_run))
         workflow.add_node("dreamer", partial(dreamer_node, dry_run=_dreamer_dry))
         workflow.add_node(
-            "fact_checker", partial(fact_checker_node, dry_run=_fc_dry)
+            "fact_checker", partial(fact_checker_node, mode=_fc_mode)
         )
         route_map = {
             "deconstruct": "deconstruct",
-            "dreamer": "dreamer",
-            "skeptic": "skeptic",
+            "skeptic_pass1": "skeptic_pass1",
         }
     else:
         route_map = {
@@ -87,6 +104,7 @@ def build_graph(
     workflow.add_conditional_edges("verify", route_after_verify, route_map)
 
     if enable_dreamer:
+        workflow.add_edge("skeptic_pass1", "dreamer")
         workflow.add_edge("dreamer", "fact_checker")
         workflow.add_edge("fact_checker", "skeptic")
 

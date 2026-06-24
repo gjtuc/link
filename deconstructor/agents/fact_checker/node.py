@@ -26,6 +26,7 @@ import logging
 from typing import TYPE_CHECKING
 
 from deconstructor.agents.fact_checker.apply import drop_fact, promote_fact
+from deconstructor.agents.fact_checker.corpus import collect_corpus_pool, corpus_verify_hypothesis
 from deconstructor.agents.fact_checker.query_builder import build_search_query
 from deconstructor.agents.fact_checker.schemas import DroppedHypothesis
 from deconstructor.agents.fact_checker.search.factory import get_search_provider
@@ -50,15 +51,25 @@ def _log(msg: str) -> None:
 def _check_one_hypothesis(
     fact: AtomicFact,
     *,
-    dry_run: bool,
+    mode: str = "stub",
+    dry_run: bool | None = None,
     search_provider=None,
     llm=None,
+    corpus_pool: list[AtomicFact] | None = None,
 ) -> tuple[AtomicFact | None, DroppedHypothesis | None, list[str]]:
     """가설 1건 검증 → promote 또는 drop."""
-    logs: list[str] = []
-    logs.append(f"[CHECK-S3-node] checking id={fact.id[:8]}.. subject={fact.subject!r}")
+    if dry_run is not None:
+        mode = "stub" if dry_run else "live"
 
-    if dry_run:
+    logs: list[str] = []
+    logs.append(
+        f"[CHECK-S3-node] checking id={fact.id[:8]}.. subject={fact.subject!r} mode={mode}"
+    )
+
+    if mode == "corpus":
+        pool = corpus_pool or []
+        verdict = corpus_verify_hypothesis(fact, pool)
+    elif mode == "stub":
         verdict = stub_verify_hypothesis(fact)
     else:
         provider = search_provider or get_search_provider()
@@ -80,10 +91,15 @@ def _check_one_hypothesis(
     return None, dropped, logs
 
 
-def fact_checker_node(state: "State", *, dry_run: bool = False) -> dict:
+def fact_checker_node(state: "State", *, mode: str = "stub", dry_run: bool | None = None) -> dict:
     """
     inferred_facts 루프 → promoted_facts / dropped_hypotheses / fact_checker_log.
+
+    ``mode``: ``live`` | ``corpus`` | ``stub`` (Sprint 5). Legacy ``dry_run`` overrides mode.
     """
+    if dry_run is not None:
+        mode = "stub" if dry_run else "live"
+
     _log("fact_checker_node enter")
     inferred = state.get("inferred_facts") or []
     fact_checker_log: list[str] = []
@@ -97,9 +113,10 @@ def fact_checker_node(state: "State", *, dry_run: bool = False) -> dict:
             "fact_checker_log": fact_checker_log,
         }
 
-    _log(f"processing {len(inferred)} inferred fact(s) dry_run={dry_run}")
+    corpus_pool = collect_corpus_pool(state) if mode == "corpus" else []
+    _log(f"processing {len(inferred)} inferred fact(s) mode={mode} corpus_pool={len(corpus_pool)}")
     fact_checker_log.append(
-        f"[CHECK-S3-node] batch size={len(inferred)} dry_run={dry_run}"
+        f"[CHECK-S3-node] batch size={len(inferred)} mode={mode} corpus_pool={len(corpus_pool)}"
     )
 
     promoted_facts: list[AtomicFact] = []
@@ -112,7 +129,11 @@ def fact_checker_node(state: "State", *, dry_run: bool = False) -> dict:
             f"팩트체크 {i}/{len(inferred)}",
             fact.subject[:40],
         ):
-            promoted, dropped, step_logs = _check_one_hypothesis(fact, dry_run=dry_run)
+            promoted, dropped, step_logs = _check_one_hypothesis(
+                fact,
+                mode=mode,
+                corpus_pool=corpus_pool,
+            )
         fact_checker_log.extend(step_logs)
         if promoted is not None:
             promoted_facts.append(promoted)

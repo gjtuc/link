@@ -36,9 +36,12 @@ Rules (non-negotiable):
 - Output ONLY physical subjects and observable state changes.
 - Strip every adjective, emotion, forecast, and value judgment.
 - Each fact: one subject + one state_change. No compound conditions.
-- Set is_atomic=True ONLY when the fragment is a single indivisible state transition.
+- Set is_atomic=False if the fact combines multiple entities, causal steps, or clauses
+  (e.g. subject contains "and", commas, or multiple events in state_change).
+- Set is_atomic=True ONLY when ONE entity + ONE indivisible observable transition.
 - reasoning must explain atomicity mechanically - never bullish/bearish/good/bad.
 - timestamp: ISO-8601 datetime if the text implies when; otherwise null.
+- For long document inputs: extract multiple distinct facts when supported (see user hint).
 """
 
 # 사용자: 입력 텍스트 삽입 + JSON 스키마만 반환 지시

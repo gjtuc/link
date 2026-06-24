@@ -1,4 +1,8 @@
 <!DOCTYPE html>
+<!-- STAGE 0-2: UI 시나리오 — 파일탭 S0-A/C | 텍스트 S0-B | URL S0-D | 그래프우클릭 S0-E
+     STAGE 0-5 Sprint 0 ✅: SP0-FC-* — stub → 「미검증 가설」 (G-FC-UI, AC-FC-02)
+     STAGE 0-5 Sprint 4: SP4-UI-* — Outline + Skeleton Health (G-UI-SKELETON)
+     docs/design/STAGE-0-5-implementation-roadmap.md -->
 <html lang="ko">
 <head>
   <meta charset="utf-8" />
@@ -179,6 +183,93 @@
     .status-steps .error { color: var(--danger); font-weight: 500; }
     .status-steps .running { color: #174ea6; }
     .status-steps .skip { color: var(--muted); }
+    .fc-badge { font-weight: 500; }
+    .fc-badge.fc-stub { color: #e37400; }
+    .fc-badge.fc-live { color: #137333; }
+    .fc-badge.fc-corpus { color: #174ea6; }
+    .hint.fc-hint { display: none; padding: 0 16px 8px; margin: 0; font-size: 11px; color: #e37400; flex-shrink: 0; }
+    .hint.fc-hint.show { display: block; }
+    .hint.corpus-hint { display: none; padding: 0 16px 8px; margin: 0; font-size: 11px; color: #5f6368; flex-shrink: 0; }
+    .hint.corpus-hint.show { display: block; }
+    .skeleton-panel {
+      display: none; flex-shrink: 0; flex-direction: column; gap: 8px;
+      margin: 0 16px 8px; padding: 10px 12px; border: 1px solid var(--border);
+      border-radius: 8px; background: #f8f9fa; max-height: 168px; min-height: 0;
+    }
+    .skeleton-panel.show { display: flex; }
+    .skeleton-panel h3 {
+      margin: 0; font-size: 12px; font-weight: 500; color: var(--muted);
+      letter-spacing: 0.02em;
+    }
+    .skeleton-health { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; line-height: 1.4; }
+    .skeleton-health .metric strong { font-weight: 600; }
+    .skeleton-health .metric.gap strong { color: #d93025; }
+    .skeleton-health .metric.strong strong { color: #137333; }
+    .skeleton-health .metric.weak strong { color: #e37400; }
+    .skeleton-outline {
+      overflow-y: auto; max-height: 96px; font-size: 11px; line-height: 1.45;
+      border-top: 1px solid #e8eaed; padding-top: 6px;
+    }
+    .skeleton-outline-item {
+      cursor: pointer; padding: 3px 4px; border-radius: 4px;
+      display: flex; align-items: baseline; gap: 6px;
+    }
+    .skeleton-outline-item:hover, .skeleton-outline-item.selected { background: #e8f0fe; }
+    .skeleton-outline-item .indent { flex-shrink: 0; color: #9aa0a6; width: 12px; }
+    .skeleton-outline-item .label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .role-badge {
+      flex-shrink: 0; font-size: 9px; padding: 1px 5px; border-radius: 4px;
+      text-transform: uppercase; letter-spacing: 0.03em;
+    }
+    .role-badge.gap { background: #fce8e6; color: #d93025; }
+    .role-badge.strong { background: #e6f4ea; color: #137333; }
+    .role-badge.weak { background: #fef7e0; color: #e37400; }
+    .role-badge.other { background: #f1f3f4; color: #5f6368; }
+    .recompose-panel {
+      display: none; flex-shrink: 0; flex-direction: column; gap: 6px;
+      margin: 0 16px 8px; padding: 10px 12px; border: 1px solid var(--border);
+      border-radius: 8px; background: #fff; max-height: 180px; min-height: 0;
+    }
+    .recompose-panel.show { display: flex; }
+    .recompose-panel h3 {
+      margin: 0; font-size: 12px; font-weight: 500; color: var(--muted);
+    }
+    .recompose-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+    .recompose-tabs button {
+      font-size: 11px; padding: 4px 10px; border-radius: 12px;
+      border: 1px solid var(--border); background: #f8f9fa; cursor: pointer;
+    }
+    .recompose-tabs button.active {
+      background: #e8f0fe; border-color: #1a73e8; color: #174ea6; font-weight: 500;
+    }
+    .recompose-body {
+      overflow-y: auto; max-height: 120px; font-size: 11px; line-height: 1.45;
+      border-top: 1px solid #e8eaed; padding-top: 6px; white-space: pre-wrap;
+      word-break: break-word; color: #3c4043;
+    }
+    .recompose-outline-item {
+      padding: 3px 0; border-bottom: 1px solid #f1f3f4;
+      font-size: 11px; line-height: 1.4;
+    }
+    .recompose-outline-item .kind {
+      font-size: 9px; font-weight: 600; text-transform: uppercase;
+      color: #5f6368; margin-right: 6px;
+    }
+    .recompose-outline-item.fix_gap .kind { color: #d93025; }
+    .recompose-outline-item.keep .kind { color: #137333; }
+    .watch-panel {
+      display: none; flex-shrink: 0; flex-direction: column; gap: 6px;
+      margin: 0 16px 8px; padding: 8px 12px; border-radius: 8px;
+      border: 1px solid #f9ab00; background: #fef7e0; max-height: 120px;
+      overflow-y: auto; font-size: 11px; line-height: 1.45;
+    }
+    .watch-panel.show { display: flex; }
+    .watch-panel h3 { margin: 0; font-size: 12px; font-weight: 500; color: #e37400; }
+    .watch-item { padding: 4px 0; border-bottom: 1px solid #fde293; }
+    .watch-item:last-child { border-bottom: none; }
+    .watch-item.error { color: #d93025; }
+    .watch-item.warn { color: #e37400; }
+    .watch-item.info { color: #5f6368; }
     .results { margin: 0 16px 12px; font-size: 12px; color: var(--muted); max-height: 120px; overflow: auto; }
     .results div { margin-bottom: 6px; padding-bottom: 6px; border-bottom: 1px solid #eee; }
     .modal {
@@ -206,6 +297,18 @@
       background: #fff;
     }
     .modal-actions button.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .cap-warn-list {
+      margin: 0 0 12px; padding: 0 0 0 18px; font-size: 13px; line-height: 1.5; color: #3c4043;
+      max-height: 220px; overflow-y: auto;
+    }
+    .cap-warn-list li { margin-bottom: 8px; }
+    .cap-probe-hint {
+      margin: 0 0 10px; padding: 8px 12px; font-size: 12px; color: #b06000;
+      background: #fef7e0; border-radius: 8px; border: 1px solid #f9e076;
+      cursor: pointer; user-select: none;
+    }
+    .cap-probe-hint:hover { background: #fff8e1; }
+    .cap-probe-hint.hidden { display: none; }
   </style>
 </head>
 <body>
@@ -228,6 +331,7 @@
         <strong>팁:</strong> 입력 칸에 <em>파일을 드래그</em>하면 파일 탭으로 자동 이동합니다.<br />
         링크만 넣으면 바로 분석 · Neo4j는 분석·그래프 볼 때만 (탭 닫으면 Link가 켠 DB만 자동 stop)
       </div>
+      <p class="cap-probe-hint hidden" id="cap-probe-hint" role="button" tabindex="0" title="미검증·미지원 항목 보기"></p>
 
       <div id="pane-input" class="pane active">
         <div class="text-drop-wrap" id="text-drop-wrap">
@@ -277,6 +381,26 @@
         ·
         <a href="/graph_output.html?debug=1" target="_blank" rel="noopener" style="color:#1a73e8;">그래프만 새 탭(debug)</a>
       </p>
+      <p class="hint fc-hint" id="fc-hint" aria-live="polite"></p>
+      <p class="hint corpus-hint" id="corpus-hint" aria-live="polite"></p>
+      <div id="skeleton-panel" class="skeleton-panel" aria-live="polite">
+        <h3>뼈대 건강 · Outline (C-3)</h3>
+        <div class="skeleton-health" id="skeleton-health"></div>
+        <div class="skeleton-outline" id="skeleton-outline" role="list"></div>
+      </div>
+      <div id="recompose-panel" class="recompose-panel" aria-live="polite">
+        <h3>재조립 (ε-2~4 · 10단계)</h3>
+        <div class="recompose-tabs" role="tablist">
+          <button type="button" class="active" data-recompose-tab="report" role="tab">Report</button>
+          <button type="button" data-recompose-tab="narrative" role="tab">Narrative</button>
+          <button type="button" data-recompose-tab="outline" role="tab">Rewrite</button>
+        </div>
+        <div id="recompose-body" class="recompose-body" role="tabpanel"></div>
+      </div>
+      <div id="watch-panel" class="watch-panel" aria-live="assertive">
+        <h3>감시 · 경고 (P2)</h3>
+        <div id="watch-list"></div>
+      </div>
       <div id="graph-wrap-home">
         <div class="graph-wrap">
           <div class="placeholder" id="graph-placeholder">
@@ -313,6 +437,18 @@
       <div class="modal-actions">
         <button type="button" id="link-modal-no">아니오, 텍스트 유지</button>
         <button type="button" class="primary" id="link-modal-yes">예, 링크로 분석</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="cap-warn-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="cap-warn-title">
+    <div class="modal-card">
+      <h3 id="cap-warn-title">분석 전에 확인해 주세요</h3>
+      <p class="hint" style="margin:0 0 10px;">아래는 아직 충분히 검증하지 않았거나 지원하지 않는 항목이에요.</p>
+      <ul id="cap-warn-list" class="cap-warn-list"></ul>
+      <div class="modal-actions">
+        <button type="button" id="cap-warn-later">나중에</button>
+        <button type="button" class="primary" id="cap-warn-proceed">그래도 실행</button>
       </div>
     </div>
   </div>
@@ -605,6 +741,7 @@
     function showGraphIdlePlaceholder() {
       graphPlaceholderBusy?.classList.add("hidden");
       placeholder?.classList.remove("hidden");
+      clearSkeletonPanel();
     }
 
     async function waitForAnalyzeComplete(signal) {
@@ -808,7 +945,120 @@
       setStatus("분석을 취소했습니다. (서버에서 이미 처리 중인 건은 잠시 더 돌 수 있습니다)", "info");
     });
 
+    /** Q2 μ-Q2-04 / Q3 μ-Q3-01 — capabilities pre-run warning + probe hint */
+    const capWarnModal = document.getElementById("cap-warn-modal");
+    const capWarnList = document.getElementById("cap-warn-list");
+    const capWarnProceed = document.getElementById("cap-warn-proceed");
+    const capWarnLater = document.getElementById("cap-warn-later");
+    const capProbeHint = document.getElementById("cap-probe-hint");
+    let cachedCapabilities = null;
+
+    function formatCapabilityStatus(status) {
+      if (status === "verified") return "✅ 확인됨";
+      if (status === "untested") return "⚠️ 미검증";
+      if (status === "unsupported") return "❌ 미지원";
+      return status;
+    }
+
+    function getCapabilityWarnings(data) {
+      return (data?.capabilities || []).filter(
+        (c) => c.status === "untested" || c.status === "unsupported"
+      );
+    }
+
+    async function loadCapabilities() {
+      if (cachedCapabilities) return cachedCapabilities;
+      const res = await fetch("/api/capabilities", { cache: "no-store" });
+      if (!res.ok) return null;
+      cachedCapabilities = await res.json();
+      return cachedCapabilities;
+    }
+
+    function updateCapProbeHint(data) {
+      if (!capProbeHint || !data?.summary) return;
+      const untested = Number(data.summary.untested) || 0;
+      const unsupported = Number(data.summary.unsupported) || 0;
+      if (untested === 0 && unsupported === 0) {
+        capProbeHint.classList.add("hidden");
+        capProbeHint.textContent = "";
+        return;
+      }
+      let text = "";
+      if (untested > 0) {
+        text = `아직 안 해본 테스트 ${untested}가지`;
+      }
+      if (unsupported > 0) {
+        text += (text ? " · " : "") + `미지원 ${unsupported}가지`;
+      }
+      capProbeHint.textContent = text;
+      capProbeHint.classList.remove("hidden");
+    }
+
+    function showCapWarnModal(warnings) {
+      return new Promise((resolve) => {
+        if (!capWarnModal || !capWarnList) {
+          resolve(true);
+          return;
+        }
+        capWarnList.innerHTML = warnings.map((c) =>
+          `<li><strong>${formatCapabilityStatus(c.status)}</strong> ${c.human_line || c.id}</li>`
+        ).join("");
+        capWarnModal.classList.remove("hidden");
+        const onProceed = () => {
+          capWarnModal.classList.add("hidden");
+          capWarnProceed.removeEventListener("click", onProceed);
+          capWarnLater.removeEventListener("click", onLater);
+          resolve(true);
+        };
+        const onLater = () => {
+          capWarnModal.classList.add("hidden");
+          capWarnProceed.removeEventListener("click", onProceed);
+          capWarnLater.removeEventListener("click", onLater);
+          resolve(false);
+        };
+        capWarnProceed.addEventListener("click", onProceed);
+        capWarnLater.addEventListener("click", onLater);
+      });
+    }
+
+    async function openCapWarnFromHint() {
+      const data = await loadCapabilities();
+      if (!data) return;
+      const warnings = getCapabilityWarnings(data);
+      if (!warnings.length) return;
+      await showCapWarnModal(warnings);
+    }
+
+    if (capProbeHint) {
+      capProbeHint.addEventListener("click", () => { openCapWarnFromHint(); });
+      capProbeHint.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          openCapWarnFromHint();
+        }
+      });
+    }
+
+    async function ensureCapabilityAck() {
+      try {
+        const data = await loadCapabilities();
+        if (!data) return true;
+        updateCapProbeHint(data);
+        const warnings = getCapabilityWarnings(data);
+        if (!warnings.length) return true;
+        return await showCapWarnModal(warnings);
+      } catch {
+        return true;
+      }
+    }
+
     async function runAnalyze() {
+      const ack = await ensureCapabilityAck();
+      if (!ack) {
+        setStatus("분석을 취소했습니다. 준비되면 다시 「전체 분석 시작」을 눌러 주세요.", "info");
+        return;
+      }
+
       const n = countInputs();
       if (n === 0) {
         setStatus("텍스트·링크·파일 중 하나 이상 입력하세요.", "error");
@@ -911,8 +1161,13 @@
         const dbTotal = gf.total_nodes_in_db != null ? gf.total_nodes_in_db : "?";
         const matched = gf.matched_nodes_in_db != null ? gf.matched_nodes_in_db : data.nodes;
         const runShort = gf.analysis_run_id ? String(gf.analysis_run_id).slice(0, 8) : "?";
+        const orch = data.orchestration;
+        const crossNote =
+          orch && data.items_processed > 1
+            ? ` · ${orch.cross_doc_label || (orch.bridge_count ? `교차 ${orch.bridge_count}건` : "교차 0건")}`
+            : "";
         statsEl.textContent =
-          `${data.items_processed}건 · 이번 그래프 노드 ${data.nodes} (배치 ${matched}) · 엣지 ${data.edges} · run ${runShort} · DB전체 ${dbTotal}`;
+          `${data.items_processed}건 · 이번 그래프 노드 ${data.nodes} (배치 ${matched}) · 엣지 ${data.edges}${crossNote} · run ${runShort} · DB전체 ${dbTotal}`;
         placeholder.classList.add("hidden");
         graphPlaceholderBusy?.classList.add("hidden");
         frame.src = `/graph_output.html?t=${Date.now()}`;
@@ -929,8 +1184,23 @@
             syncNote = ` · Neo4j 자동 기동 실패: ${s.message}`;
           }
         }
-        setStatus(`완료 — ${data.items_processed}건 분석, 그래프 갱신 (${neo4jNote}${syncNote})`, data.neo4j ? "ok" : "info");
-        updateBackendStatus(data.neo4j);
+        const fcNote =
+          cachedBackendStatus.fact_checker === "corpus"
+            ? " · 그래프 관계는 넣은 문서와 대조해 봤습니다"
+            : cachedBackendStatus.fact_checker === "stub"
+              ? " · 그래프 관계는 아직 검증하지 않은 가설입니다"
+              : cachedBackendStatus.fact_checker === "live"
+                ? " · 그래프 관계는 웹 검색으로 확인해 봤습니다"
+                : "";
+        setStatus(
+          `완료 — ${data.items_processed}건 분석, 그래프 갱신 (${neo4jNote}${syncNote})${fcNote}`,
+          data.neo4j ? "ok" : "info"
+        );
+        renderSkeleton(data.skeleton);
+        renderRecompose(data.recompose);
+        renderWatch(data.watch);
+        updateBackendStatus({ neo4j: data.neo4j });
+        await refreshBackendStatusFromApi();
       } catch (err) {
         if (err.name === "AbortError") {
           stopProgressPoll();
@@ -956,37 +1226,276 @@
     renderFileQueue();
     countInputs();
 
-    fetch("/api/status")
-      .then((r) => {
-        if (!r.ok) throw new Error(`status ${r.status}`);
-        return r.json();
-      })
-      .then((data) => updateBackendStatus(data.neo4j, data.install))
-      .catch(async () => {
+    refreshBackendStatusFromApi().catch(async () => {
         document.getElementById("backend-status").textContent = "서버 오프라인";
         document.getElementById("backend-status").style.color = "#d93025";
         await showNetworkError("[L0-NETWORK] Link 서버 무응답 (ERR_EMPTY_RESPONSE)");
       });
 
-    function updateBackendStatus(connected, install) {
-      const el = document.getElementById("backend-status");
+    loadCapabilities()
+      .then((data) => { if (data) updateCapProbeHint(data); })
+      .catch(() => {});
+
+    /** Sprint 0 SP0-FC-01 — cache /api/status for FC label (AC-FC-02, C-4) */
+    let cachedBackendStatus = {
+      fact_checker: "stub",
+      tavily_disabled: true,
+      cross_run_corpus: {
+        enabled: false,
+        run_count: 0,
+        fact_count: 0,
+        source_files: [],
+        session_id: null,
+      },
+    };
+
+    function formatFactCheckerLine(factChecker) {
+      if (factChecker === "live") {
+        return { text: "웹 검색으로 검증", stub: false, cls: "fc-live" };
+      }
+      if (factChecker === "corpus") {
+        return { text: "문서 안에서 검증", stub: false, cls: "fc-corpus" };
+      }
+      return { text: "가설만 (검증 안 함)", stub: true, cls: "fc-stub" };
+    }
+
+    function describeNeo4jLine(connected, install) {
       if (connected) {
-        el.textContent = "Neo4j 연결됨 · Gemini API";
-        el.style.color = "";
-        return;
+        return { text: "Neo4j 연결됨 · Gemini API", color: "" };
       }
       if (install?.can_auto_start) {
         const db = install.desktop_dbms_names?.length
           ? ` · DB: ${install.desktop_dbms_names.join(", ")}`
           : "";
-        el.textContent = install.desktop
+        const text = install.desktop
           ? `Neo4j Desktop 설치됨${db} — 분석 시 stock 자동 기동 (Play 수동 불필요)`
           : `Docker 설치됨 — 분석 후 자동 기동 시도`;
-        el.style.color = "#e37400";
-      } else {
-        el.textContent = "Neo4j 미설치 — 분석·그래프만 (DB 없음)";
-        el.style.color = "#d93025";
+        return { text, color: "#e37400" };
       }
+      return { text: "Neo4j 미설치 — 분석·그래프만 (DB 없음)", color: "#d93025" };
+    }
+
+    /** SP4-UI-01~03 — Skeleton Health + Outline from analyze result */
+    function highlightGraphNode(nodeId) {
+      const f = document.getElementById("graph-frame");
+      if (f && f.contentWindow) {
+        f.contentWindow.postMessage({ type: "deconstructor-highlight-node", nodeId }, "*");
+      }
+    }
+
+    function renderSkeleton(skeleton) {
+      const panel = document.getElementById("skeleton-panel");
+      const healthEl = document.getElementById("skeleton-health");
+      const outlineEl = document.getElementById("skeleton-outline");
+      if (!panel || !healthEl || !outlineEl) return;
+      if (!skeleton) {
+        panel.classList.remove("show");
+        healthEl.innerHTML = "";
+        outlineEl.innerHTML = "";
+        return;
+      }
+      const gapN = skeleton.gap_count ?? 0;
+      const strongN = skeleton.strong_chain_count ?? 0;
+      const weakN = skeleton.weak_count ?? 0;
+      healthEl.innerHTML =
+        `<span class="metric gap">Gap <strong>${gapN}</strong></span>` +
+        `<span class="metric strong">Strong <strong>${strongN}</strong></span>` +
+        `<span class="metric weak">Weak <strong>${weakN}</strong></span>`;
+      const outline = skeleton.outline || [];
+      if (!outline.length) {
+        outlineEl.innerHTML = '<span class="hint">claim 없음</span>';
+      } else {
+        outlineEl.innerHTML = outline
+          .map((item) => {
+            const role = item.role || "other";
+            const indent = "&nbsp;".repeat((item.depth || 0) * 2);
+            const label = `${item.subject || "?"} → ${item.state_change || ""}`;
+            return (
+              `<div class="skeleton-outline-item" role="listitem" data-node-id="${item.id}" title="${label.replace(/"/g, "&quot;")}">` +
+              `<span class="indent">${indent ? "·" : ""}</span>` +
+              `<span class="role-badge ${role}">${role}</span>` +
+              `<span class="label">${item.subject || item.id}</span>` +
+              `</div>`
+            );
+          })
+          .join("");
+        outlineEl.querySelectorAll(".skeleton-outline-item").forEach((el) => {
+          el.addEventListener("click", () => {
+            outlineEl.querySelectorAll(".skeleton-outline-item").forEach((x) => x.classList.remove("selected"));
+            el.classList.add("selected");
+            highlightGraphNode(el.dataset.nodeId);
+          });
+        });
+      }
+      panel.classList.add("show");
+    }
+
+    function clearSkeletonPanel() {
+      renderSkeleton(null);
+      clearRecomposePanel();
+    }
+
+    /** SP6-UI-01~03 — Recompose Report / Narrative / Rewrite outline */
+    let cachedRecompose = null;
+    let activeRecomposeTab = "report";
+
+    function renderRecomposeTabContent() {
+      const bodyEl = document.getElementById("recompose-body");
+      if (!bodyEl || !cachedRecompose) return;
+      if (activeRecomposeTab === "report") {
+        bodyEl.textContent = cachedRecompose.report_markdown || "(report empty)";
+        return;
+      }
+      if (activeRecomposeTab === "narrative") {
+        bodyEl.textContent = cachedRecompose.verified_narrative || "(narrative empty)";
+        return;
+      }
+      const outline = cachedRecompose.rewrite_outline || [];
+      if (!outline.length) {
+        bodyEl.textContent = "(rewrite outline empty)";
+        return;
+      }
+      bodyEl.innerHTML = outline
+        .map(
+          (item) =>
+            `<div class="recompose-outline-item ${item.kind || ""}">` +
+            `<span class="kind">${item.kind || "?"}</span>` +
+            `<strong>${item.subject || ""}</strong> — ${item.hint || ""}` +
+            `</div>`
+        )
+        .join("");
+    }
+
+    function renderRecompose(recompose) {
+      const panel = document.getElementById("recompose-panel");
+      if (!panel) return;
+      if (!recompose) {
+        clearRecomposePanel();
+        return;
+      }
+      cachedRecompose = recompose;
+      panel.classList.add("show");
+      panel.querySelectorAll(".recompose-tabs button").forEach((btn) => {
+        btn.classList.toggle("active", btn.dataset.recomposeTab === activeRecomposeTab);
+      });
+      renderRecomposeTabContent();
+    }
+
+    function clearRecomposePanel() {
+      cachedRecompose = null;
+      const panel = document.getElementById("recompose-panel");
+      const bodyEl = document.getElementById("recompose-body");
+      if (panel) panel.classList.remove("show");
+      if (bodyEl) bodyEl.textContent = "";
+      clearWatchPanel();
+    }
+
+    /** SP7-UI-01~03 — partial_run, NG-2, F0-A2 watch warnings */
+    function renderWatch(watch) {
+      const panel = document.getElementById("watch-panel");
+      const listEl = document.getElementById("watch-list");
+      if (!panel || !listEl) return;
+      const warnings = watch?.warnings || [];
+      if (!warnings.length) {
+        panel.classList.remove("show");
+        listEl.innerHTML = "";
+        return;
+      }
+      listEl.innerHTML = warnings
+        .map((w) => {
+          const sev = w.severity || (w.code === "PARTIAL_RUN" ? "warn" : "info");
+          return `<div class="watch-item ${sev}"><strong>${w.code || "?"}</strong> — ${w.message || ""}</div>`;
+        })
+        .join("");
+      panel.classList.add("show");
+    }
+
+    function clearWatchPanel() {
+      const panel = document.getElementById("watch-panel");
+      const listEl = document.getElementById("watch-list");
+      if (panel) panel.classList.remove("show");
+      if (listEl) listEl.innerHTML = "";
+    }
+
+    document.querySelectorAll(".recompose-tabs button").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        activeRecomposeTab = btn.dataset.recomposeTab || "report";
+        document.querySelectorAll(".recompose-tabs button").forEach((b) => {
+          b.classList.toggle("active", b === btn);
+        });
+        renderRecomposeTabContent();
+      });
+    });
+
+    function updateFactCheckerHint(factChecker) {
+      const hint = document.getElementById("fc-hint");
+      if (!hint) return;
+      if (factChecker === "live") {
+        hint.textContent =
+          "그래프에 올라간 관계는 웹 검색으로 맞는지 확인해 봅니다. 논문·보고서 전체가 맞다고 보장하지는 않습니다.";
+      } else if (factChecker === "corpus") {
+        hint.textContent =
+          "추론으로 그려진 관계는, 이번에 넣은 문서에서 뽑아 둔 사실과 맞는지 대조해 봅니다. 인터넷 검색은 하지 않으며, 내용이 전부 맞다고 보장하지는 않습니다.";
+      } else {
+        hint.textContent =
+          "그래프의 노란·초록 관계는 아직 검증하지 않은 가설입니다. 참고용으로만 보세요.";
+      }
+      hint.classList.add("show");
+    }
+
+    function formatCrossRunCorpusLine(block) {
+      const b = block || { enabled: false };
+      if (!b.enabled) {
+        return { text: "", show: false };
+      }
+      const runs = Number(b.run_count) || 0;
+      const facts = Number(b.fact_count) || 0;
+      const files = Array.isArray(b.source_files) ? b.source_files.length : 0;
+      if (runs <= 0) {
+        return { text: "분석 기록 모음: 켜짐 · 아직 분석한 적 없음", show: true };
+      }
+      return {
+        text: `분석 기록 모음: ${runs}번 분석 · 항목 ${facts}개 · 출처 파일 ${files}개`,
+        show: true,
+      };
+    }
+
+    function updateCrossRunCorpusHint(block) {
+      const hint = document.getElementById("corpus-hint");
+      if (!hint) return;
+      const line = formatCrossRunCorpusLine(block);
+      if (!line.show) {
+        hint.textContent = "";
+        hint.classList.remove("show");
+        return;
+      }
+      hint.textContent = line.text;
+      hint.classList.add("show");
+    }
+
+    /** SP0-FC-02 — merge Neo4j install line + fact_checker badge */
+    function updateBackendStatus(snapshot) {
+      if (snapshot == null) return;
+      if (typeof snapshot === "boolean") {
+        cachedBackendStatus = { ...cachedBackendStatus, neo4j: snapshot };
+      } else {
+        cachedBackendStatus = { ...cachedBackendStatus, ...snapshot };
+      }
+      const el = document.getElementById("backend-status");
+      const neo = describeNeo4jLine(cachedBackendStatus.neo4j, cachedBackendStatus.install);
+      const fc = formatFactCheckerLine(cachedBackendStatus.fact_checker);
+      const fcClass = fc.cls || (fc.stub ? "fc-stub" : "fc-live");
+      el.innerHTML = `${neo.text} · <span class="fc-badge ${fcClass}">${fc.text}</span>`;
+      el.style.color = neo.color;
+      updateFactCheckerHint(cachedBackendStatus.fact_checker);
+      updateCrossRunCorpusHint(cachedBackendStatus.cross_run_corpus || { enabled: false });
+    }
+
+    async function refreshBackendStatusFromApi() {
+      const r = await fetch("/api/status", { cache: "no-store" });
+      if (!r.ok) throw new Error(`status ${r.status}`);
+      const data = await r.json();
+      updateBackendStatus(data);
     }
 
     const linkTabId = sessionStorage.getItem("linkTabId") || crypto.randomUUID();

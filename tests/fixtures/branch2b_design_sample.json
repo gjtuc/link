@@ -1,0 +1,29 @@
+{
+  "mu_id": "μ-PRE-2b-00",
+  "branch": "Branch-2b",
+  "stage": "STAGE-1",
+  "status": "unlocked",
+  "implementation_started": false,
+  "unlock_mu_id": "μ-UNLOCK-2b",
+  "baseline_commit": "ac673d7",
+  "unlock_fields": {
+    "branch_2_unlocked": true,
+    "branch_2b_unlocked": true,
+    "branch_2b_design_complete": true
+  },
+  "mu_ids_planned": [
+    "μ-PRE-2b-00",
+    "μ-UNLOCK-2b",
+    "μ-2b-00",
+    "μ-2b-01",
+    "μ-2b-02",
+    "μ-2b-ω"
+  ],
+  "pr_hint": "cross-run corpus DB",
+  "spec_ref": "docs/design/BRANCH-2b-spec.md",
+  "related_specs": [
+    "docs/design/BRANCH-2a-spec.md",
+    "docs/design/STAGE-0-CLOSURE-ROADMAP.md",
+    "docs/design/BRANCH-0-MAINTENANCE-spec.md"
+  ]
+}

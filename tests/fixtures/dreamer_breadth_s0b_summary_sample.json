@@ -1,0 +1,30 @@
+{
+  "fixture": "s0b",
+  "runs": 3,
+  "timestamp": "2026-06-22T16:59:10",
+  "averages": {
+    "exact_duplicate_rate": 0.0,
+    "unique_subject_ratio": 1.0,
+    "mechanism_similarity_mean": 0.06290520552885283
+  },
+  "runs_detail": [
+    {
+      "exact_duplicate_rate": 0.0,
+      "unique_subject_ratio": 1.0,
+      "mechanism_similarity_mean": 0.049706065835161434,
+      "count": 17.0
+    },
+    {
+      "exact_duplicate_rate": 0.0,
+      "unique_subject_ratio": 1.0,
+      "mechanism_similarity_mean": 0.08930348491623562,
+      "count": 17.0
+    },
+    {
+      "exact_duplicate_rate": 0.0,
+      "unique_subject_ratio": 1.0,
+      "mechanism_similarity_mean": 0.049706065835161434,
+      "count": 17.0
+    }
+  ]
+}

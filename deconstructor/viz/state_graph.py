@@ -30,6 +30,12 @@ When to modify / 수정 시점
 --------------------------
 - orphan·ghost 포함 정책 변경 시 weaver/node.py 와 동기화
 - ``GraphNode`` 필드 추가 시 ``_fact_to_node`` · neo4j MERGE · visualizer 동시 갱신
+
+Sprint 2 (G-ORC-POLICY)
+-----------------------
+  - ``merge_graph_results``: node id dedup, later wins (POL-03)
+  - Cross-doc BRIDGE edges: ``web/corpus_bridge.attach_bridge_edges`` (post-merge)
+  - See ``docs/design/SPRINT-2-orchestration-spec.md``
 """
 
 from __future__ import annotations
@@ -57,6 +63,9 @@ def _fact_to_node(fact: AtomicFact, trigger_event: str) -> GraphNode:
         is_critical=fact.is_critical,
         anchor_fact_id=fact.anchor_fact_id,
         reasoning=fact.reasoning or None,
+        source_file=fact.source_file or None,
+        page_range=fact.page_range or None,
+        chunk_id=fact.chunk_id or None,
     )
 
 
@@ -67,6 +76,7 @@ def _edge_to_graph(edge: CausalEdge) -> GraphEdge:
         target_id=edge.target_fact_id,
         probability=edge.probability,
         latency=edge.latency,
+        edge_kind="CAUSES",
     )
 
 
@@ -124,7 +134,11 @@ def graph_from_pipeline_state(state: dict) -> GraphFetchResult:
 
 
 def merge_graph_results(results: list[GraphFetchResult]) -> GraphFetchResult:
-    """여러 배치 실행 결과를 노드 id 기준으로 병합 (웹 UI 다건 분석)."""
+    """여러 배치 실행 결과를 노드 id 기준으로 병합 (웹 UI 다건 분석).
+
+    POL-03: 동일 node id → **나중 run wins** (UUID collision rare).
+    CAUSES edges dedup by (source_id, target_id). BRIDGE edges added separately.
+    """
     node_map: dict[str, GraphNode] = {}
     edge_keys: set[tuple[str, str]] = set()
     merged_edges: list[GraphEdge] = []

@@ -1,0 +1,12 @@
+{
+  "scenario": "PROBE-neo4j-off",
+  "cat_id": "cat-neo4j-off",
+  "files": ["s0b_draft_short.txt"],
+  "phase_r_ok": true,
+  "neo4j_available": false,
+  "neo4j_method": "NEO4J_URI=bolt://127.0.0.1:19999",
+  "link_disable_neo4j_auto_start": true,
+  "pipeline_ok": true,
+  "failed_step": null,
+  "elapsed_sec": 0.0
+}

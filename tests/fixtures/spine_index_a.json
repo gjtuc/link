@@ -1,0 +1,58 @@
+{
+  "mu_id": "μ-SPINE-02",
+  "scenario": "S-SPINE-A",
+  "description": "3-edge verified CAUSES chain — spine list ≥1",
+  "nodes": [
+    {
+      "id": "fact-a",
+      "subject": "Ni 촉매",
+      "state_change": "활성점 형성",
+      "source_file": "paper.pdf"
+    },
+    {
+      "id": "fact-b",
+      "subject": "CH4 생성",
+      "state_change": "생성 속도 증가",
+      "source_file": "paper.pdf"
+    },
+    {
+      "id": "fact-c",
+      "subject": "메탄 수율",
+      "state_change": "수율 상승",
+      "source_file": "paper.pdf"
+    },
+    {
+      "id": "fact-d",
+      "subject": "반응 온도",
+      "state_change": "온도 안정",
+      "source_file": "paper.pdf"
+    }
+  ],
+  "edges": [
+    {
+      "source_id": "fact-a",
+      "target_id": "fact-b",
+      "edge_kind": "CAUSES",
+      "probability": 1.0
+    },
+    {
+      "source_id": "fact-b",
+      "target_id": "fact-c",
+      "edge_kind": "CAUSES",
+      "probability": 1.0
+    },
+    {
+      "source_id": "fact-b",
+      "target_id": "fact-d",
+      "edge_kind": "CAUSES",
+      "probability": 0.8
+    }
+  ],
+  "expected": {
+    "min_spines": 1,
+    "first_index": 1,
+    "label_contains_arrow": true,
+    "is_branched": true,
+    "main_path_len": 3
+  }
+}

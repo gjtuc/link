@@ -1,0 +1,26 @@
+{
+  "mu_id": "μ-B2a-02",
+  "scenario": "B2a-DENSITY-S0A",
+  "fixture": "s0a_paper.pdf",
+  "files": ["s0a_paper.pdf"],
+  "phase_r_ok": true,
+  "pipeline_ok": true,
+  "failed_step": null,
+  "elapsed_sec": 174.0,
+  "ac_dec_02_median_target": 5,
+  "ac_dec_02_meets_should": true,
+  "deconstruct_batch": {
+    "runs": 1,
+    "completed_facts_per_run": [12],
+    "median_completed_facts": 12.0,
+    "runs_with_depth_gt_1": 0,
+    "recursion_depths": [1],
+    "partial_run_count": 0
+  },
+  "per_run_meta": [
+    {"chunk_id": "s0a_paper.pdf#chunk-1/1", "completed_facts": 12, "recursion_depth": 1}
+  ],
+  "nodes": 17,
+  "edges": 64,
+  "log_ref": "logs/b2a_density/20260623-1315-b2a-density-s0a-detail.json"
+}

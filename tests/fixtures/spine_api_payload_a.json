@@ -1,0 +1,25 @@
+{
+  "mu_id": "μ-SPINE-02-API",
+  "scenario": "S-SPINE-A",
+  "input_fixture": "tests/fixtures/spine_index_a.json",
+  "expected": {
+    "min_spines": 1,
+    "selected_spine_id_non_empty": true,
+    "empty_selected_when_no_spines": true,
+    "spine_block_keys": ["spines", "selected_spine_id", "filters"],
+    "filters": {
+      "include_hypothesis": false,
+      "include_bridge": true
+    },
+    "link_rationale_keys": [
+      "source_fact_id",
+      "target_fact_id",
+      "edge_kind",
+      "link_sentence",
+      "link_mechanism",
+      "locale"
+    ],
+    "link_rationales_count_equals_causes_bridge_edges": true
+  },
+  "contract_ref": "tests/fixtures/spine_design_sample.json#contract_sample"
+}

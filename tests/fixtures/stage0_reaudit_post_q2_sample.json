@@ -1,0 +1,57 @@
+{
+  "timestamp": "2026-06-22T23:46:08",
+  "branch_state": {
+    "branch_0": "active",
+    "branch_1_complete": true,
+    "branch_2_unlocked": true,
+    "_comment": "branch_1_complete=true only after scripts/branch1_full_e2e.py exit 0. branch_2_unlocked stays false until explicitly unlocked post-closure."
+  },
+  "phase_r_regression_exit": 0,
+  "pytest": {
+    "test_branch_gates": {
+      "exit_code": 0,
+      "passed": 15,
+      "failed": 0,
+      "tail": ".s...s...........                                                        [100%]\n15 passed, 2 skipped in 5.75s"
+    },
+    "test_ingest_foundation": {
+      "exit_code": 0,
+      "passed": 10,
+      "failed": 0,
+      "tail": "..........                                                               [100%]\n10 passed in 0.20s"
+    },
+    "test_stage0_acceptance": {
+      "exit_code": 0,
+      "passed": 5,
+      "failed": 0,
+      "tail": ".....                                                                    [100%]\n5 passed in 0.21s"
+    }
+  },
+  "pytest_q1": {
+    "exit_code": 0,
+    "passed": 8,
+    "failed": 0,
+    "tail": "........                                                                 [100%]\n8 passed in 8.78s"
+  },
+  "pytest_q2": {
+    "exit_code": 0,
+    "passed": 7,
+    "failed": 0,
+    "tail": ".......                                                                  [100%]\n7 passed in 0.16s"
+  },
+  "q2_capabilities": {
+    "verified": 9,
+    "untested": 5,
+    "unsupported": 1,
+    "total": 15
+  },
+  "record_phase_a": {
+    "CL-0-B": "✅ PASS",
+    "CL-0-C": "✅ PASS"
+  },
+  "closure_spec_rows": {
+    "CL-0-B": "| **CL-0-B** | S0-B 텍스트 초안 | P0 | μ-R + μ-A | `s0b_e2e_run.py` | [S0-B-E2E-RECORD.md](S0-B-E2E-RECORD.md) R✅ A✅ |",
+    "CL-0-C": "| **CL-0-C** | S0-C 다중 파일 | P1 | μ-R + μ-A | `s0c_e2e_run.py` | [S0-C-E2E-RECORD.md](S0-C-E2E-RECORD.md) R✅ A✅ |"
+  },
+  "mismatches": []
+}
