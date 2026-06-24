@@ -50,6 +50,7 @@ Branch-2b = **[STAGE 1](STAGE-0-CLOSURE-spec.md)** — 0단계 클로저 이후 
 | **μ-2b-02-R** | corpus READ/query 계약 | `query.py` + pytest | ✅ |
 | **μ-2b-02-API** | `/api/status` corpus 힌트 | `status_block.py` + pytest | ✅ |
 | **μ-2b-02-UI** | index.html 힌트 | `test_stage1_corpus_ui.py` | ✅ |
+| **μ-2b-02-UI-FIX** | 분석 후 corpus 갱신 + 사용자 문구 | `test_stage1_corpus_ui.py` | ✅ |
 | **μ-PRE-2b-PERSIST** | Neo4j·영속 경계 설계 | `STAGE-1-PERSIST-spec.md` | ✅ |
 | **μ-2b-03-00** | CorpusStore protocol + factory | `factory.py` + pytest | ✅ |
 | **μ-2b-03-01** | Neo4j adapter mock | `neo4j_adapter.py` + pytest | ✅ |

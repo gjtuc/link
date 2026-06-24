@@ -1186,11 +1186,11 @@
         }
         const fcNote =
           cachedBackendStatus.fact_checker === "corpus"
-            ? " · promoted = 문서 corpus 검증"
+            ? " · 그래프 관계는 넣은 문서와 대조해 봤습니다"
             : cachedBackendStatus.fact_checker === "stub"
-              ? " · promoted(노랑/초록) = 미검증 가설"
+              ? " · 그래프 관계는 아직 검증하지 않은 가설입니다"
               : cachedBackendStatus.fact_checker === "live"
-                ? " · promoted = 웹 검색 검증 시도"
+                ? " · 그래프 관계는 웹 검색으로 확인해 봤습니다"
                 : "";
         setStatus(
           `완료 — ${data.items_processed}건 분석, 그래프 갱신 (${neo4jNote}${syncNote})${fcNote}`,
@@ -1200,6 +1200,7 @@
         renderRecompose(data.recompose);
         renderWatch(data.watch);
         updateBackendStatus({ neo4j: data.neo4j });
+        await refreshBackendStatusFromApi();
       } catch (err) {
         if (err.name === "AbortError") {
           stopProgressPoll();
@@ -1225,13 +1226,7 @@
     renderFileQueue();
     countInputs();
 
-    fetch("/api/status")
-      .then((r) => {
-        if (!r.ok) throw new Error(`status ${r.status}`);
-        return r.json();
-      })
-      .then((data) => updateBackendStatus(data))
-      .catch(async () => {
+    refreshBackendStatusFromApi().catch(async () => {
         document.getElementById("backend-status").textContent = "서버 오프라인";
         document.getElementById("backend-status").style.color = "#d93025";
         await showNetworkError("[L0-NETWORK] Link 서버 무응답 (ERR_EMPTY_RESPONSE)");
@@ -1256,12 +1251,12 @@
 
     function formatFactCheckerLine(factChecker) {
       if (factChecker === "live") {
-        return { text: "웹 검색 검증", stub: false, cls: "fc-live" };
+        return { text: "웹 검색으로 검증", stub: false, cls: "fc-live" };
       }
       if (factChecker === "corpus") {
-        return { text: "문서 내부 검증 (corpus FC)", stub: false, cls: "fc-corpus" };
+        return { text: "문서 안에서 검증", stub: false, cls: "fc-corpus" };
       }
-      return { text: "미검증 가설 (Fact-Checker stub)", stub: true, cls: "fc-stub" };
+      return { text: "가설만 (검증 안 함)", stub: true, cls: "fc-stub" };
     }
 
     function describeNeo4jLine(connected, install) {
@@ -1437,13 +1432,13 @@
       if (!hint) return;
       if (factChecker === "live") {
         hint.textContent =
-          "Fact-Checker live: promoted 노드는 Tavily 웹 검색 검증 시도 (NG-3: 논문·보고서의 진실 보장 아님).";
+          "그래프에 올라간 관계는 웹 검색으로 맞는지 확인해 봅니다. 논문·보고서 전체가 맞다고 보장하지는 않습니다.";
       } else if (factChecker === "corpus") {
         hint.textContent =
-          "Fact-Checker corpus: promoted 노드는 문서 extracted fact 풀과 매칭 검증 (NG-3: 웹·진실 보장 아님).";
+          "추론으로 그려진 관계는, 이번에 넣은 문서에서 뽑아 둔 사실과 맞는지 대조해 봅니다. 인터넷 검색은 하지 않으며, 내용이 전부 맞다고 보장하지는 않습니다.";
       } else {
         hint.textContent =
-          "Fact-Checker stub: 노랑·초록 promoted 노드는 미검증 가설입니다 — 검증·기각 출처를 숨기지 않음 (C-4).";
+          "그래프의 노란·초록 관계는 아직 검증하지 않은 가설입니다. 참고용으로만 보세요.";
       }
       hint.classList.add("show");
     }
@@ -1457,10 +1452,10 @@
       const facts = Number(b.fact_count) || 0;
       const files = Array.isArray(b.source_files) ? b.source_files.length : 0;
       if (runs <= 0) {
-        return { text: "Cross-run corpus: 켜짐 · 아직 run 없음", show: true };
+        return { text: "분석 기록 모음: 켜짐 · 아직 분석한 적 없음", show: true };
       }
       return {
-        text: `Cross-run corpus: run ${runs} · fact ${facts} · 파일 ${files}개`,
+        text: `분석 기록 모음: ${runs}번 분석 · 항목 ${facts}개 · 출처 파일 ${files}개`,
         show: true,
       };
     }
@@ -1494,6 +1489,13 @@
       el.style.color = neo.color;
       updateFactCheckerHint(cachedBackendStatus.fact_checker);
       updateCrossRunCorpusHint(cachedBackendStatus.cross_run_corpus || { enabled: false });
+    }
+
+    async function refreshBackendStatusFromApi() {
+      const r = await fetch("/api/status", { cache: "no-store" });
+      if (!r.ok) throw new Error(`status ${r.status}`);
+      const data = await r.json();
+      updateBackendStatus(data);
     }
 
     const linkTabId = sessionStorage.getItem("linkTabId") || crypto.randomUUID();

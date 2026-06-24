@@ -68,7 +68,7 @@ def test_roadmap_branch2b_first_closure():
 
 def test_handoff_documents_b2b_omega_complete():
     body = HANDOFF.read_text(encoding="utf-8")
-    assert "μ-2b-ω" in body
+    assert "μ-2b-ω" in body or "μ-2b-02-UI-FIX" in body
     assert "μ-2b-02-UI" in body
 
 

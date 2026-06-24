@@ -244,9 +244,9 @@ Deconstruct → Verify → Dreamer → Fact-Checker → Skeptic → Weaver → V
 
 | | |
 |---|---|
-| **완료** | **μ-2b-ω** — Branch-2b STAGE-1 corpus 1차 마감 (contract→ingest→query→status→factory→Neo4j mock) |
-| **작업자 지금 할 일** | **μ-2b-02-UI** (선택) — index.html corpus 힌트 |
-| **금지** | Branch-3, live E2E 재실행 (2b ω), `branch_2_unlocked` 수동 true |
+| **완료** | **μ-2b-02-UI-FIX** — 분석 기록 모음 줄 자동 갱신 + 사용자 문구 |
+| **작업자 지금 할 일** | **μ-2b-03-LIVE** — 실 Neo4j corpus 연동 관측 (별도 주문) |
+| **금지** | Branch-3, `branch1_full_e2e`, pipeline DAG 변경 |
 
 ### 작업자 명령 치트시트
 
@@ -282,7 +282,7 @@ Deconstruct → Verify → Dreamer → Fact-Checker → Skeptic → Weaver → V
 
 시작 전: git pull → docs/design/SUPERVISOR-AI-HANDOFF.md 읽기.
 
-현재: **μ-2b-ω** ✅ — Branch-2b STAGE-1 corpus 1차 마감. **다음 = μ-2b-02-UI** (선택). Branch-0 MUST.
+현재: **μ-2b-02-UI-FIX** ✅ — 분석 후 분석 기록 모음 줄 갱신. **다음 = μ-2b-03-LIVE**. Branch-0 MUST.
 사후 수정 시 §1.2 — `stage0_reaudit_baseline.py` → `phase_r_regression` 순.
 
 매 답변: 풀어설명 + 작업자 복붙블록 + 지금 할 일(있/없).

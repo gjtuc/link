@@ -56,8 +56,8 @@ def test_sp0_index_html_wires_fact_checker_to_ui():
     """AC-FC-02: index.html consumes fact_checker and shows FC labels."""
     html = INDEX_HTML.read_text(encoding="utf-8")
     assert "fact_checker" in html
-    assert "미검증" in html
-    assert "문서 내부 검증" in html
+    assert "가설만" in html
+    assert "문서 안에서 검증" in html
     assert "updateBackendStatus" in html
     assert "formatFactCheckerLine" in html
     assert 'id="fc-hint"' in html
