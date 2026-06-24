@@ -1,9 +1,9 @@
 """
-μ-2b-03-00 — CorpusStore factory.
+μ-2b-03-00/01 — CorpusStore factory.
 
-μ-ID: μ-2b-03-00
-선행: memory_adapter + store_protocol
-env: LINK_CORPUS_BACKEND=memory|neo4j (neo4j → μ-2b-03-01)
+μ-ID: μ-2b-03-00 / μ-2b-03-01
+선행: memory_adapter + neo4j_adapter + store_protocol
+env: LINK_CORPUS_BACKEND=memory|neo4j
 스펙: docs/design/STAGE-1-PERSIST-spec.md
 """
 
@@ -29,7 +29,9 @@ def _create_store(backend: str) -> CorpusStore:
     if backend == "memory":
         return MemoryCorpusStoreAdapter()
     if backend == "neo4j":
-        raise NotImplementedError("LINK_CORPUS_BACKEND=neo4j — μ-2b-03-01")
+        from deconstructor.corpus.neo4j_adapter import Neo4jCorpusStoreAdapter
+
+        return Neo4jCorpusStoreAdapter()
     raise ValueError(f"unknown LINK_CORPUS_BACKEND: {backend!r}")
 
 

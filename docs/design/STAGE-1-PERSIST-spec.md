@@ -22,7 +22,7 @@
 |------|------|------|
 | **μ-PRE-2b-PERSIST** | 영속 경계 설계 + sample | ✅ (본 문서) |
 | **μ-2b-03-00** | CorpusStore protocol + memory factory | `factory.py` + pytest | ✅ |
-| **μ-2b-03-01** | Neo4j adapter (mock) | TBD | [ ] |
+| **μ-2b-03-01** | Neo4j adapter (mock) | `neo4j_adapter.py` + pytest | ✅ |
 | **μ-2b-03** | 영속 store 통합 | TBD | [ ] |
 | **μ-2b-02-UI** | index.html 힌트 (선택) | [ ] |
 
@@ -92,6 +92,45 @@
 
 ```bash
 python -m pytest tests/test_stage1_corpus_store_factory.py -q
+```
+
+---
+
+## μ-2b-03-01 — Neo4j adapter (✅)
+
+| 항목 | 내용 |
+|------|------|
+| Adapter | `deconstructor/corpus/neo4j_adapter.py` — `Neo4jCorpusStoreAdapter` |
+| Factory | `LINK_CORPUS_BACKEND=neo4j` → lazy import + bolt (실패 시 `ConnectionError`) |
+| 테스트 | mock `session_factory` — LLM 0, 실 Neo4j 불필요 |
+
+### Cypher sketch
+
+```cypher
+// schema
+CREATE CONSTRAINT corpus_run_id IF NOT EXISTS
+FOR (r:CorpusRun) REQUIRE r.run_id IS UNIQUE;
+
+CREATE CONSTRAINT corpus_fact_id IF NOT EXISTS
+FOR (f:CorpusFactRef) REQUIRE f.fact_id IS UNIQUE;
+
+// append — duplicate run_id → ValueError (CREATE, not MERGE on run)
+MATCH (r:CorpusRun {run_id: $run_id}) RETURN r LIMIT 1;
+CREATE (r:CorpusRun {run_id, session_id, merge_mode, source_files, fact_count, created_at});
+
+MATCH (r:CorpusRun {run_id: $run_id})
+MERGE (f:CorpusFactRef {fact_id: $fact_id})
+SET f.subject = $subject, f.source_file = $source_file, f.chunk_id = $chunk_id, f.run_id = $run_id
+MERGE (r)-[:CORPUS_MEMBER]->(f);
+
+// read
+MATCH (r:CorpusRun) RETURN r ORDER BY r.created_at;
+MATCH (f:CorpusFactRef) RETURN f ORDER BY f.run_id, f.fact_id;
+MATCH (f:CorpusFactRef {run_id: $run_id}) RETURN f;
+```
+
+```bash
+python -m pytest tests/test_stage1_corpus_neo4j_adapter.py -q
 ```
 
 ---

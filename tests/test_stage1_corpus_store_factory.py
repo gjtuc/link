@@ -52,10 +52,11 @@ def test_get_corpus_store_returns_memory_adapter():
     assert isinstance(store, MemoryCorpusStoreAdapter)
 
 
-def test_neo4j_backend_not_implemented(monkeypatch):
+def test_neo4j_backend_without_bolt_raises_connection_error(monkeypatch):
     monkeypatch.setenv("LINK_CORPUS_BACKEND", "neo4j")
+    monkeypatch.setenv("NEO4J_URI", "bolt://127.0.0.1:19999")
     clear_corpus_store_singleton()
-    with pytest.raises(NotImplementedError, match="μ-2b-03-01"):
+    with pytest.raises(ConnectionError, match="bolt connection failed"):
         get_corpus_store()
 
 

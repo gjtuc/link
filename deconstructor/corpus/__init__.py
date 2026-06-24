@@ -20,6 +20,7 @@ from deconstructor.corpus.factory import (
     reset_corpus_store,
 )
 from deconstructor.corpus.memory_adapter import MemoryCorpusStoreAdapter
+from deconstructor.corpus.neo4j_adapter import Neo4jCorpusStoreAdapter
 from deconstructor.corpus.store_protocol import CorpusStore
 from deconstructor.corpus.ingest_hook import (
     append_pipeline_to_corpus,
@@ -45,6 +46,7 @@ __all__ = [
     "InMemoryCorpusStore",
     "CorpusStore",
     "MemoryCorpusStoreAdapter",
+    "Neo4jCorpusStoreAdapter",
     "corpus_backend",
     "append_pipeline_to_corpus",
     "cross_run_corpus_enabled",
