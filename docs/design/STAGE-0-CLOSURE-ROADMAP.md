@@ -3,22 +3,44 @@
 > **계약 원칙:** ingest 계약을 **조금만** 어겨도(요약·출처 누락·F0-A2) 분석 결과가 **그럴듯하게** 깨진다.  
 > **그래서:** LLM(Phase A) 전 **읽기(Phase R) 게이트** + **분기마다 pytest 증명**.  
 > **μ 재쪼개기:** 1차 → μ-ID → pytest/스크립트 → ω → 다음 분기 **하나만** 잠금 해제.  
-> **지금 활성:** Branch-0 **MUST**. Branch-1 **완료**. Branch-2a 1차 관측 마감 (μ-B2a-ω). **μ-PRE-2b-00** (파도 4) — Branch-2b **설계 완료**, **구현 잠금 유지**. 2b/3 **코드 착수 금지**.
+> **지금 활성:** Branch-0 **MUST**. Branch-1 **완료**. Branch-2a 1차 관측 마감 (μ-B2a-ω). **Branch-2b STAGE-1 corpus 1차 마감** (μ-2b-ω). Branch-3 **잠금 유지**.
 
 ---
 
-## Branch-2b — 설계만 ✅ (μ-PRE-2b-00)
+## Branch-2b — STAGE-1 corpus 1차 마감 ✅ (μ-2b-ω)
 
-**스펙:** [BRANCH-2b-spec.md](BRANCH-2b-spec.md) (구현 **미착수**)
+**스펙:** [BRANCH-2b-spec.md](BRANCH-2b-spec.md) · [STAGE-1-CORPUS-spec.md](STAGE-1-CORPUS-spec.md) · [STAGE-1-PERSIST-spec.md](STAGE-1-PERSIST-spec.md)
+
+| μ-ID | 내용 | 상태 |
+|------|------|------|
+| μ-2b-00 | corpus 계약 + in-memory | ✅ |
+| μ-2b-01 | cross-run ingest hook | ✅ |
+| μ-2b-02-R | corpus READ/query | ✅ |
+| μ-2b-02-API | `/api/status` cross_run_corpus | ✅ |
+| μ-PRE-2b-PERSIST | 영속 경계 설계 | ✅ |
+| μ-2b-03-00 | CorpusStore protocol + memory factory | ✅ `5e6e44d` |
+| μ-2b-03-01 | Neo4j adapter (mock bolt) | ✅ `c6ca7fb` |
+| **μ-2b-ω** | Branch-2b 1차 마감 | ✅ sample + pytest |
+
+**backends:** memory (default) · neo4j (mock offline)  
+**env:** `LINK_CROSS_RUN_CORPUS`, `LINK_CORPUS_BACKEND`, `LINK_SESSION_ID`
+
+**다음:** **μ-2b-02-UI** (선택) — index.html corpus 힌트. Branch-0 MUST 지속.
+
+**오프라인:** `tests/fixtures/b2b_closure_sample.json`, `tests/test_b2b_closure.py`
+
+---
+
+## Branch-2b — 설계 (선행, ✅)
+
+**스펙:** [BRANCH-2b-spec.md](BRANCH-2b-spec.md) (μ-2b-ω **1차 마감** ✅)
 
 | μ-ID | 내용 | 상태 |
 |------|------|------|
 | **μ-PRE-2b-00** | STAGE-1 cross-run corpus 설계 | ✅ spec + sample |
 | **μ-UNLOCK-2b** | 2b 착수 잠금 해제 | ✅ `branch_2b_unlocked=true` |
 
-**다음:** **μ-2b-03** (영속) 또는 μ-2b-02-UI. Branch-0 MUST 지속.
-
-**STAGE-1:** [STAGE-1-CORPUS-spec.md](STAGE-1-CORPUS-spec.md) · [STAGE-1-PERSIST-spec.md](STAGE-1-PERSIST-spec.md) (μ-2b-02-API ✅, μ-PRE-2b-PERSIST ✅)
+**STAGE-1 구현:** μ-2b-00~03-01 + **μ-2b-ω** — [위 § Branch-2b 마감](#branch-2b--stage-1-corpus-1차-마감--μ-2b-ω)
 
 ---
 
@@ -29,14 +51,15 @@ Branch-0  Phase R  pytest + phase_r_regression     ← 지속 MUST
     │
     └─ DONE ──► Branch-1  S0-B/C Phase A E2E ✅     ← 2026-06-22
                     │
-                    └─ DONE ──► Branch-2a  μ-A 깊이 1차 관측 ✅  ← μ-B2a-ω 마감
+                    └─ DONE ──► Branch-2a  μ-A 깊이 1차 관측 ✅  ← μ-B2a-ω
+                                    │
+                                    └─ DONE ──► Branch-2b  STAGE-1 corpus ✅  ← μ-2b-ω
 ```
 
 ## 잠금 분기 (생각·착수 금지)
 
 | Branch | 내용 | 잠금 사유 |
 |--------|------|-----------|
-| 2b | STAGE 1 | 클로저 전 |
 | 3 | μ-R edge | 실 PDF/DOCX R fail 관측 전 |
 
 ## Branch-2a — 1차 관측 마감 ✅ (μ-B2a-ω)
@@ -50,7 +73,7 @@ Branch-0  Phase R  pytest + phase_r_regression     ← 지속 MUST
 | μ-B2a-03 | ROADMAP + baseline | ✅ 본 문서 |
 | **μ-B2a-ω** | Branch-2a 1차 관측 마감 | ✅ sample + pytest |
 
-**다음:** Branch-2b/STAGE-1 — **μ-PRE-2b-00 설계 완료**; **구현·unlock은 사용자 승인 후 μ-UNLOCK-2b**. Branch-0 MUST 지속.
+**다음:** Branch-2b/STAGE-1 — **μ-2b-ω 1차 마감** ✅; **다음 = μ-2b-02-UI** (선택). Branch-0 MUST 지속.
 
 ---
 

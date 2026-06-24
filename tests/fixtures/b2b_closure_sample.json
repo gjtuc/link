@@ -1,0 +1,41 @@
+{
+  "mu_id": "μ-2b-ω",
+  "branch": "Branch-2b",
+  "stage": "STAGE-1",
+  "closure": "1차 마감",
+  "baseline_commit": "c6ca7fb",
+  "branch_2b_unlocked": true,
+  "branch_3_locked": true,
+  "stack_completed": [
+    "μ-PRE-2b-00",
+    "μ-UNLOCK-2b",
+    "μ-2b-00",
+    "μ-2b-01",
+    "μ-2b-02-R",
+    "μ-2b-02-API",
+    "μ-PRE-2b-PERSIST",
+    "μ-2b-03-00",
+    "μ-2b-03-01"
+  ],
+  "backends": {
+    "default": "memory",
+    "implemented": ["memory", "neo4j"],
+    "neo4j_mode": "mock_bolt_offline"
+  },
+  "env_flags": {
+    "LINK_CROSS_RUN_CORPUS": "1 enables ingest hook (default off)",
+    "LINK_CORPUS_BACKEND": "memory|neo4j (default memory)",
+    "LINK_SESSION_ID": "optional /api/status session filter"
+  },
+  "deferred": ["μ-2b-02-UI", "μ-2b-03"],
+  "offline_pytest_modules": [
+    "tests/test_stage1_corpus_contract.py",
+    "tests/test_stage1_corpus_ingest.py",
+    "tests/test_stage1_corpus_query.py",
+    "tests/test_stage1_corpus_status_api.py",
+    "tests/test_stage1_corpus_store_factory.py",
+    "tests/test_stage1_corpus_neo4j_adapter.py",
+    "tests/test_stage1_persist_design_sample.py"
+  ],
+  "live_e2e_rerun": false
+}

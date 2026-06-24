@@ -1,8 +1,8 @@
-# Branch-2b — STAGE 1 (cross-run corpus) — 설계만
+# Branch-2b — STAGE 1 (cross-run corpus)
 
-> **상태:** **μ-2b-00** ✅ — STAGE-1 corpus 계약·in-memory skeleton  
+> **상태:** **μ-2b-ω 완료** — Branch-2b **STAGE-1 corpus 1차 마감** (2026-06-24)  
 > **선행:** μ-UNLOCK-2b  
-> **다음:** **μ-2b-01** — cross-run ingest (pipeline·Neo4j 경계)
+> **다음:** **μ-2b-02-UI** (선택) — index.html corpus 힌트
 
 ---
 
@@ -54,7 +54,7 @@ Branch-2b = **[STAGE 1](STAGE-0-CLOSURE-spec.md)** — 0단계 클로저 이후 
 | **μ-2b-03-00** | CorpusStore protocol + factory | `factory.py` + pytest | ✅ |
 | **μ-2b-03-01** | Neo4j adapter mock | `neo4j_adapter.py` + pytest | ✅ |
 | **μ-2b-03** | 영속 store 통합 | TBD | [ ] |
-| **μ-2b-ω** | 2b 1차 마감 | sample + `stage0_reaudit_baseline.py` | [ ] |
+| **μ-2b-ω** | 2b 1차 마감 | sample + `stage0_reaudit_baseline.py` | ✅ |
 
 ---
 
@@ -107,3 +107,23 @@ python -m pytest tests/test_branch2b_design_sample.py tests/test_branch_gates.py
 ```
 
 **sample:** `tests/fixtures/branch2b_design_sample.json`
+
+---
+
+## μ-2b-ω — Branch-2b STAGE-1 1차 마감 ✅
+
+**목적:** μ-2b-00~03-01 cross-run corpus 스택을 **문서·sample로 잠금** — live E2E 재실행 없음.
+
+| 항목 | 마감 (기록만) |
+|------|----------------|
+| corpus 계약 | `contract.py` + in-memory + ingest/query/status |
+| CorpusStore | `store_protocol` + memory factory + Neo4j mock adapter |
+| backends | **memory** (default), **neo4j** (mock bolt offline) |
+| env | `LINK_CROSS_RUN_CORPUS`, `LINK_CORPUS_BACKEND`, `LINK_SESSION_ID` |
+| 미착수 (별도 μ) | μ-2b-02-UI, μ-2b-03 (실 bolt 통합) |
+| Branch-3 | **잠금 유지** |
+| live E2E 재실행 | **금지** (본 ω) |
+
+**오프라인:** `tests/fixtures/b2b_closure_sample.json`, `tests/test_b2b_closure.py`
+
+**기록:** [STAGE-1-CORPUS-spec.md](STAGE-1-CORPUS-spec.md) · [STAGE-1-PERSIST-spec.md](STAGE-1-PERSIST-spec.md) · [STAGE-0-CLOSURE-ROADMAP.md](STAGE-0-CLOSURE-ROADMAP.md)
