@@ -38,6 +38,8 @@ def test_b2b_closure_sample_schema():
     assert "LINK_CROSS_RUN_CORPUS" in data["env_flags"]
     assert "LINK_CORPUS_BACKEND" in data["env_flags"]
     assert "μ-2b-03-01" in data["stack_completed"]
+    assert "μ-2b-02-UI" in data["stack_completed"]
+    assert "μ-2b-02-UI" not in data["deferred"]
 
 
 def test_b2b_closure_stack_modules_exist():

@@ -15,7 +15,8 @@
     "μ-2b-02-API",
     "μ-PRE-2b-PERSIST",
     "μ-2b-03-00",
-    "μ-2b-03-01"
+    "μ-2b-03-01",
+    "μ-2b-02-UI"
   ],
   "backends": {
     "default": "memory",
@@ -27,7 +28,7 @@
     "LINK_CORPUS_BACKEND": "memory|neo4j (default memory)",
     "LINK_SESSION_ID": "optional /api/status session filter"
   },
-  "deferred": ["μ-2b-02-UI", "μ-2b-03"],
+  "deferred": ["μ-2b-03"],
   "offline_pytest_modules": [
     "tests/test_stage1_corpus_contract.py",
     "tests/test_stage1_corpus_ingest.py",

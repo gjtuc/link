@@ -189,6 +189,8 @@
     .fc-badge.fc-corpus { color: #174ea6; }
     .hint.fc-hint { display: none; padding: 0 16px 8px; margin: 0; font-size: 11px; color: #e37400; flex-shrink: 0; }
     .hint.fc-hint.show { display: block; }
+    .hint.corpus-hint { display: none; padding: 0 16px 8px; margin: 0; font-size: 11px; color: #5f6368; flex-shrink: 0; }
+    .hint.corpus-hint.show { display: block; }
     .skeleton-panel {
       display: none; flex-shrink: 0; flex-direction: column; gap: 8px;
       margin: 0 16px 8px; padding: 10px 12px; border: 1px solid var(--border);
@@ -380,6 +382,7 @@
         <a href="/graph_output.html?debug=1" target="_blank" rel="noopener" style="color:#1a73e8;">그래프만 새 탭(debug)</a>
       </p>
       <p class="hint fc-hint" id="fc-hint" aria-live="polite"></p>
+      <p class="hint corpus-hint" id="corpus-hint" aria-live="polite"></p>
       <div id="skeleton-panel" class="skeleton-panel" aria-live="polite">
         <h3>뼈대 건강 · Outline (C-3)</h3>
         <div class="skeleton-health" id="skeleton-health"></div>
@@ -1239,7 +1242,17 @@
       .catch(() => {});
 
     /** Sprint 0 SP0-FC-01 — cache /api/status for FC label (AC-FC-02, C-4) */
-    let cachedBackendStatus = { fact_checker: "stub", tavily_disabled: true };
+    let cachedBackendStatus = {
+      fact_checker: "stub",
+      tavily_disabled: true,
+      cross_run_corpus: {
+        enabled: false,
+        run_count: 0,
+        fact_count: 0,
+        source_files: [],
+        session_id: null,
+      },
+    };
 
     function formatFactCheckerLine(factChecker) {
       if (factChecker === "live") {
@@ -1435,6 +1448,36 @@
       hint.classList.add("show");
     }
 
+    function formatCrossRunCorpusLine(block) {
+      const b = block || { enabled: false };
+      if (!b.enabled) {
+        return { text: "", show: false };
+      }
+      const runs = Number(b.run_count) || 0;
+      const facts = Number(b.fact_count) || 0;
+      const files = Array.isArray(b.source_files) ? b.source_files.length : 0;
+      if (runs <= 0) {
+        return { text: "Cross-run corpus: 켜짐 · 아직 run 없음", show: true };
+      }
+      return {
+        text: `Cross-run corpus: run ${runs} · fact ${facts} · 파일 ${files}개`,
+        show: true,
+      };
+    }
+
+    function updateCrossRunCorpusHint(block) {
+      const hint = document.getElementById("corpus-hint");
+      if (!hint) return;
+      const line = formatCrossRunCorpusLine(block);
+      if (!line.show) {
+        hint.textContent = "";
+        hint.classList.remove("show");
+        return;
+      }
+      hint.textContent = line.text;
+      hint.classList.add("show");
+    }
+
     /** SP0-FC-02 — merge Neo4j install line + fact_checker badge */
     function updateBackendStatus(snapshot) {
       if (snapshot == null) return;
@@ -1450,6 +1493,7 @@
       el.innerHTML = `${neo.text} · <span class="fc-badge ${fcClass}">${fc.text}</span>`;
       el.style.color = neo.color;
       updateFactCheckerHint(cachedBackendStatus.fact_checker);
+      updateCrossRunCorpusHint(cachedBackendStatus.cross_run_corpus || { enabled: false });
     }
 
     const linkTabId = sessionStorage.getItem("linkTabId") || crypto.randomUUID();

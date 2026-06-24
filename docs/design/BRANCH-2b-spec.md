@@ -2,7 +2,7 @@
 
 > **상태:** **μ-2b-ω 완료** — Branch-2b **STAGE-1 corpus 1차 마감** (2026-06-24)  
 > **선행:** μ-UNLOCK-2b  
-> **다음:** **μ-2b-02-UI** (선택) — index.html corpus 힌트
+> **다음:** Branch-3 잠금 유지 — **μ-2b-03** (실 bolt 통합, 별도 주문)
 
 ---
 
@@ -49,7 +49,7 @@ Branch-2b = **[STAGE 1](STAGE-0-CLOSURE-spec.md)** — 0단계 클로저 이후 
 | **μ-2b-01** | cross-run ingest hook | `ingest_hook.py` + env | ✅ |
 | **μ-2b-02-R** | corpus READ/query 계약 | `query.py` + pytest | ✅ |
 | **μ-2b-02-API** | `/api/status` corpus 힌트 | `status_block.py` + pytest | ✅ |
-| **μ-2b-02-UI** | index.html 힌트 (선택) | TBD | [ ] |
+| **μ-2b-02-UI** | index.html 힌트 | `test_stage1_corpus_ui.py` | ✅ |
 | **μ-PRE-2b-PERSIST** | Neo4j·영속 경계 설계 | `STAGE-1-PERSIST-spec.md` | ✅ |
 | **μ-2b-03-00** | CorpusStore protocol + factory | `factory.py` + pytest | ✅ |
 | **μ-2b-03-01** | Neo4j adapter mock | `neo4j_adapter.py` + pytest | ✅ |
@@ -120,7 +120,7 @@ python -m pytest tests/test_branch2b_design_sample.py tests/test_branch_gates.py
 | CorpusStore | `store_protocol` + memory factory + Neo4j mock adapter |
 | backends | **memory** (default), **neo4j** (mock bolt offline) |
 | env | `LINK_CROSS_RUN_CORPUS`, `LINK_CORPUS_BACKEND`, `LINK_SESSION_ID` |
-| 미착수 (별도 μ) | μ-2b-02-UI, μ-2b-03 (실 bolt 통합) |
+| 미착수 (별도 μ) | μ-2b-03 (실 bolt 통합) |
 | Branch-3 | **잠금 유지** |
 | live E2E 재실행 | **금지** (본 ω) |
 
