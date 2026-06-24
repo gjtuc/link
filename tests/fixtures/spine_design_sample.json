@@ -1,0 +1,91 @@
+{
+  "mu_id": "μ-SPINE-00",
+  "branch": "Branch-SPINE",
+  "stage": "STAGE-0-SPINE",
+  "status": "unlocked",
+  "implementation_started": true,
+  "unlock_mu_id": "μ-SPINE-UNLOCK",
+  "unlock_fields": {
+    "branch_spine_unlocked": true,
+    "spine_design_complete": true
+  },
+  "mu_ids_planned": [
+    "μ-SPINE-00",
+    "μ-SPINE-UNLOCK",
+    "μ-SPINE-01",
+    "μ-SPINE-02",
+    "μ-SPINE-02-API",
+    "μ-SPINE-03-UI",
+    "μ-SPINE-04-UI",
+    "μ-SPINE-05-UI",
+    "μ-SPINE-ω"
+  ],
+  "must_ac_bundle": [
+    "C-SPINE-05",
+    "C-SPINE-01",
+    "C-SPINE-09",
+    "C-SPINE-02",
+    "C-SPINE-08"
+  ],
+  "spec_ref": "docs/design/BRANCH-SPINE-spec.md",
+  "related_specs": [
+    "docs/design/STAGE-0-SPINE-philosophy.md",
+    "docs/design/STAGE-0-SPINE-2-scenarios.md",
+    "docs/design/STAGE-0-SPINE-3-acceptance.md",
+    "docs/design/BRANCH-SPINE-spec-읽기가이드.md"
+  ],
+  "parallel_branches": [
+    "BRIDGE-EXPAND-philosophy.md",
+    "μ-CHUNK-STRUCT"
+  ],
+  "contract_sample": {
+    "spine": {
+      "spines": [
+        {
+          "spine_id": "spine-a-001",
+          "index": 1,
+          "label": "뼈대 1 · Ni 촉매 → 메탄 수율",
+          "bridge_count": 0,
+          "node_ids": ["fact-a", "fact-b", "fact-c"],
+          "edge_ids": [["fact-a", "fact-b"], ["fact-b", "fact-c"]],
+          "main_path_node_ids": ["fact-a", "fact-b", "fact-c"],
+          "is_branched": false
+        }
+      ],
+      "selected_spine_id": "spine-a-001",
+      "filters": {
+        "include_hypothesis": false,
+        "include_bridge": true
+      }
+    },
+    "link_rationales": [
+      {
+        "source_fact_id": "fact-a",
+        "target_fact_id": "fact-b",
+        "edge_kind": "CAUSES",
+        "link_sentence": "Ni 촉매 표면에서 CH4 생성이 촉진된다.",
+        "link_mechanism": "금속-Ni 활성점에서 C-O 해리 후 메탄 경로가 우세해진다.",
+        "locale": "ko"
+      },
+      {
+        "source_fact_id": "fact-b",
+        "target_fact_id": "fact-c",
+        "edge_kind": "CAUSES",
+        "link_sentence": "메탄 농도 상승이 수율 지표를 높인다.",
+        "link_mechanism": "",
+        "locale": "ko"
+      }
+    ]
+  },
+  "closure_fixtures_planned": [
+    "tests/fixtures/spine_closure_a.json",
+    "tests/fixtures/spine_closure_b.json",
+    "tests/fixtures/spine_closure_c.json",
+    "tests/fixtures/spine_closure_d.json"
+  ],
+  "tests": [
+    "tests/test_spine_design_sample.py",
+    "tests/test_spine_rationale.py"
+  ],
+  "scenario_ref": "S-SPINE-A"
+}

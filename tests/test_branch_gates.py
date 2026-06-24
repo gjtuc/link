@@ -51,6 +51,8 @@ def test_gate_branch_state_file_valid():
     assert isinstance(s["branch_2_unlocked"], bool)
     assert isinstance(s.get("branch_2b_unlocked"), bool)
     assert isinstance(s.get("branch_2b_design_complete"), bool)
+    assert isinstance(s.get("branch_spine_unlocked"), bool)
+    assert isinstance(s.get("spine_design_complete"), bool)
 
 
 def test_gate_branch2b_unlocked_after_mu_unlock_2b():
@@ -59,6 +61,14 @@ def test_gate_branch2b_unlocked_after_mu_unlock_2b():
     assert s.get("branch_2b_design_complete") is True
     assert s.get("branch_2b_unlocked") is True
     assert (DESIGN / "BRANCH-2b-spec.md").is_file()
+
+
+def test_gate_branch_spine_unlocked_after_design_complete():
+    """μ-SPINE-UNLOCK: branch_spine_unlocked + spine design complete."""
+    s = _branch_state()
+    assert s.get("spine_design_complete") is True
+    assert s.get("branch_spine_unlocked") is True
+    assert (DESIGN / "BRANCH-SPINE-spec.md").is_file()
 
 
 def test_gate_branch2b_implementation_specs_forbidden_until_unlocked():
