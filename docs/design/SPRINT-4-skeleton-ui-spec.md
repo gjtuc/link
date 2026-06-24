@@ -48,17 +48,17 @@
 
 | γ (0-1) | 데이터 조건 | 코드 |
 |---------|-------------|------|
-| 빈 因 (Gap) | conclusion-like fact, CAUSES in-edge 0 | `rules.find_gaps` |
-| Strong 因→과 | verified CAUSES path length ≥2 | `rules.find_strong_chains` |
+| 빈 원인 (Gap) | conclusion-like fact, CAUSES in-edge 0 | `rules.find_gaps` |
+| Strong 원인→결과 | verified CAUSES path length ≥2 | `rules.find_strong_chains` |
 | Weak | promoted inferred 또는 CAUSES 미연결 extracted (gap·strong 제외) | `rules.find_weak` |
-| 因→과 검증 | `edge_kind==CAUSES` | Strong/Gap 집계에만 사용 |
+| 원인→결과 검증 | `edge_kind==CAUSES` | Strong/Gap 집계에만 사용 |
 | 교차 bridge | `edge_kind==BRIDGE` | outline depth 계산 제외 |
 
 ### conclusion-like 휴리스틱 (IDX-02)
 
 CAUSES 기준 차수 `in_d`, `out_d`:
 
-1. `out_d > 0` — downstream 因 주장이지만 upstream 없음 → Gap 후보  
+1. `out_d > 0` — downstream 원인 주장이지만 upstream 없음 → Gap 후보  
 2. `state_change` 에 결과 키워드 (`increased`, `decreased`, `rose`, `fell`, `result`, `achieved`, `improved`, `reduced`, `상승`, `하락`, `증가`, `감소`)  
 3. `out_d == 0` — leaf(과) 노드
 

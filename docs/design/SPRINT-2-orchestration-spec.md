@@ -82,7 +82,7 @@ CAP at MAX_BRIDGE_EDGES=30
 | 동일 `subject` + 다른 `source_file` | 별도 노드 유지 | ✅ 후보 |
 | 동일 `subject` + 동일 file + 다른 chunk | 별도 노드 (`chunk_id`) | ❌ |
 | 동일 UUID id 충돌 on merge | later run wins | — |
-| LLM cross-doc 因→과 추론 | **금지** (NON-GOAL) | — |
+| LLM cross-doc 원인→결과 추론 | **금지** (NON-GOAL) | — |
 
 ---
 

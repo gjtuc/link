@@ -1,4 +1,4 @@
-# S0-C E2E 기록 — 다중 파일 교차 因→과
+# S0-C E2E 기록 — 다중 파일 교차 원인→결과
 
 > **시나리오:** [STAGE-0-2-user-scenarios.md](STAGE-0-2-user-scenarios.md) § S0-C  
 > **μ 스펙:** [STAGE-0-CLOSURE-spec.md](STAGE-0-CLOSURE-spec.md) § μ-C-*  

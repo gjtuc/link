@@ -67,7 +67,7 @@ def is_conclusion_like(node: GraphNode, in_deg: int, out_deg: int) -> bool:
     """
     SP4-IDX-02 heuristic — see spec μ-IDX-02.
 
-    Leaf (out=0), downstream 因 (out>0), or outcome keyword in state_change.
+    Leaf (out=0), downstream 원인 (out>0), or outcome keyword in state_change.
     """
     if out_deg > 0:
         return True

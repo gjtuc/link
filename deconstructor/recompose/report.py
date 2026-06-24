@@ -26,7 +26,7 @@ def build_health_report(
         "# Skeleton Health Report (ε-2)",
         "",
         "## Summary",
-        f"- **Gap** (빈 因): {gap_n}",
+        f"- **Gap** (빈 원인): {gap_n}",
         f"- **Strong** chains: {strong_n}",
         f"- **Weak**: {weak_n}",
         f"- Fact-Checker mode: `{fc_mode}`",
@@ -35,7 +35,7 @@ def build_health_report(
 
     gaps = skeleton.get("gaps") or []
     if gaps:
-        lines.append("## Gaps (빈 因)")
+        lines.append("## Gaps (빈 원인)")
         for g in gaps:
             lines.append(
                 f"- **{g.get('subject', '?')}** — {g.get('state_change', '')} "

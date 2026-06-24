@@ -4,8 +4,8 @@ LangGraph 컴파일 및 파이프라인 실행 진입점 (Canonical Graph Builde
 
 STAGE 0-1 (제품 계약) — 코어 DAG (변경 금지 방향)
 -------------------------------------------------
-  완성품 → **Deconstruct(해체)** → Verify(粒度) → Dreamer(빈 因) →
-  Fact-Checker(상함 검사) → Skeptic(因→과 법칙) → Weaver → END
+  완성품 → **Deconstruct(해체)** → Verify(粒度) → Dreamer(빈 원인) →
+  Fact-Checker(상함 검사) → Skeptic(원인→결과 법칙) → Weaver → END
 
 Q1 2-pass (enable_dreamer=True):
 

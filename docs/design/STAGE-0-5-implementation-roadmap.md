@@ -209,7 +209,7 @@ C-2: 각 `AtomicFact`에 **출처 provenance** — `source_file`, `page_range`, 
 
 ### 목표
 
-S0-C: N 파일 ingest 후 **교차 因→과** 또는 **「교차 0건」** 투명 표시. merge-only 한계 명시.
+S0-C: N 파일 ingest 후 **교차 원인→결과** 또는 **「교차 0건」** 투명 표시. merge-only 한계 명시.
 
 ### AC closure
 

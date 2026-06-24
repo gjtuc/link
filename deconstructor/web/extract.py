@@ -6,7 +6,7 @@ STAGE 0-1 (제품 계약) — Ingest
 ------------------------------
   - **완성품 → 부스러기 재료**: 서술을 Deconstruct에 넘기기 **전** 원문을 잃지 않는다.
   - **압축 ≠ 분해**: document 모드에서 LLM 2–5문장 요약 금지 (NG-1).
-  - **因·과 crumb의 원천**: 여기서 나온 ``ExtractedSource.text`` 가 Deconstruct 입력.
+  - **원인과 결과 crumb의 원천**: 여기서 나온 ``ExtractedSource.text`` 가 Deconstruct 입력.
   - 상세: ``docs/design/STAGE-0-1-product-definition.md`` (β-1~3, C-1, C-2)
 
 모드 (``LINK_DOCUMENT_INGEST``)

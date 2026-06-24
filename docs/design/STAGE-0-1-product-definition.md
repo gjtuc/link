@@ -8,14 +8,14 @@
 
 ## 0-1 수정본 (계약 문장)
 
-**Link는 겉으로 완성된 서술(논문·보고서 등)을 因·과 crumb으로 해체하고, Skeptic·Fact-Checker·출처(provenance)로 논리 뼈대의 튼 곳·빈 因·약한·거짛 因→과를 숨기지 않고 보여 준다. 이 지도를 바탕으로 이후 단계에서 글을 재조립할 수 있다.**
+**Link는 겉으로 완성된 서술(논문·보고서 등)을 원인과 결과 crumb으로 해체하고, Skeptic·Fact-Checker·출처(provenance)로 논리 뼈대의 튼 곳·빈 원인·약한·거짛 원인→결과를 숨기지 않고 보여 준다. 이 지도를 바탕으로 이후 단계에서 글을 재조립할 수 있다.**
 
 ### 문장별 주석
 
 | 구절 | 의미 | 검증 방법 |
 |------|------|-----------|
 | 겉으로 완성된 서술 | PDF/DOCX/긴 텍스트 등 **출판·제출 수준** 글 | ingest 후 char 수 ≈ 원문 |
-| 因·과 crumb | `AtomicFact.subject` + `state_change` | Deconstruct FactList |
+| 원인과 결과 crumb | `AtomicFact.subject` + `state_change` | Deconstruct FactList |
 | 해체 | **분해** (요약 아님) | `LINK_DOCUMENT_INGEST=document` |
 | Skeptic·Fact-Checker | 규칙·검증 레이어 | `verified_edges`, dropped |
 | 튼/빈/약/거짛 | Strong/Gap/Weak/False (9단계 UI) | skeleton index |
@@ -33,7 +33,7 @@
 | α-1 | 사용자: 연구자·분석가·보고서 작성자 |
 | α-2 | 입력: 완성품 서술 (PDF/DOCX/긴 txt). URL/HTML은 **1단계 ingest 부록** |
 | α-3 | 금지: 요약본만 Deconstruct, LLM 내러티브 대체 |
-| α-4 | 출력(0-1): 因·과 지도 + **뼈대 강약**. 재조리 **텍스트**는 10단계 |
+| α-4 | 출력(0-1): 원인과 결과 지도 + **뼈대 강약**. 재조리 **텍스트**는 10단계 |
 
 ### β — 해체(부스러기)
 
@@ -43,16 +43,16 @@
 | β-2 | non-atomic → Verify 재분해 | 1회 LLM 후 전부 atomic |
 | β-3 | 출처(파일·페이지·청크) | 출처 없는 fact |
 
-### γ — 因·과 (제품 정의)
+### γ — 원인과 결과 (제품 정의)
 
 | 기호 | 데이터 | UI |
 |------|--------|-----|
-| 因 | subject | 노드 라벨 |
-| 과 | state_change | 툴팁 |
-| 因→과 검증 | `verified_edges` | 회색 실선 |
-| 因→과 가설 | inferred/promoted/dropped | 노랑/✕ |
-| 빈 因 | in-edge 없는 conclusion | Gap (9단계) |
-| 약한 因→과 | INCONCLUSIVE 등 | 점선/Weak |
+| 원인 | subject | 노드 라벨 |
+| 결과 | state_change | 툴팁 |
+| 원인→결과 검증 | `verified_edges` | 회색 실선 |
+| 원인→결과 가설 | inferred/promoted/dropped | 노랑/✕ |
+| 빈 원인 | in-edge 없는 conclusion | Gap (9단계) |
+| 약한 원인→결과 | INCONCLUSIVE 등 | 점선/Weak |
 
 ### δ — “왜곡 없이”의 정확한 의미
 

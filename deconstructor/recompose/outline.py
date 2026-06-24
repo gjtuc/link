@@ -9,7 +9,7 @@ def build_rewrite_outline(skeleton: dict) -> list[dict]:
     """
     Structured rewrite hints — not full LLM prose (NON-GOAL).
 
-    - ``fix_gap``: high priority — add upstream 因
+    - ``fix_gap``: high priority — add upstream 원인
     - ``keep``: strong claim to preserve
     - ``review_weak``: optional weak/hypothesis review
     """
@@ -24,7 +24,7 @@ def build_rewrite_outline(skeleton: dict) -> list[dict]:
                 "subject": g.get("subject", ""),
                 "state_change": g.get("state_change", ""),
                 "hint": (
-                    f"Add upstream 因 supporting «{g.get('subject', '?')}» "
+                    f"Add upstream 원인 supporting «{g.get('subject', '?')}» "
                     f"→ {g.get('state_change', '')}"
                 ),
             }

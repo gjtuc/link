@@ -1,8 +1,8 @@
-# Deconstructor (Link) — 因·과 논리 뼈대 엔진
+# Deconstructor (Link) — 원인과 결과 논리 뼈대 엔진
 
-**완성품(논문·보고서·서술) → 因·과 crumb 해체 → Skeptic·Fact-Checker로 뼈대 강약 드러내기 → (재조립)**
+**완성품(논문·보고서·서술) → 원인과 결과 crumb 해체 → Skeptic·Fact-Checker로 뼈대 강약 드러내기 → (재조립)**
 
-겉으로 잘 조리된 글을 **부위별로 해체**하고, 튼 연결·빈 因·약한·거짛 因→과를 **숨기지 않고** 보여 준다.  
+겉으로 잘 조리된 글을 **부위별로 해체**하고, 튼 연결·빈 원인·약한·거짛 원인→결과를 **숨기지 않고** 보여 준다.  
 코어: Deconstruct → Verify → Dreamer → Fact-Checker → Skeptic → Weaver.
 
 > **0-1 계약:** [docs/design/STAGE-0-1-product-definition.md](docs/design/STAGE-0-1-product-definition.md)  
@@ -33,7 +33,7 @@
 완성품(서술·논문·보고서) — STAGE 0-1: document ingest, 청크
     │
     ▼
-[Deconstruct]  LLM → FactList (subject + state_change)  ← 因·과 crumb
+[Deconstruct]  LLM → FactList (subject + state_change)  ← 원인과 결과 crumb
     │
     ▼
 [Verify]       is_atomic=True → completed_facts / False → 재분해 대기

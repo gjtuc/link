@@ -123,7 +123,7 @@ def _e2e_record_items() -> list[dict[str, str]]:
             _item(
                 "cap-s0c-cross-doc",
                 "verified",
-                "파일 두 개(논문+메모)를 묶어 교차 因→과를 찾는 건 확인했어요.",
+                "파일 두 개(논문+메모)를 묶어 교차 원인→결과를 찾는 건 확인했어요.",
                 "S0-C-E2E-RECORD.md",
                 f"bridge={bridge} merge_mode=batch_corpus",
             )

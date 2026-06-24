@@ -76,14 +76,14 @@
 
 ---
 
-## D. Skeptic·因→과 (ζ-3, ζ-4, γ)
+## D. Skeptic·원인→결과 (ζ-3, ζ-4, γ)
 
 | AC-ID | Level | S0 | 조건 | 관측 | 상태 |
 |-------|-------|-----|------|------|------|
 | **AC-SKP-01** | MUST | A,B | `verified_edges` 존재 가능, pyvis CAUSES 표시 | graph | ✅ |
 | **AC-SKP-02** | MUST | A,B | dropped ghost ✕ 노드 **숨기지 않음** (δ) | graph legend | ✅ |
 | **AC-SKP-03** | SHOULD | A,B | **Gap** count: in-degree 0 on conclusion-like facts (C-3) | skeleton index | ✅ Sprint 4 |
-| **AC-SKP-04** | SHOULD | A,B | **Strong** chain count ≥1 when paper has clear 因→과 | skeleton index | ✅ Sprint 4 |
+| **AC-SKP-04** | SHOULD | A,B | **Strong** chain count ≥1 when paper has clear 원인→결과 | skeleton index | ✅ Sprint 4 |
 | **AC-SKP-05** | MUST | A,B | **NG-2**: PASS ≠ `nodes > N`; 판정은 AC-SKP-03/04 | skeleton + watch NG-2 | ✅ Sprint 4,7 |
 
 ---
